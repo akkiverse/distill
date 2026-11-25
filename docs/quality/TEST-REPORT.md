@@ -1,6 +1,6 @@
 # Distill: Test report
 
-**Run:** 2026-11-25 · **Commit:** latest on `cr/0001-mvp` (CR-0001) · **Result:** 51 of 51 tests passing (34 pytest, 17 Vitest); all 23 acceptance criteria covered · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-25 · **Commit:** latest on `cr/0001-mvp` (CR-0001) · **Result:** 51 of 51 tests passing (34 pytest, 17 Vitest); all 23 acceptance criteria covered · **Preview:** `/api/health` and the app shell load on the preview · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
 
 ## Traceability: acceptance criteria to tests
 
@@ -47,7 +47,7 @@ Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over 
 Built UI served locally with the API, sample cards (marked "Sample:") seeded on the device, screenshots in headless Chromium of Feed, Post and Topics at 375px and 1280px in light and dark, plus the empty Feed. No sideways scroll at either width. Fixes made: none needed after review; bottom navigation on phones and top tabs on desktop behave as designed, the chart and figure chips render in both themes, and the end-of-feed moment sits below the last card.
 
 ## Feed check
-The build environment can't reach the news sites, so every default feed is checked from the Vercel preview with `/api/feeds/check`; results are recorded in the pull request and dead feeds are listed in `feeds.DROPPED`.
+Checked from the Vercel preview (Singapore) with `/api/feeds/check` on 2026-11-25: **74 of 76** feeds answered with stories (all 12 Google News section feeds among them). Business Standard (latest) and Yahoo Finance answered with HTTP errors and are listed in `feeds.DROPPED`, so they are not asked; every section still has working feeds.
 
 ## Releases
 None yet.

@@ -116,7 +116,11 @@ RSS_FEEDS: dict[str, list[tuple[str, str]]] = {
 }
 
 # Feeds from the founder's list that did not answer with a usable feed during the build check.
-DROPPED: dict[str, str] = {}
+DROPPED: dict[str, str] = {
+    # Checked from the Vercel preview on 25 Nov 2026 (/api/feeds/check): 74 of 76 feeds answered.
+    "https://www.business-standard.com/rss/latest.rss": "answered with an HTTP error from Vercel (25 Nov 2026)",
+    "https://finance.yahoo.com/news/rssindex": "answered with an HTTP error from Vercel (25 Nov 2026)",
+}
 
 _GN = "hl=en-IN&gl=IN&ceid=IN:en"
 _GN_TOPICS = {
