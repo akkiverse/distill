@@ -1,0 +1,140 @@
+"""Shared test fixtures: a mock news source, a mock AI curator and a memory store. Nothing real is called."""
+
+from __future__ import annotations
+
+import typing
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
+
+import httpx
+import pytest
+from distill import app as app_mod
+from distill.models import Article, Card
+from distill.store import MemoryStore
+from fastapi.testclient import TestClient
+
+NOW = datetime(2026, 11, 25, 9, 0, tzinfo=UTC)
+
+
+def iso(dt: datetime) -> str:
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def article(
+    n: int,
+    title: str,
+    snippet: str = "",
+    section: str = "finance",
+    url: str | None = None,
+    hours_ago: float = 1,
+    source: str = "Mock Times",
+) -> Article:
+    url = url or f"https://news.example.com/story-{n}"
+    from distill.textutil import article_id
+
+    return Article(
+        id=article_id(url),
+        title=title,
+        snippet=snippet,
+        url=url,
+        source_name=source,
+        published_at=iso(NOW - timedelta(hours=hours_ago)),
+        section=section,
+        via="rss",
+    )
+
+
+def card(
+    id: str,
+    title: str,
+    *,
+    hours_ago: float = 1,
+    saved: bool = False,
+    section: str = "finance",
+    story_key: str = "",
+    saved_changed_at: str | None = None,
+) -> Card:
+    return Card(
+        id=id,
+        topic_section=section,
+        title=title,
+        source_name="Mock Times",
+        source_url=f"https://news.example.com/{id}",
+        fetched_at=iso(NOW - timedelta(hours=hours_ago)),
+        summary="A summary.",
+        key_points=["One.", "Two."],
+        story_key=story_key,
+        saved=saved,
+        saved_changed_at=saved_changed_at,
+    )
+
+
+@dataclass
+class MockSource:
+    name: str
+    articles: list[Article] = field(default_factory=list)
+    fail: bool = False
+    delay: float = 0.0
+
+    async def fetch(self, client: httpx.AsyncClient) -> list[Article]:
+        import asyncio
+
+        if self.delay:
+            await asyncio.sleep(self.delay)
+        if self.fail:
+            raise httpx.ConnectError("down")
+        return list(self.articles)
+
+
+@dataclass
+class MockCurator:
+    """Answers like Studio AI would. `verdicts` maps an article id to the raw answer; default is relevant."""
+
+    verdicts: dict = field(default_factory=dict)
+    calls: list[str] = field(default_factory=list)
+    raise_exc: Exception | None = None
+
+    async def judge(self, a: Article, sections: Sequence[str], keywords: Sequence[str]) -> dict:
+        self.calls.append(a.id)
+        if self.raise_exc:
+            raise self.raise_exc
+        return self.verdicts.get(
+            a.id,
+            {
+                "relevance": 0.9,
+                "summary": f"Summary of {a.title}.",
+                "key_points": ["First point.", "Second point."],
+                "key_figures": [],
+                "story_key": a.title.lower().replace(" ", "-")[:40],
+            },
+        )
+
+
+@pytest.fixture
+def env():
+    """Swap the app's adapters for mocks; returns a holder the test fills in."""
+
+    class Env:
+        sources: typing.ClassVar[list] = []
+        curator = MockCurator()
+        store = MemoryStore()
+        user_id: str | None = "u_test"
+
+    e = Env()
+    e.sources = []
+    app = app_mod.app
+    app.dependency_overrides[app_mod.get_source_factory] = lambda: lambda sections, keywords: e.sources
+    app.dependency_overrides[app_mod.get_curator] = lambda: e.curator
+    app.dependency_overrides[app_mod.get_store] = lambda: e.store
+    app.dependency_overrides[app_mod.get_user_id] = lambda: e.user_id
+    original_now = app_mod.now
+    app_mod.now = lambda: NOW
+    yield e
+    app.dependency_overrides.clear()
+    app_mod.now = original_now
+
+
+@pytest.fixture
+def client(env):
+    return TestClient(app_mod.app)
