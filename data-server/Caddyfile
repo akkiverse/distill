@@ -1,0 +1,17 @@
+# Lets a request through to PostgREST only with "Authorization: Bearer <DATA_GATEWAY_KEY>".
+# The header is removed before PostgREST sees it. Everything else answers 401.
+{
+	admin off
+	auto_https off
+}
+
+:8090 {
+	@allowed header Authorization "Bearer {$DATA_GATEWAY_KEY}"
+	handle @allowed {
+		request_header -Authorization
+		reverse_proxy api:3000
+	}
+	handle {
+		respond "Not allowed" 401
+	}
+}
