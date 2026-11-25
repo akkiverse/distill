@@ -16,3 +16,7 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 10 | Data server kit for the home server, and the feed check endpoint | AC-6.5, AC-6.6, US-2 | Yes |
 | 11 | Visual check at 375px and 1280px, light and dark | design | Yes |
 | 12 | Records, pull request, preview check (and drop dead feeds found there) | all | Yes |
+
+## Release v0.1.0
+- [x] Released 2026-11-25: merge commit be9eb2d, Vercel deployment dpl_4i33zu3gL5MCt1QbKJqqbrmLBNar.
+- [ ] Tag pending: Claude sessions cannot create Git tags or GitHub Releases; add tag v0.1.0 on be9eb2d by hand if wanted.
