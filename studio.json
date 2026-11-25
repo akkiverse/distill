@@ -1,0 +1,12 @@
+{
+  "name": "Distill",
+  "slug": "distill",
+  "tagline": "A calm news feed that ends: your topics, summarised by your own AI, gone after a day unless saved.",
+  "accent": "#0f766e",
+  "repo": "https://github.com/akkiverse/distill",
+  "live_url": "https://distill-akkiverse.vercel.app",
+  "version": "0.1.0",
+  "launched": "",
+  "tests_passed": 0,
+  "tests_total": 0
+}
