@@ -1,0 +1,75 @@
+# Distill data server: Postgres + PostgREST + Caddy (key check), one Compose project on its own network.
+# Only Caddy is published, and only on 127.0.0.1:8090; Tailscale Funnel makes it reachable over HTTPS.
+# Postgres (5432) is never published. See README.md in this folder.
+name: distill
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: distill
+      POSTGRES_USER: distill_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      AUTHENTICATOR_PASSWORD: ${AUTHENTICATOR_PASSWORD:?set AUTHENTICATOR_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    networks: [distill]
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U distill_owner -d distill"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: postgrest/postgrest:v12.2.3
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTHENTICATOR_PASSWORD}@db:5432/distill
+      PGRST_DB_SCHEMAS: api
+      PGRST_DB_ANON_ROLE: distill_web
+      PGRST_OPENAPI_MODE: disabled
+      PGRST_DB_MAX_ROWS: "100"
+    networks: [distill]
+    mem_limit: 128m
+
+  gateway:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on: [api]
+    environment:
+      DATA_GATEWAY_KEY: ${DATA_GATEWAY_KEY:?set DATA_GATEWAY_KEY in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    ports:
+      - "127.0.0.1:8090:8090"
+    networks: [distill]
+    mem_limit: 64m
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      KEEP_DAYS: "14"
+    volumes:
+      - ./backups:/backups
+      - ./backup.sh:/backup.sh:ro
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    networks: [distill]
+    mem_limit: 128m
+
+networks:
+  distill:
+    name: distill
+
+volumes:
+  db-data:

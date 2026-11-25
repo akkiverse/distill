@@ -175,3 +175,33 @@ async def write_state(
     except store.StoreUnavailable as exc:
         raise HTTPException(503, detail={"code": "data_offline", "message": "Saved on this device, will sync later."}) from exc
     return StateResponse(state=merged, synced_at=iso(t))
+
+
+@app.get("/api/feeds/check")
+async def check_feeds():
+    """Ask every default feed once and report which answer with stories (the build's feed check).
+
+    Run on a preview or by the founder; it is behind the same sign-in as the rest of the app.
+    """
+    seen: dict[str, sources.RssFeed] = {}
+    for section, lst in feeds.RSS_FEEDS.items():
+        for name, url in lst:
+            seen.setdefault(url, sources.RssFeed(name, url, section))
+    for s in feeds.SECTIONS:
+        url = feeds.google_news_section_url(s.id)
+        seen.setdefault(url, sources.RssFeed(f"Google News {s.name}", url, s.id, via="google-news"))
+
+    async def one(src: sources.RssFeed, client) -> dict:
+        try:
+            got = await asyncio.wait_for(src.fetch(client), sources.TIMEOUT_SECONDS)
+            return {"name": src.name, "url": src.url, "ok": len(got) > 0, "stories": len(got), "error": "" if got else "empty"}
+        except Exception as exc:  # report every failure, whatever it is
+            return {"name": src.name, "url": src.url, "ok": False, "stories": 0, "error": type(exc).__name__}
+
+    import httpx
+
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(sources.TIMEOUT_SECONDS), follow_redirects=True, headers={"User-Agent": sources.USER_AGENT}
+    ) as client:
+        results = await asyncio.gather(*(one(s, client) for s in seen.values()))
+    return {"checked": len(results), "ok": sum(r["ok"] for r in results), "feeds": sorted(results, key=lambda r: (r["ok"], r["name"]))}

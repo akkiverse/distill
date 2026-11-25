@@ -27,3 +27,19 @@ def test_signed_in_user_id_comes_from_the_studio_session(monkeypatch):
     req = Request({"type": "http", "headers": [(b"cookie", b"studio_session=good")]})
     assert app_mod.get_user_id(req) == "u_42"
     assert app_mod.get_user_id(Request({"type": "http", "headers": []})) is None
+
+
+def test_feed_check_reports_each_feed(client, monkeypatch):
+    """The feed check asks every default feed and lists which answered with stories."""
+    from distill import sources
+
+    async def fake_fetch(self, client):
+        if "thehindu" in self.url:
+            raise sources.httpx.ConnectError("down")
+        return []
+
+    monkeypatch.setattr(sources.RssFeed, "fetch", fake_fetch)
+    body = client.get("/api/feeds/check").json()
+    assert body["checked"] > 60
+    hindu = [f for f in body["feeds"] if "thehindu.com" in f["url"]]
+    assert hindu and all(not f["ok"] and f["error"] == "ConnectError" for f in hindu)
