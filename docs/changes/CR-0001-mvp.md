@@ -1,10 +1,10 @@
 # CR-0001: First version (MVP)
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board: build approved 25 Nov 2026)
 - **Date:** 2026-11-25
-- **Release:** (not yet released)
-- **Pull request:** (opened when the build is ready)
+- **Release:** v0.1.0 (2026-11-25)
+- **Pull request:** [#7](https://github.com/akkiverse/distill/pull/7)
 
 ## Why
 The founder approved Distill as a personal tool: a calm news feed of AI summaries for chosen sections and keywords that ends and cleans itself up, instead of scrolling social media.
