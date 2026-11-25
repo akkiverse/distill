@@ -1,6 +1,6 @@
 # CR-0001: First version (MVP)
 
-- **Status:** In progress
+- **Status:** In review
 - **Requested by:** Founder (board: build approved 25 Nov 2026)
 - **Date:** 2026-11-25
 - **Release:** (not yet released)
@@ -28,7 +28,11 @@ Everything is new: Topics, Feed, Post detail and Saved screens; news gathering f
 New. See [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), [ADR-0002](../adr/0002-stack.md).
 
 ## Verification
-To be filled when the build is tested.
+51 of 51 tests pass (34 pytest, 17 Vitest), one or more per acceptance criterion; Ruff and the production build pass; visual check at 375px and 1280px in light and dark. See [TEST-REPORT](../quality/TEST-REPORT.md).
 
 ## Notes
-None yet.
+- Stories published more than 36 hours ago are skipped at fetch time, since they would expire almost at once.
+- Keyword searches are filed as their own topic (`kw:<keyword>`) so replacement (AC-6.3) works per keyword.
+- Without Studio AI linked, cards are headline-only and say so (no fake summaries).
+- Keyed news APIs are off until the founder adds their keys; Marketaux is asked only for finance, business or keyword topics, to stay inside its small free quota.
+- The founder still needs to: run the data server (`data-server/README.md`) and add `DATA_ENDPOINT` and `DATA_GATEWAY_KEY`; link `AI_ENDPOINTS` and `AI_GATEWAY_KEY`; add Distill's live address in hub admin and turn sign-in on.
