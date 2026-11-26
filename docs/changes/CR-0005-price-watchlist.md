@@ -4,7 +4,7 @@
 - **Requested by:** Founder (board, new feature E4)
 - **Date:** 2026-11-26
 - **Release:** (set at release; a feature, so the next minor version, v0.4.0)
-- **Pull request:** (see the PR for branch `cr/0005-price-watchlist`)
+- **Pull request:** https://github.com/akkiverse/distill/pull/14
 - **Issue:** closes #13 (US-9)
 
 ## Why
