@@ -61,3 +61,7 @@ For CR-0001. Each task names the stories and criteria it serves.
 ## Release v0.2.1
 - [x] Released 2026-11-26: merge commit f5cce53, Vercel deployment dpl_F8dmKUNa6B9u1XntRQGeKj4W6Rw6.
 - [ ] Tag pending: add tag v0.2.1 on f5cce53 by hand if wanted.
+
+## Release v0.3.0
+- [x] Released 2026-11-26: merge commit 026f466, Vercel deployment dpl_4GHYcugmHLMjRkCZasKHSZ4U72c6 (CR-0004, E3).
+- [ ] Tag pending: add tag v0.3.0 on 026f466 by hand if wanted (milestone v0.3.0 has no open issues).
