@@ -212,9 +212,10 @@ def test_ac_9_10_not_set_up_and_offline(env, monkeypatch):
 
 def test_ac_9_11_order_is_kept(client):
     """AC-9.11: removing and reordering keep the new order in the account."""
-    put = lambda keys, at: client.put("/api/me/state", json={"watchlist": {"keys": keys, "updated_at": at}}).json()["state"]["watchlist"][
-        "keys"
-    ]  # noqa: E731
+    def put(keys, at):
+        r = client.put("/api/me/state", json={"watchlist": {"keys": keys, "updated_at": at}})
+        return r.json()["state"]["watchlist"]["keys"]
+
     assert put(["NSE:TCS", "US:EPAM", "GOLD:XAU_USD"], "2026-11-25T08:00:00Z") == ["NSE:TCS", "US:EPAM", "GOLD:XAU_USD"]
     assert put(["GOLD:XAU_USD", "NSE:TCS"], "2026-11-25T08:01:00Z") == ["GOLD:XAU_USD", "NSE:TCS"]
 

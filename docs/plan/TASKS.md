@@ -63,7 +63,7 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 3 | API routes and `UserState.watchlist` with newest-wins merge and v0.3.0 compatibility | AC-9.2, AC-9.11 | Yes |
 | 4 | Prices component: list, search and add, remove and reorder, folded at the top of the Feed and as a tab | AC-9.2, AC-9.4 to AC-9.7, AC-9.11, AC-9.14 | Yes |
 | 5 | Refresh timer by market hours, only while on screen; news cards that mention an item | AC-9.9, AC-9.12 | Yes |
-| 6 | Tests, lint, build, visual check, records, pull request, preview check | all | No |
+| 6 | Tests, lint, build, visual check, records, pull request, preview check | all | Yes |
 
 ## Release v0.2.0
 - [x] Released 2026-11-26: merge commit 52e1563, Vercel deployment dpl_CcLnpx8cRaVZxp9MoX3QXT7ofQaM.
