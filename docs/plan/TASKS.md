@@ -41,3 +41,11 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 3 | Re-send headline-only stories on refresh; AI summary wins over headline copy in both merges, first fetch time kept | AC-3.6 | Yes |
 | 4 | Tests (fail on v0.2.0, pass now), lint, build | AC-3.5, AC-3.6 | Yes |
 | 5 | Records, pull request, preview check | all | Yes |
+
+## Release v0.2.0
+- [x] Released 2026-11-26: merge commit 52e1563, Vercel deployment dpl_CcLnpx8cRaVZxp9MoX3QXT7ofQaM.
+- [ ] Tag pending: add tag v0.2.0 on 52e1563 by hand if wanted.
+
+## Release v0.2.1
+- [x] Released 2026-11-26: merge commit f5cce53, Vercel deployment dpl_F8dmKUNa6B9u1XntRQGeKj4W6Rw6.
+- [ ] Tag pending: add tag v0.2.1 on f5cce53 by hand if wanted.
