@@ -1,9 +1,9 @@
 # CR-0002: Keep topics and saved cards in each person's account (Neon)
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board notes)
 - **Date:** 2026-11-26
-- **Release:** v0.2.0 (once released)
+- **Release:** v0.2.0 (26 Nov 2026)
 - **Pull request:** https://github.com/akkiverse/distill/pull/9
 - **Issue:** #8 (US-7)
 
