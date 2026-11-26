@@ -29,6 +29,8 @@ interface Ctx {
   notice: string | null;
   phase: RefreshPhase;
   lastOutcome: RefreshOutcome | null;
+  /** The newest word on the AI server: from the live status check or the latest refresh (null: not known). */
+  aiOnline: boolean | null;
   ready: boolean;
   saveTopics: (sections: string[], keywords: string[]) => Promise<boolean>;
   toggleSave: (id: string) => Promise<void>;
@@ -44,6 +46,20 @@ export function useDistill(): Ctx {
   return c;
 }
 
+/** Cards made while the AI was off (or failed) show the headline only; the next refresh tries them again. */
+export const isHeadlineOnly = (c: Card) => c.ai_status !== "ok";
+
+/** Put freshly curated cards in, keeping the first fetch time of a headline-only card they replace (AC-3.6). */
+export function withFirstFetch(fresh: Card[], existing: Card[]): Card[] {
+  const before = new Map(existing.map((c) => [c.id, c]));
+  return fresh.map((c) => {
+    const old = before.get(c.id);
+    return old ? { ...c, fetched_at: old.fetched_at } : c;
+  });
+}
+
+export const AI_STATUS_EVERY_MS = 60_000;
+
 export const SYNC_LATER = "Saved on this device, will sync later"; // AC-6.6
 
 export function DistillProvider({ children }: { children: ReactNode }) {
@@ -58,6 +74,7 @@ export function DistillProvider({ children }: { children: ReactNode }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [phase, setPhase] = useState<RefreshPhase>({ kind: "idle" });
   const [lastOutcome, setLastOutcome] = useState<RefreshOutcome | null>(null);
+  const [aiOnline, setAiOnline] = useState<boolean | null>(null);
   const [ready, setReady] = useState(false);
   const latest = useRef(local);
   latest.current = local;
@@ -114,6 +131,26 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     };
   }, [pushSync, commit]);
 
+  // AC-3.5: the offline note follows the live AI status check, not the cards already on screen.
+  useEffect(() => {
+    let alive = true;
+    const check = () =>
+      api
+        .aiStatus()
+        .then((j) => {
+          if (!alive) return;
+          if (j.configured === false) setAiOnline(null);
+          else if (typeof j.online === "boolean") setAiOnline(j.online);
+        })
+        .catch(() => undefined); // signed out, route missing or a network blip: say nothing new
+    void check();
+    const timer = setInterval(check, AI_STATUS_EVERY_MS);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, []);
+
   const saveTopics = useCallback(
     async (secs: string[], keywords: string[]) => {
       if (secs.length === 0) return false; // AC-1.3: nothing is saved
@@ -146,7 +183,9 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     setPhase({ kind: "fetching" });
     const outcome: RefreshOutcome = { aiStatus: null, failedSources: [], error: null, added: 0 };
     try {
-      const got = await api.refresh({ sections: topics.sections, keywords: topics.keywords, known_urls: cards.map((c) => c.source_url) });
+      // AC-3.6: headline-only cards are not "known", so this refresh can bring their AI summaries.
+      const known = cards.filter((c) => !isHeadlineOnly(c)).map((c) => c.source_url);
+      const got = await api.refresh({ sections: topics.sections, keywords: topics.keywords, known_urls: known });
       outcome.failedSources = got.failed_sources;
       const fresh: Card[] = [];
       const statuses = new Set<AiStatus>();
@@ -161,12 +200,16 @@ export function DistillProvider({ children }: { children: ReactNode }) {
         }
       }
       outcome.aiStatus = (["offline", "not_configured", "error"] as AiStatus[]).find((s) => statuses.has(s)) ?? (statuses.size ? "ok" : null);
-      outcome.added = fresh.length;
+      if (outcome.aiStatus === "offline") setAiOnline(false);
+      else if (outcome.aiStatus === "ok") setAiOnline(true);
+      const existing = latest.current.state.cards;
+      const fresh2 = withFirstFetch(fresh, existing);
+      outcome.added = fresh2.filter((c) => !existing.some((e) => e.id === c.id)).length;
       let merged: Card[];
       try {
-        merged = (await api.merge(latest.current.state.cards, fresh)).cards;
+        merged = (await api.merge(existing, fresh2)).cards;
       } catch {
-        merged = dropExpired([...fresh, ...latest.current.state.cards]);
+        merged = dropExpired(localMerge(existing, fresh2));
       }
       const state = { ...latest.current.state, cards: merged, settings: { ...latest.current.state.settings, last_refreshed_at: nowIso() } };
       commit({ state, pendingSync: true });
@@ -182,12 +225,29 @@ export function DistillProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(
     () => ({
-      state: local.state, sections, sync, notice, phase, lastOutcome, ready,
+      state: local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready,
       saveTopics, toggleSave, refresh, dismissNotice: () => setNotice(null),
     }),
-    [local.state, sections, sync, notice, phase, lastOutcome, ready, saveTopics, toggleSave, refresh],
+    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, toggleSave, refresh],
   );
   return <DistillContext.Provider value={value}>{children}</DistillContext.Provider>;
+}
+
+/** Without the server's merge: one card per id, an AI summary beats a headline-only copy, then the saved choice made last wins. */
+export function localMerge(existing: Card[], fresh: Card[]): Card[] {
+  const byId = new Map<string, Card>();
+  for (const c of [...existing, ...fresh]) {
+    const old = byId.get(c.id);
+    if (!old) {
+      byId.set(c.id, c);
+      continue;
+    }
+    const base = isHeadlineOnly(old) !== isHeadlineOnly(c) ? (isHeadlineOnly(c) ? old : c) : Date.parse(c.fetched_at) >= Date.parse(old.fetched_at) ? c : old;
+    const when = (x: Card) => (x.saved_changed_at ? Date.parse(x.saved_changed_at) : -Infinity);
+    const flag = when(c) > when(old) ? c : old;
+    byId.set(c.id, { ...base, saved: flag.saved, saved_changed_at: flag.saved_changed_at });
+  }
+  return [...byId.values()];
 }
 
 export function sectionLabel(id: string, sections: Section[]): string {

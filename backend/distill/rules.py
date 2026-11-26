@@ -48,7 +48,8 @@ def merge_cards(existing: Iterable[Card], new_cards: Iterable[Card], now: dateti
     """Add new cards, let a newer card replace an older unsaved card on the same story, drop expired ones.
 
     Cards with the same id are combined: the saved flag that changed last wins, so saving on one
-    device and unsaving on another settles on the later choice (AC-6.5).
+    device and unsaving on another settles on the later choice (AC-6.5). An AI summary of a story
+    always beats a headline-only copy of it, even one a slower device sends later (AC-3.6).
     """
     now = now or datetime.now(UTC)
     by_id: dict[str, Card] = {}
@@ -57,7 +58,10 @@ def merge_cards(existing: Iterable[Card], new_cards: Iterable[Card], now: dateti
         if old is None:
             by_id[c.id] = c
             continue
-        base = c if parse_time(c.fetched_at) >= parse_time(old.fetched_at) else old
+        if (c.ai_status == "ok") != (old.ai_status == "ok"):
+            base = c if c.ai_status == "ok" else old  # an AI summary replaces a headline-only copy (AC-3.6)
+        else:
+            base = c if parse_time(c.fetched_at) >= parse_time(old.fetched_at) else old
         flag = c if parse_time(c.saved_changed_at) > parse_time(old.saved_changed_at) else old
         by_id[c.id] = base.model_copy(update={"saved": flag.saved, "saved_changed_at": flag.saved_changed_at})
     kept: list[Card] = []
