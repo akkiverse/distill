@@ -1,6 +1,6 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0002-neon-sync` (CR-0002) · **Result:** 57 of 57 tests passing (40 pytest, 17 Vitest); all 29 acceptance criteria covered · **Database tests:** against a throwaway local Postgres 16 started by the test run · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0002-neon-sync` (CR-0002) · **Result:** 58 of 58 tests passing (41 pytest, 17 Vitest); all 29 acceptance criteria covered · **Database tests:** against a throwaway local Postgres 16 started by the test run · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
 
 Previous run (CR-0001, 2026-11-25): 51 of 51 passing.
 
@@ -39,7 +39,7 @@ Previous run (CR-0001, 2026-11-25): 51 of 51 passing.
 | AC-7.5 | `test_us7_account.py::test_ac_7_5_two_devices_syncing_at_once_keep_both_changes` (8 syncs at once; fails if the row lock is removed) | Pass |
 | AC-7.6 | `test_us7_account.py::test_ac_7_6_rows_saved_by_v0_1_0_read_unchanged` (compatibility with v0.1.0 data) | Pass |
 
-Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the table check running once per instance, the memory store's sync contract, health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the hub); the account database is a throwaway local Postgres.
+Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the table check running once per instance, the memory store's sync contract, a database driver that fails to load (answers "will sync later"), health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the hub); the account database is a throwaway local Postgres.
 
 ## Design checklist
 - [x] Colours as CSS custom properties with a designed dark theme (`prefers-color-scheme`)

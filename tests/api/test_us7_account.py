@@ -165,3 +165,20 @@ async def test_memory_store_sync_combines_and_saves():
     m.offline = True
     with pytest.raises(store.StoreUnavailable):
         await m.sync("u", lambda stored: stored)
+
+
+def test_driver_that_cannot_load_means_will_sync_later(client, env, monkeypatch):
+    """If the Postgres driver can't load on the server, sync answers "will sync later" instead of crashing."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def no_psycopg(name, *args, **kwargs):
+        if name == "psycopg":
+            raise ImportError("no driver")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_psycopg)
+    env.store = store.PostgresStore("postgresql://distill@db.example.invalid/distill")
+    r = client.put("/api/me/state", json={"topics": {}, "cards": [], "settings": {}})
+    assert r.status_code == 503 and r.json()["error"]["code"] == "data_offline"

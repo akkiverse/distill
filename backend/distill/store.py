@@ -79,7 +79,11 @@ class PostgresStore:
         self.table_ready = False
 
     async def _connect(self):
-        import psycopg  # imported here so the app starts even if the driver can't load
+        try:
+            import psycopg  # imported here so the app starts even if the driver can't load
+        except ImportError as exc:
+            log.warning("the Postgres driver couldn't load: %s", exc)
+            raise StoreUnavailable("driver") from exc
 
         try:
             # prepare_threshold=None: Neon's pooled address doesn't keep prepared statements between calls.
@@ -101,9 +105,9 @@ class PostgresStore:
         return conn
 
     async def load(self, user_id: str) -> UserState | None:
-        import psycopg
-
         conn = await self._connect()
+        import psycopg  # loaded by _connect
+
         try:
             async with conn:
                 row = await (await conn.execute(SELECT_STATE, (user_id,))).fetchone()
@@ -114,10 +118,10 @@ class PostgresStore:
 
     async def sync(self, user_id: str, merge: Merge) -> UserState:
         """Read, combine and save inside one transaction, with the row locked, so two devices can't overwrite each other (AC-7.5)."""
-        import psycopg
+        conn = await self._connect()
+        import psycopg  # loaded by _connect
         from psycopg.types.json import Jsonb
 
-        conn = await self._connect()
         try:
             async with conn, conn.transaction():
                 await conn.execute(SEED_STATE, (user_id,))

@@ -35,9 +35,9 @@ None. The request came with no files or links.
 The data server (PostgREST, Caddy, Tailscale Funnel at home) is replaced by a direct connection from the Vercel function to Neon in Singapore, the same region as the app. See [ADR-0004](../adr/0004-account-database-on-neon.md), which supersedes the storage part of ADR-0003.
 
 ## Verification
-- New `tests/api/test_us7_account.py`: one test per AC-7.x plus two supporting tests. The database tests run against a throwaway local Postgres started by the test run (CI sets `DISTILL_REQUIRE_PG=1`, so they fail rather than skip if Postgres is missing). Nothing real is called.
+- New `tests/api/test_us7_account.py`: one test per AC-7.x plus three supporting tests (including a database driver that fails to load). The database tests run against a throwaway local Postgres started by the test run (CI sets `DISTILL_REQUIRE_PG=1`, so they fail rather than skip if Postgres is missing). Nothing real is called.
 - The two PostgREST adapter tests were removed with the adapter; every other existing test is unchanged and passing.
-- Result: 40 of 40 back-end tests and 17 of 17 interface tests passing; lint and production build clean.
+- Result: 41 of 41 back-end tests and 17 of 17 interface tests passing; lint and production build clean.
 
 ## Notes
 - After release, the first sync creates the table in the founder's Neon database. No data moves from the home server: it was never switched on in production (the live v0.1.0 health check reported `sync_configured: false` on 26 Nov 2026), so there is nothing to copy. Each device's own copy is sent up on its first sync after sign-in.
