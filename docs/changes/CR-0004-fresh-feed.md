@@ -1,10 +1,10 @@
 # CR-0004: Show when each story was published, and keep the feed fresh on its own
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board, new feature E3)
 - **Date:** 2026-11-26
-- **Release:** (set at release; a feature, so the next minor version, v0.3.0)
-- **Pull request:** (see the PR for branch `cr/0004-fresh-feed`)
+- **Release:** v0.3.0 (26 Nov 2026)
+- **Pull request:** https://github.com/akkiverse/distill/pull/12
 - **Issue:** closes #11 (US-8)
 
 ## Why

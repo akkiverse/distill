@@ -74,6 +74,7 @@ No screen changed; the only interface edit is the "Not synced yet" tooltip text.
 Built UI served locally with the API mocked in the browser, sample cards seeded on the device (one replaced report, one with no publish time), screenshots in headless Chromium of the Feed and a post at 375px and 1280px in light and dark. No sideways scroll at either width (page width equals viewport). The publish time and time ago sit on their own line under the source and topic; the "Updated" tag uses the soft teal chip; "Time not given by source" reads clearly. No fixes needed.
 
 ## Releases
+- v0.3.0 (2026-11-26): CR-0004 publish times and a feed that stays fresh (E3), 81 of 81 tests passing, released through [PR #12](https://github.com/akkiverse/distill/pull/12).
 - v0.2.1 (2026-11-26): CR-0003 "AI is offline" note fix, 63 of 63 tests passing, released through [PR #10](https://github.com/akkiverse/distill/pull/10).
 - v0.2.0 (2026-11-26): CR-0002 topics and saved cards kept in each person's account (Neon), 58 of 58 tests passing, released through [PR #9](https://github.com/akkiverse/distill/pull/9).
 - v0.1.0 (2026-11-25): CR-0001 first version (MVP), 51 of 51 tests passing, released through [PR #7](https://github.com/akkiverse/distill/pull/7).
