@@ -49,3 +49,9 @@ tests/api/                   pytest acceptance tests;  src/__tests__/  Vitest ac
 - **Cause:** the note was derived from the cards on screen, and headline-only stories were sent as "known URLs", so they were never curated again.
 - **Fix:** the device keeps an `aiOnline` signal set by the live `/api/ai/status` check (on open and every minute) and by each refresh's result; the Feed shows the note only when it is `false`. Headline-only cards are left out of `known_urls`; the curated card keeps the old card's id and `fetched_at`; both merges prefer an AI summary over a headline-only copy of the same id.
 - **Existing data:** no stored shape changes; data saved by v0.2.0 loads as before (the new tests seed it).
+
+## CR-0004: Published times and a feed that stays fresh (feature)
+- **What:** Indian-time publish labels on cards and the post (`time.ts`, `WhenPublished`); feed ordered by publish time; automatic refresh while the Feed is open and visible (30-second check, 15-minute threshold, visibility and focus events, at most one automatic try per 15 minutes); a device-only list of links the AI has judged, sent as known links; `replaced_at` set by `merge_cards` when a newer card replaces one the reader had; the Feed holds new cards while the reader is scrolled down and shows a "N new" pill.
+- **Existing data:** `replaced_at` is optional, so cards saved by v0.2.1 on devices and in the account database read unchanged (tested). The synced device copy keeps its shape; the seen list is a separate key, and losing it only means a story may be judged again.
+- **AI load:** each automatic refresh sends only stories not judged before (at most 15, as before); while the AI is offline, headline-only cards are made without it and upgraded later.
+- **Risks:** a story replaced while the reader is scrolled down stays on screen until the pill is tapped (saving it then has no effect; it is already replaced); a source's wrong publish time shows as given.

@@ -54,8 +54,10 @@ One document per person (`UserState`), kept on the device and, when the account 
 | Part | Fields |
 |---|---|
 | `topics` | sections, keywords, updated_at |
-| `cards[]` | id, topic_section (a section id or `kw:<keyword>`), title, source_name, source_url, published_at, fetched_at, summary (≤ 400), key_points (2 to 4), key_figures [{label, value, unit}], story_key, relevance, saved, saved_changed_at, ai_status |
+| `cards[]` | id, topic_section (a section id or `kw:<keyword>`), title, source_name, source_url, published_at, fetched_at, summary (≤ 400), key_points (2 to 4), key_figures [{label, value, unit}], story_key, relevance, saved, saved_changed_at, ai_status, replaced_at (optional; when a newer report replaced an older card, added CR-0004) |
 | `settings` | last_refreshed_at, theme |
+
+The device also keeps `distill.seen.v1` in browser storage: the links the AI has already judged on that device, with when, for 36 hours (at most 500). It is never synced and only feeds `known_urls`, so stories already judged are not sent to the AI again (CR-0004).
 
 A single JSON row per person keeps the database to one table and makes sync one read and one upsert; the volume is tiny (tens of cards per person).
 
@@ -75,6 +77,7 @@ External services sit behind adapters so they can be mocked in tests and demos a
 2. **Open the app:** the device copy shows at once (expired cards dropped); then `PUT /api/me/state` sends it and takes back the combined copy. Without sync, `/api/feed/merge` applies the full rules.
 3. **Save while the database can't be reached:** the change stays on the device, marked pending; the toast says "Saved on this device, will sync later"; the next request that reaches the database sends it.
 4. **Sync:** `PUT /api/me/state` opens a short connection, locks the person's row, merges the stored copy with the device's (`rules.merge_states`) and saves it in the same transaction.
+5. **Fresh feed (CR-0004):** while the Feed is open and the page is visible, it checks every 30 seconds whether 15 minutes have passed since the last refresh (or the last automatic try), and also checks when the page becomes visible again or gets focus; nothing runs in the background. When cards that weren't on screen arrive while the reader is more than 120 px down the page, the Feed keeps showing what was on screen and shows a "N new" pill; tapping it (or scrolling back to the top) shows the new cards.
 
 ## Quality attributes
 - **Performance:** one JS bundle of about 54 kB gzipped plus two serif font files; charts are inline SVG. Each AI call is its own short request.

@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0003-ai-offline-note` (CR-0003) · **Result:** 63 of 63 tests passing (42 pytest, 21 Vitest); all 31 acceptance criteria covered · **Database tests:** against a throwaway local Postgres 16 started by the test run · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0004-fresh-feed` (CR-0004) · **Result:** 81 of 81 tests passing (48 pytest, 33 Vitest); all 39 acceptance criteria covered · **Database tests:** against a throwaway local Postgres started by the test run · **Build:** `npm run build` passes (JS 56 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -25,7 +25,7 @@ Previous runs: CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of
 | AC-4.2 | `us4_feed.test.tsx` "AC-4.2" | Pass |
 | AC-4.3 | `us4_feed.test.tsx` "AC-4.3" | Pass |
 | AC-4.4 | `us4_feed.test.tsx` "AC-4.4" | Pass |
-| AC-4.5 | `us4_feed.test.tsx` "AC-4.5" (both directions) | Pass |
+| AC-4.5 | `us4_feed.test.tsx` "AC-4.5" (both directions, 15 minutes; changed CR-0004) | Pass |
 | AC-5.1 | `us5_post.test.tsx` "AC-5.1" | Pass |
 | AC-5.2 | `us5_post.test.tsx` "AC-5.2" | Pass |
 | AC-6.1 | `test_us6_save_expire.py::test_ac_6_1_unsaved_card_older_than_24_hours_is_removed`; `us6_saved.test.tsx` "AC-6.1" | Pass |
@@ -40,6 +40,14 @@ Previous runs: CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of
 | AC-7.4 | `test_us7_account.py::test_ac_7_4_unreachable_database_says_will_sync_later` | Pass |
 | AC-7.5 | `test_us7_account.py::test_ac_7_5_two_devices_syncing_at_once_keep_both_changes` (8 syncs at once; fails if the row lock is removed) | Pass |
 | AC-7.6 | `test_us7_account.py::test_ac_7_6_rows_saved_by_v0_1_0_read_unchanged` (compatibility with v0.1.0 data) | Pass |
+| AC-8.1 | `us8_fresh_feed.test.tsx` "AC-8.1" (format and Indian time incl. midnight and noon; card and post detail) | Pass |
+| AC-8.2 | `us8_fresh_feed.test.tsx` "AC-8.2" (missing and unreadable publish time) | Pass |
+| AC-8.3 | `us8_fresh_feed.test.tsx` "AC-8.3" | Pass |
+| AC-8.4 | `us8_fresh_feed.test.tsx` "AC-8.4" (15-minute timer with fake clock; none in the background; refresh on coming back; none on coming back early) | Pass |
+| AC-8.5 | `test_us8_fresh_feed.py::test_ac_8_5_known_links_are_not_sent_to_the_ai_again`; `us8_fresh_feed.test.tsx` "AC-8.5" (dropped story sent as known; headline-only not) | Pass |
+| AC-8.6 | `test_us8_fresh_feed.py` (4 tests: replacement label, arriving together, saved card, sync from an older copy); `us8_fresh_feed.test.tsx` "AC-8.6"; compatibility: `test_ac_8_6_cards_saved_by_v0_2_1_still_read` | Pass |
+| AC-8.7 | `us8_fresh_feed.test.tsx` "AC-8.7" (held while scrolled down, the replaced card stays on screen, "1 new" pill scrolls to the top; at the top cards appear at once; scrolling up releases) | Pass |
+| AC-8.8 | `us8_fresh_feed.test.tsx` "AC-8.8" ("Last updated 10:42 AM", next refresh 15 minutes later) | Pass |
 
 Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the table check running once per instance, the memory store's sync contract, a database driver that fails to load (answers "will sync later"), health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the hub); the account database is a throwaway local Postgres.
 
@@ -61,6 +69,9 @@ Checked from the Vercel preview (Singapore) with `/api/feeds/check` on 2026-11-2
 
 ## Visual check (CR-0002)
 No screen changed; the only interface edit is the "Not synced yet" tooltip text. The 17 interface tests and the production build pass unchanged.
+
+## Visual check (CR-0004)
+Built UI served locally with the API mocked in the browser, sample cards seeded on the device (one replaced report, one with no publish time), screenshots in headless Chromium of the Feed and a post at 375px and 1280px in light and dark. No sideways scroll at either width (page width equals viewport). The publish time and time ago sit on their own line under the source and topic; the "Updated" tag uses the soft teal chip; "Time not given by source" reads clearly. No fixes needed.
 
 ## Releases
 - v0.2.1 (2026-11-26): CR-0003 "AI is offline" note fix, 63 of 63 tests passing, released through [PR #10](https://github.com/akkiverse/distill/pull/10).

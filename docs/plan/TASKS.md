@@ -42,6 +42,18 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 4 | Tests (fail on v0.2.0, pass now), lint, build | AC-3.5, AC-3.6 | Yes |
 | 5 | Records, pull request, preview check | all | Yes |
 
+## CR-0004: Published times and a feed that stays fresh (feature, minor)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue #11 (US-8), milestone v0.3.0; branch `cr/0004-fresh-feed` from `main`; CR-0004 and spec | all | Yes |
+| 2 | Publish date and time in Indian time on cards and post; "Time not given by source"; order by publish time | AC-8.1, AC-8.2, AC-8.3 | Yes |
+| 3 | Automatic refresh every 15 minutes while open and visible, on coming back, never in the background; AC-4.5 to 15 minutes | AC-8.4, AC-4.5 | Yes |
+| 4 | Remember links the AI judged on the device and send them as known | AC-8.5 | Yes |
+| 5 | `replaced_at` in the merge rules and the "Updated" label | AC-8.6 | Yes |
+| 6 | Hold new cards while scrolled down, "N new" pill, "Last updated" | AC-8.7, AC-8.8 | Yes |
+| 7 | Tests, lint, build, visual check, records, pull request, preview check | all | Yes |
+
 ## Release v0.2.0
 - [x] Released 2026-11-26: merge commit 52e1563, Vercel deployment dpl_CcLnpx8cRaVZxp9MoX3QXT7ofQaM.
 - [ ] Tag pending: add tag v0.2.0 on 52e1563 by hand if wanted.
