@@ -42,5 +42,6 @@ export const api = {
     post<{ card: Card | null; ai_status: AiStatus }>("/api/feed/curate", body),
   merge: (cards: Card[], new_cards: Card[]) => post<{ cards: Card[] }>("/api/feed/merge", { cards, new_cards }),
   sync: (state: UserState) => call<{ state: UserState; synced_at: string }>("/api/me/state", { method: "PUT", body: JSON.stringify(state) }),
+  aiStatus: () => call<{ configured?: boolean; online?: boolean }>("/api/ai/status"),
   me: () => call<{ signed_in: boolean; user?: { name: string } }>("/auth/me"),
 };

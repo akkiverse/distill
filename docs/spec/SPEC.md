@@ -33,6 +33,8 @@ As a reader I want my own AI to keep only useful stories and summarise them so t
 - **AC-3.2** Given a kept article, then its card has a summary of at most 400 characters and 2 to 4 key points. *(added CR-0001)*
 - **AC-3.3** Given the AI returns key figures, then a figure is kept only if its number appears in the article's title or snippet; others are dropped. *(added CR-0001)*
 - **AC-3.4** Given Studio AI is unavailable, when the feed refreshes, then headline-only cards are returned with `ai_status` "offline" and the Feed shows "AI is offline right now". *(added CR-0001)*
+- **AC-3.5** Given every card on screen was made while the AI was offline, when the live AI status check (or the latest refresh) says the AI is online, then the Feed does not show "AI is offline right now"; the note appears only when the latest of those two says offline. *(added CR-0003)*
+- **AC-3.6** Given headline-only cards in the feed and the AI back online, when the feed refreshes, then those stories are sent for curation again and their AI summaries replace the headline-only cards (same story id, saved choice and first fetch time kept, so the 24-hour expiry is unchanged); an AI summary also wins over a headline-only copy when devices sync. *(added CR-0003)*
 
 ### US-4: Card feed that ends
 As a reader I want an Instagram-style feed that stops so that I don't keep scrolling.

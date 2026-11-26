@@ -133,3 +133,18 @@ def test_bad_ai_answer_is_not_trusted(client, env):
     env.curator = MockCurator(verdicts={a.id: {"relevance": "very", "summary": 3}})
     c = client.post("/api/feed/curate", json={"article": a.model_dump()}).json()
     assert c["ai_status"] == "error" and c["card"]["title"] == "Story"
+
+
+def test_ac_3_6_ai_summary_replaces_headline_only_copy(client):
+    """AC-3.6: an AI summary of a story replaces its headline-only copy, keeping the saved choice, whichever device sends it."""
+    from conftest import card
+
+    headline = card("h1", "Rupee ends flat", hours_ago=3, saved=True, saved_changed_at="2026-11-26T01:00:00Z").model_copy(
+        update={"summary": "", "key_points": [], "ai_status": "offline"}
+    )
+    summarised = card("h1", "Rupee ends flat", hours_ago=3).model_copy(update={"summary": "The rupee closed flat."})
+    for existing, new in ((headline, summarised), (summarised, headline)):
+        r = client.post("/api/feed/merge", json={"cards": [existing.model_dump()], "new_cards": [new.model_dump()]})
+        [c] = r.json()["cards"]
+        assert c["ai_status"] == "ok" and c["summary"] == "The rupee closed flat."
+        assert c["saved"] is True and c["fetched_at"] == headline.fetched_at

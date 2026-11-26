@@ -44,3 +44,8 @@ tests/api/                   pytest acceptance tests;  src/__tests__/  Vitest ac
 - **Existing users' data:** the stored shape is unchanged (one `UserState` JSON document per person, `version: 1`), and every device keeps its own copy first, so each device sends its topics and saved cards up on its first sync. The home data server never ran in production, so nothing has to be copied. AC-7.6 proves a v0.1.0 row reads unchanged.
 - **Previews and tests:** `DATABASE_URL` is set for Production only, so previews stay device-only; tests use the memory store, plus a throwaway local Postgres for the database tests.
 - **Risks:** Neon waking from idle (8-second connect limit; the device copy covers it); two cold starts creating the table at once (advisory lock); simultaneous syncs (row lock, AC-7.5).
+
+## CR-0003: "AI is offline" note stays after the AI is back (bug fix)
+- **Cause:** the note was derived from the cards on screen, and headline-only stories were sent as "known URLs", so they were never curated again.
+- **Fix:** the device keeps an `aiOnline` signal set by the live `/api/ai/status` check (on open and every minute) and by each refresh's result; the Feed shows the note only when it is `false`. Headline-only cards are left out of `known_urls`; the curated card keeps the old card's id and `fetched_at`; both merges prefer an AI summary over a headline-only copy of the same id.
+- **Existing data:** no stored shape changes; data saved by v0.2.0 loads as before (the new tests seed it).

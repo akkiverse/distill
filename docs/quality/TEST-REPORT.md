@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0002-neon-sync` (CR-0002) · **Result:** 58 of 58 tests passing (41 pytest, 17 Vitest); all 29 acceptance criteria covered · **Database tests:** against a throwaway local Postgres 16 started by the test run · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0003-ai-offline-note` (CR-0003) · **Result:** 63 of 63 tests passing (42 pytest, 21 Vitest); all 31 acceptance criteria covered · **Database tests:** against a throwaway local Postgres 16 started by the test run · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
 
-Previous run (CR-0001, 2026-11-25): 51 of 51 passing.
+Previous runs: CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -19,6 +19,8 @@ Previous run (CR-0001, 2026-11-25): 51 of 51 passing.
 | AC-3.2 | `test_us3_curation.py::test_ac_3_2_summary_at_most_400_and_two_to_four_points` | Pass |
 | AC-3.3 | `test_us3_curation.py::test_ac_3_3_figures_not_in_the_text_are_dropped` | Pass |
 | AC-3.4 | `test_us3_curation.py::test_ac_3_4_ai_offline_gives_headline_cards`; `us4_feed.test.tsx` "AC-3.4" | Pass |
+| AC-3.5 | `cr0003_ai_back.test.tsx` "AC-3.5" (online check hides the note over old headline-only cards; offline check shows it) | Pass |
+| AC-3.6 | `test_us3_curation.py::test_ac_3_6_ai_summary_replaces_headline_only_copy`; `cr0003_ai_back.test.tsx` "AC-3.6" (refresh re-sends headline-only stories; device fallback merge) | Pass |
 | AC-4.1 | `us4_feed.test.tsx` "AC-4.1" | Pass |
 | AC-4.2 | `us4_feed.test.tsx` "AC-4.2" | Pass |
 | AC-4.3 | `us4_feed.test.tsx` "AC-4.3" | Pass |
@@ -61,5 +63,6 @@ Checked from the Vercel preview (Singapore) with `/api/feeds/check` on 2026-11-2
 No screen changed; the only interface edit is the "Not synced yet" tooltip text. The 17 interface tests and the production build pass unchanged.
 
 ## Releases
+- v0.2.1 (2026-11-26): CR-0003 "AI is offline" note fix, 63 of 63 tests passing, released through [PR #10](https://github.com/akkiverse/distill/pull/10).
 - v0.2.0 (2026-11-26): CR-0002 topics and saved cards kept in each person's account (Neon), 58 of 58 tests passing, released through [PR #9](https://github.com/akkiverse/distill/pull/9).
 - v0.1.0 (2026-11-25): CR-0001 first version (MVP), 51 of 51 tests passing, released through [PR #7](https://github.com/akkiverse/distill/pull/7).

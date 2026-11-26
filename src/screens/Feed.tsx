@@ -7,7 +7,7 @@ import { AUTO_REFRESH_MS, clock, refreshIsDue, timeAgo } from "../time";
 export const AI_OFFLINE = "AI is offline right now"; // AC-3.4
 
 export function Feed() {
-  const { state, sections, phase, refresh, lastOutcome, ready } = useDistill();
+  const { state, sections, phase, refresh, lastOutcome, aiOnline, ready } = useDistill();
   const { topics, settings } = state;
   const hasTopics = topics.sections.length > 0;
   const tried = useRef(false);
@@ -33,7 +33,8 @@ export function Feed() {
   const busy = phase.kind !== "idle";
   const last = settings.last_refreshed_at;
   const next = last ? Date.parse(last) + AUTO_REFRESH_MS : null;
-  const offline = lastOutcome?.aiStatus === "offline" || (feed.length > 0 && busy === false && feed.every((c) => c.ai_status === "offline"));
+  // AC-3.5: only the live status check or the latest refresh decide this, never the older cards on screen.
+  const offline = aiOnline === false;
 
   return (
     <section aria-labelledby="feed-title">
