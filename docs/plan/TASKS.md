@@ -31,3 +31,13 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 4 | Tests against a throwaway local Postgres, including data saved by v0.1.0; CI requires Postgres | AC-7.1 to AC-7.6 | Yes |
 | 5 | ADR-0004, spec, architecture, CR-0002, changelog, test report; mark `data-server/` as no longer used | all | Yes |
 | 6 | Pull request and preview check | all | Yes |
+
+## CR-0003: "AI is offline" note fix (bug fix, patch)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Branch `cr/0003-ai-offline-note` from `main`; CR-0003 and spec AC-3.5, AC-3.6 (refs #3) | all | Yes |
+| 2 | Offline note follows the live `/api/ai/status` check or the latest refresh | AC-3.5 | Yes |
+| 3 | Re-send headline-only stories on refresh; AI summary wins over headline copy in both merges, first fetch time kept | AC-3.6 | Yes |
+| 4 | Tests (fail on v0.2.0, pass now), lint, build | AC-3.5, AC-3.6 | Yes |
+| 5 | Records, pull request, preview check | all | Yes |

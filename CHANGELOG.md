@@ -5,6 +5,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+- The "AI is offline right now" note no longer stays after the AI is back, and the next refresh replaces headline-only cards with AI summaries. See [CR-0003](docs/changes/CR-0003-ai-offline-note.md).
+
 ## [0.2.0] - 2026-11-26
 
 ### Changed
