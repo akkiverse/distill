@@ -14,8 +14,8 @@ Distill is a purposeful alternative to scrolling social media for news. You pick
 | | |
 |---|---|
 | Stage | Live: v0.4.0, released 26 Nov 2026 ([live app](https://distill-akkiverse.vercel.app)) |
-| Acceptance tests | 132 of 132 passing on v0.4.0 ([report](docs/quality/TEST-REPORT.md)) |
-| Latest change | [CR-0005](docs/changes/CR-0005-price-watchlist.md): price watchlist (released in v0.4.0) |
+| Acceptance tests | 132 of 132 passing on v0.4.0; 194 of 194 on the CR-0006 branch ([report](docs/quality/TEST-REPORT.md)) |
+| Latest change | [CR-0006](docs/changes/CR-0006-watchlist-strip.md): Watchlist page and pinned prices strip (E5, in review for v0.5.0) |
 
 ## Stack
 

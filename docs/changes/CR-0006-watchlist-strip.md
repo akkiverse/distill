@@ -1,6 +1,6 @@
 # CR-0006: Watchlist page and pinned prices strip
 
-- **Status:** In progress
+- **Status:** In review
 - **Requested by:** Founder (board, new feature E5)
 - **Date:** 2026-11-26
 - **Release:** v0.5.0 (once released; feature, minor)
@@ -50,7 +50,10 @@ Underneath:
 The market adapter learns two optional parts of the contract and a clock fallback, and the React app gains a shared price reader (`src/prices.tsx`) used by the strip, the Watchlist and the item detail. See [ADR-0006](../adr/0006-watchlist-v2-and-calendar-fallback.md).
 
 ## Verification
-To be filled in when the tests have run.
+- 194 of 194 tests passing (122 pytest, 72 Vitest). New: 43 pytest in [test_us10_watchlist_strip.py](../../tests/api/test_us10_watchlist_strip.py) and 19 Vitest in [us10_watchlist.test.tsx](../../src/__tests__/us10_watchlist.test.tsx), at least one per AC-10.x. The US-9 interface tests ([us9_prices.test.tsx](../../src/__tests__/us9_prices.test.tsx)) were rewritten for the new screens with the same criteria (the changed ones say so); in the US-9 pytest file one test now checks 20 items instead of 10 and one compatibility test expects the upgraded watchlist. Every other earlier test is unchanged.
+- The market SQL runs against two throwaway Postgres databases shaped like the gateway as released (no `category`, no `market_calendar`) and with its change E1, connected as a role with only the contract's `app` rights.
+- Compatibility: account and device copies saved by v0.4.0 load with their first 6 items pinned and the strip on every screen; a newer change from a v0.4.0 device keeps items 11 to 20, pins and the setting; a v0.5.0 copy with 20 items validates against v0.4.0's watchlist model.
+- Ruff lint and format clean; TypeScript and `npm run build` pass; visual check at 375 px and 1280 px in light and dark, with fixes (see the [test report](../quality/TEST-REPORT.md) and [screenshots](../quality/screenshots/)).
 
 ## Notes
 - The Market Gateway change E1 (PR akkiverse/market-gateway#12) is built but not released. Until it is, Distill works out gold types itself, uses its own market hours (no exchange holidays), and the India gold rate, gold funds and Sovereign Gold Bonds can't be found because the gateway doesn't list them yet.
