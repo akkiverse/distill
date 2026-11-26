@@ -4,7 +4,7 @@
 - **Requested by:** Founder (board notes)
 - **Date:** 2026-11-26
 - **Release:** v0.2.0 (once released)
-- **Pull request:** see the `cr/0002-neon-sync` pull request
+- **Pull request:** https://github.com/akkiverse/distill/pull/9
 - **Issue:** #8 (US-7)
 
 ## Why
