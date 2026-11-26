@@ -4,7 +4,7 @@
 - **Requested by:** Founder (board, bug fix B6)
 - **Date:** 2026-11-26
 - **Release:** not yet (patch, v0.5.1 when released)
-- **Pull request:** see the pull request for branch `cr/0007-gold-search-fixed-rows`
+- **Pull request:** https://github.com/akkiverse/distill/pull/17
 - **Issue:** refs #15 (US-10: Watchlist page and pinned prices strip)
 
 ## Why
