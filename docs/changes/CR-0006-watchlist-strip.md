@@ -4,7 +4,7 @@
 - **Requested by:** Founder (board, new feature E5)
 - **Date:** 2026-11-26
 - **Release:** v0.5.0 (once released; feature, minor)
-- **Pull request:** to follow
+- **Pull request:** https://github.com/akkiverse/distill/pull/16
 - **Issue:** closes #15 (US-10); changes criteria of US-9 (#13)
 
 ## Why
