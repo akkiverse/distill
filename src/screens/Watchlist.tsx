@@ -125,7 +125,7 @@ export function Watchlist({ adding = false }: { adding?: boolean }) {
               <h2 id="pin-order-title" className="side-title">On top of every screen</h2>
               <p className="muted small">{pinned.length} of {MAX_PINNED} pinned. Drag or use the arrows to set the order.</p>
               <ol className="ord">
-                {pinned.map((k, i) => {
+                {pinned.filter((k) => !result || item(k)).map((k, i, shownPins) => {
                   const it = item(k);
                   const name = it ? shortOf(it) : k;
                   return (
@@ -133,7 +133,7 @@ export function Watchlist({ adding = false }: { adding?: boolean }) {
                       <IconGrip className="grip" width={16} height={16} />
                       <span>{name}</span>
                       <button type="button" className="icon-btn" aria-label={`Move ${name} earlier in the strip`} disabled={i === 0} onClick={() => movePin(k, -1)}><IconChevron dir="up" /></button>
-                      <button type="button" className="icon-btn" aria-label={`Move ${name} later in the strip`} disabled={i === pinned.length - 1} onClick={() => movePin(k, 1)}><IconChevron dir="down" /></button>
+                      <button type="button" className="icon-btn" aria-label={`Move ${name} later in the strip`} disabled={i === shownPins.length - 1} onClick={() => movePin(k, 1)}><IconChevron dir="down" /></button>
                     </li>
                   );
                 })}

@@ -22,11 +22,14 @@ export function Strip({ showLink }: { showLink: boolean }) {
   const { state } = useDistill();
   const { result, status, item } = usePrices();
   const pinned = pinnedKeys(state.watchlist);
-  if (pinned.length === 0) return null;
+  if (pinned.length === 0 || status === "not_set_up") return null; // AC-9.10: the Watchlist explains; the strip stays out of the way
   const notice = priceNotices(status, result)[0];
   const free = MAX_PINNED - pinned.length;
   const tiles = pinned.map((k) => ({ k, it: item(k) })).filter(({ it }) => !result || it); // hidden items stay out (AC-9.8)
   if (result && tiles.length === 0) return null;
+  if (!result && status === "offline") {
+    return <p className="strip-note error strip-alone"><IconAlert width={14} height={14} /><span>{notice?.short}</span></p>;
+  }
   const NoticeIcon = notice ? ICONS[notice.icon] : null;
   return (
     <div className="strip-wrap">
