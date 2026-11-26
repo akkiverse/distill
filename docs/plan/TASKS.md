@@ -54,6 +54,17 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 6 | Hold new cards while scrolled down, "N new" pill, "Last updated" | AC-8.7, AC-8.8 | Yes |
 | 7 | Tests, lint, build, visual check, records, pull request, preview check | all | Yes |
 
+## CR-0005: Price watchlist from the shared market database (feature, minor)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue #13 (US-9), milestone v0.4.0; branch `cr/0005-price-watchlist` from `main`; CR-0005, spec, ADR-0005, plan | all | Yes |
+| 2 | `MarketData` adapter (Postgres and fake), search, watch and prices with labels, paused and founder-only rules | AC-9.1, AC-9.3 to AC-9.8, AC-9.10, AC-9.13 | No |
+| 3 | API routes and `UserState.watchlist` with newest-wins merge and v0.3.0 compatibility | AC-9.2, AC-9.11 | No |
+| 4 | Prices component: list, search and add, remove and reorder, folded at the top of the Feed and as a tab | AC-9.2, AC-9.4 to AC-9.7, AC-9.11, AC-9.14 | No |
+| 5 | Refresh timer by market hours, only while on screen; news cards that mention an item | AC-9.9, AC-9.12 | No |
+| 6 | Tests, lint, build, visual check, records, pull request, preview check | all | No |
+
 ## Release v0.2.0
 - [x] Released 2026-11-26: merge commit 52e1563, Vercel deployment dpl_CcLnpx8cRaVZxp9MoX3QXT7ofQaM.
 - [ ] Tag pending: add tag v0.2.0 on 52e1563 by hand if wanted.
