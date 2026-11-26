@@ -1,4 +1,6 @@
-# Distill data server
+# Distill data server (no longer used)
+
+> **No longer used since CR-0002 (26 Nov 2026).** Distill now keeps each person's topics and saved cards in a hosted Postgres database (Neon) connected to the Vercel project as `DATABASE_URL`. See [ADR-0004](../docs/adr/0004-account-database-on-neon.md). This folder is kept for history only; there is nothing to run, and `DATA_ENDPOINT` and `DATA_GATEWAY_KEY` are no longer read.
 
 Keeps each person's topics and saved cards so they sync across devices (AC-6.5). It runs on the founder's own home server with Docker; the Distill app on Vercel reaches it over HTTPS through Tailscale Funnel, and every request must carry the shared key. If the data server is off, Distill keeps working on each device and syncs later (AC-6.6).
 

@@ -54,7 +54,16 @@ As a reader I want unsaved posts to disappear when they're old or replaced so th
 - **AC-6.3** Given an unsaved card and a newer card for the same topic whose story key matches (AI `story_key` equal, or title word overlap 0.6 or more), when the feed refreshes, then the newer card replaces the older one. *(added CR-0001)*
 - **AC-6.4** Given a saved card, when I unsave it, then it follows the normal 24-hour expiry from its fetch time. *(added CR-0001)*
 - **AC-6.5** Given I save a card on one device, when I open Saved on another device signed in to the same account, then the card is there. *(added CR-0001)*
-- **AC-6.6** Given the data server is offline, when I save or unsave a card, then the change is kept on the device, the app shows "Saved on this device, will sync later", and it syncs on the next request that reaches the data server. *(added CR-0001)*
+- **AC-6.6** Given the account database can't be reached, when I save or unsave a card, then the change is kept on the device, the app shows "Saved on this device, will sync later", and it syncs on the next request that reaches the database. *(added CR-0001, changed CR-0002: "data server" is now the account database)*
+
+### US-7: Keep my topics and saved cards in my account *(added CR-0002)*
+As a signed-in reader I want my topics and saved cards kept in my account so that they follow me to any device.
+- **AC-7.1** Given the account database is set up and I'm signed in, when I change my topics or save a card on one device, then it is stored in my account and another device signed in to the same account gets it on its next sync. *(added CR-0002)*
+- **AC-7.2** Given the account database has no Distill table yet, when the first sync arrives, then the table is created automatically and the sync succeeds. *(added CR-0002)*
+- **AC-7.3** Given no account database is set up (previews, tests, local runs), then Distill works with everything kept on the device, and tests use a memory store. *(added CR-0002)*
+- **AC-7.4** Given the account database can't be reached, when I save, change topics or open the app, then the change stays on the device, the app shows "Saved on this device, will sync later", and nothing is lost. *(added CR-0002)*
+- **AC-7.5** Given two devices sync for the same person at the same moment, then both changes are kept (the combine-and-save happens in one database transaction). *(added CR-0002)*
+- **AC-7.6** Given topics and cards saved in the format Distill v0.1.0 used, when they are loaded from the account database, then they read unchanged. *(added CR-0002)*
 
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
@@ -88,11 +97,11 @@ News sources sit behind a `NewsSource` adapter: GDELT DOC API, Google News and a
 | GET | /api/ai/status | Whether Studio AI answers (for the offline banner) |
 | POST | /api/feed/refresh | Takes topics (sections, keywords) and existing story keys; returns candidate articles (or curated cards), `ai_status` and failed sources |
 | POST | /api/feed/curate | Curates one article (used to show progress card by card within the function time limit) |
-| POST | /api/feed/merge | Applies the expiry and replacement rules to a set of cards (works without the data server) |
-| GET, PUT | /api/me/state | Reads and syncs the signed-in person's topics, cards and settings with the data server |
+| POST | /api/feed/merge | Applies the expiry and replacement rules to a set of cards (works without the account database) |
+| GET, PUT | /api/me/state | Reads and syncs the signed-in person's topics, cards and settings with the account database |
 
 ## Data model
-User data (topics, cards, saved state) lives in Postgres on the founder's home server, reached through a `Store` adapter that calls PostgREST over HTTPS (behind a key check, the same pattern as Studio AI; settings `DATA_ENDPOINT` and `DATA_GATEWAY_KEY`). The browser keeps a copy so the feed works when the data server is off. A memory store is used in tests. The Vercel functions stay stateless. Each row carries the user id from Studio Accounts.
+User data (topics, cards, saved state) lives in the account database: hosted Postgres on Neon (Singapore), connected to the Vercel project as `DATABASE_URL` (Production only), reached through a `Store` adapter (`PostgresStore`). One table, `distill_user_state`, one JSON document per person, created automatically when missing. The browser keeps a copy first, so the feed works when the database can't be reached. Previews, tests and local runs have no `DATABASE_URL` and stay device-only (a memory store in tests). The Vercel functions stay stateless. Each row carries the user id from Studio Accounts. *(changed CR-0002; see [ADR-0004](../adr/0004-account-database-on-neon.md))*
 
 | Entity | Fields |
 |---|---|
@@ -111,12 +120,12 @@ User data (topics, cards, saved state) lives in Postgres on the founder's home s
 ## Out of scope
 - Push or email digests, background refresh on a timer.
 - AI-drawn diagrams beyond simple charts and key points.
-- Running the database anywhere other than the founder's home server (a hosted database stays a later option).
+- A second database or storage service; everything stays in the one Neon database. *(changed CR-0002)*
 - Paid news APIs, payments, ads, sharing, comments, multiple languages.
 - Calling Ollama from the browser.
 
 ## Decisions (founder, 25 Nov 2026)
-- **Database:** saved posts and topics sync across devices; Postgres runs on the founder's home server, the app stays on Vercel. The data server is its own Compose project (`distill`) on its own Docker network, publishes only Caddy on 127.0.0.1, never 5432, restarts on boot, sets memory limits, and includes a nightly `pg_dump` backup. See [data-server/README.md](../../data-server/README.md).
+- **Database:** saved posts and topics sync across devices. *(changed CR-0002)* On 26 Nov 2026 the founder chose Neon (hosted Postgres, Singapore) over the home data server, to be able to check usage; it is connected to the Vercel project as `DATABASE_URL` for Production only. Up to 4 people, signed in with Studio Accounts. The home data server kit in `data-server/` is no longer used.
 - **News keys:** the founder adds free keys in Vercel when wanted; GDELT, Google News and RSS are always on.
 - **RSS defaults:** the founder's list, approved 25 Nov 2026, is in [backend/distill/feeds.py](../../backend/distill/feeds.py). Each section fetches only its own feeds, in parallel with an 8-second timeout. Dead feeds found during the build are dropped. Cards are built from the headline and snippet only.
 - **Refresh:** automatic when the Feed opens and the last refresh is older than 3 hours, plus a manual Refresh button.

@@ -20,3 +20,14 @@ For CR-0001. Each task names the stories and criteria it serves.
 ## Release v0.1.0
 - [x] Released 2026-11-25: merge commit be9eb2d, Vercel deployment dpl_4i33zu3gL5MCt1QbKJqqbrmLBNar.
 - [ ] Tag pending: Claude sessions cannot create Git tags or GitHub Releases; add tag v0.1.0 on be9eb2d by hand if wanted.
+
+## CR-0002: account database on Neon
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue #8 (US-7) and milestone v0.2.0; branch `cr/0002-neon-sync` from `main` | all | Yes |
+| 2 | `PostgresStore` with `psycopg`: table created when missing, one-transaction sync with the row locked; remove the PostgREST adapter | AC-7.1, AC-7.2, AC-7.4, AC-7.5 | Yes |
+| 3 | Device-only without `DATABASE_URL`; memory store for tests and local runs | AC-7.3 | Yes |
+| 4 | Tests against a throwaway local Postgres, including data saved by v0.1.0; CI requires Postgres | AC-7.1 to AC-7.6 | Yes |
+| 5 | ADR-0004, spec, architecture, CR-0002, changelog, test report; mark `data-server/` as no longer used | all | Yes |
+| 6 | Pull request and preview check | all | Yes |
