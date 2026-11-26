@@ -1,9 +1,9 @@
 # CR-0005: Price watchlist from the shared market database
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board, new feature E4)
 - **Date:** 2026-11-26
-- **Release:** (set at release; a feature, so the next minor version, v0.4.0)
+- **Release:** v0.4.0 (26 Nov 2026)
 - **Pull request:** https://github.com/akkiverse/distill/pull/14
 - **Issue:** closes #13 (US-9)
 

@@ -95,6 +95,7 @@ The built interface was served locally with the API answered by fixed sample pri
 Markets-closed note (AC-9.15, founder note 26 Nov): served the same way with TCS and gold both closed on a Saturday and the gateway quiet; at 375 px and 1280 px, light and dark, the list shows a quiet grey note with a moon icon, "Markets closed, prices from the last close", above the last prices, and no amber "Prices paused". No sideways scroll. No fixes needed.
 
 ## Releases
+- v0.4.0 (2026-11-26): CR-0005 price watchlist (E4), 132 of 132 tests passing, released through [PR #14](https://github.com/akkiverse/distill/pull/14).
 - v0.3.0 (2026-11-26): CR-0004 publish times and a feed that stays fresh (E3), 81 of 81 tests passing, released through [PR #12](https://github.com/akkiverse/distill/pull/12).
 - v0.2.1 (2026-11-26): CR-0003 "AI is offline" note fix, 63 of 63 tests passing, released through [PR #10](https://github.com/akkiverse/distill/pull/10).
 - v0.2.0 (2026-11-26): CR-0002 topics and saved cards kept in each person's account (Neon), 58 of 58 tests passing, released through [PR #9](https://github.com/akkiverse/distill/pull/9).
