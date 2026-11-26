@@ -63,6 +63,13 @@ class Settings(BaseModel):
     theme: Literal["system", "light", "dark"] = "system"
 
 
+class Watchlist(BaseModel):
+    """The founder's price watchlist (US-9, added CR-0005): market keys in display order."""
+
+    keys: list[str] = Field(default_factory=list, max_length=10)
+    updated_at: str | None = None
+
+
 class UserState(BaseModel):
     """Everything kept for one person: synced through the Store, mirrored in the browser."""
 
@@ -70,6 +77,7 @@ class UserState(BaseModel):
     topics: Topics = Field(default_factory=Topics)
     cards: list[Card] = Field(default_factory=list)
     settings: Settings = Field(default_factory=Settings)
+    watchlist: Watchlist = Field(default_factory=Watchlist)  # absent in copies saved before v0.4.0 (CR-0005)
     updated_at: str | None = None
 
 
