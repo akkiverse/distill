@@ -111,7 +111,7 @@ export function Item({ k }: { k: string }) {
           ))}
         </ul>
       )}
-      <Disclaimer result={result} />
+      <Disclaimer result={result && { ...result, items: [it] }} />
     </article>
   );
 }

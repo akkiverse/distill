@@ -317,18 +317,21 @@ legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
 @media (min-width: 1000px) {
   .wide-only { display: inline; }
   .pin-order { display: block; }
-  .wl-cols, .wl-row { grid-template-columns: minmax(0, 2.2fr) 64px minmax(108px, 1fr) minmax(128px, 1.1fr) minmax(124px, 1.1fr) 44px; column-gap: 12px; }
+  .wl-cols, .wl-row { grid-template-columns: minmax(0, 1fr) 60px 112px 140px 150px 44px; column-gap: 12px; }
   .wl-cols { display: grid; padding: 0 2px 6px 14px; font-size: .78rem; font-weight: 700; color: var(--muted); }
   .wl-price b, .wl-change { white-space: nowrap; }
   .wl-cols .num { text-align: right; }
   .wl-type, .wl-change, .wl-time { display: block; }
   .wl-change { text-align: right; white-space: nowrap; }
-  .wl-time { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; color: var(--muted); }
+  .wl-time { display: flex; flex-direction: column; gap: 0; align-items: flex-start; color: var(--muted); min-width: 0; }
+  .wl-time > * { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wl-time time { color: var(--ink); }
   .wl-pct { display: none; }
   .wl-tools { grid-column: 6; justify-self: end; }
-  .watchlist.editing .wl-row { grid-template-columns: minmax(0, 2.2fr) 64px minmax(108px, 1fr) minmax(128px, 1.1fr) minmax(124px, 1.1fr) auto; }
+  .watchlist.editing .wl-row { grid-template-columns: minmax(0, 1fr) 60px 112px auto; }
   .watchlist.editing .wl-price { display: grid; }
-  .watchlist.editing .wl-tools { grid-column: 6; }
+  .watchlist.editing .wl-change, .watchlist.editing .wl-time, .watchlist.editing .wl-cols { display: none; }
+  .watchlist.editing .wl-tools { grid-column: 4; }
 }
 
 /* the Add sheet (AC-10.5) */
