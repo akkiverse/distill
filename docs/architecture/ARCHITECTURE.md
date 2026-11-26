@@ -20,7 +20,7 @@ flowchart LR
 ```mermaid
 flowchart TB
   subgraph Browser
-    ui[React app: Feed, Topics, Post, Saved] --- copy[(Device copy: localStorage)]
+    ui[React app: Feed, Prices, Topics, Post, Saved] --- copy[(Device copy: localStorage)]
   end
   subgraph Vercel["Vercel project distill (sin1)"]
     mw[middleware.js: Studio sign-in] --> static[Static UI from Vite]
@@ -30,11 +30,14 @@ flowchart TB
     api --> cur[curator.py: Curator adapter]
     api --> rules[rules.py]
     api --> store[store.py: Store adapter]
+    api --> mkt[market.py: MarketData adapter]
   end
   ui -->|fetch /api/*| mw
   cur --> studio_ai[studio_ai.py kit] --> AI[(Studio AI)]
   store --> PG[(Neon Postgres: distill_user_state)]
   src --> NEWS[(News sources)]
+  mkt -->|MARKET_DATABASE_URL, app role| MDB[(Founder's market database: schema market)]
+  GW[Market Gateway on the founder's laptop] -->|writes prices| MDB
 ```
 
 | Component | Responsibility | Code |
@@ -47,6 +50,7 @@ flowchart TB
 | Curator | Studio AI prompt with JSON schema; validates, trims and checks numbers | `backend/distill/curator.py`, `prompts.py` |
 | Rules | 24-hour expiry, same-story replacement, sync merge | `backend/distill/rules.py` |
 | Store | Per-person state in the account database (Postgres on Neon, `psycopg`), one transaction per sync | `backend/distill/store.py` |
+| Market data | Search, watch and prices from the shared market database; labels, the paused rule and Zerodha prices for the founder only (CR-0005) | `backend/distill/market.py`, `src/components/Prices.tsx`, `src/markets.ts` |
 
 ## Data model
 One document per person (`UserState`), kept on the device and, when the account database is set up, in `distill_user_state (user_id text primary key, state jsonb, updated_at timestamptz)`, created automatically when missing:
@@ -56,6 +60,7 @@ One document per person (`UserState`), kept on the device and, when the account 
 | `topics` | sections, keywords, updated_at |
 | `cards[]` | id, topic_section (a section id or `kw:<keyword>`), title, source_name, source_url, published_at, fetched_at, summary (≤ 400), key_points (2 to 4), key_figures [{label, value, unit}], story_key, relevance, saved, saved_changed_at, ai_status, replaced_at (optional; when a newer report replaced an older card, added CR-0004) |
 | `settings` | last_refreshed_at, theme |
+| `watchlist` | keys (up to 10 market keys in display order), updated_at; absent in copies saved before v0.4.0, read as empty (added CR-0005) |
 
 The device also keeps `distill.seen.v1` in browser storage: the links the AI has already judged on that device, with when, for 36 hours (at most 500). It is never synced and only feeds `known_urls`, so stories already judged are not sent to the AI again (CR-0004).
 
@@ -70,6 +75,7 @@ External services sit behind adapters so they can be mocked in tests and demos a
 | The Guardian, NewsData.io, Currents, Marketaux | `NewsSource` (`Guardian`, `NewsData`, `Currents`, `Marketaux`) | Off until a key is set | Founder adds `GUARDIAN_API_KEY`, `NEWSDATA_API_KEY`, `CURRENTS_API_KEY`, `MARKETAUX_API_KEY` in Vercel |
 | Studio AI | `Curator` (`StudioAICurator`) | Live when `AI_ENDPOINTS` and `AI_GATEWAY_KEY` are linked; otherwise headline-only cards | Link the shared AI variables to the project |
 | Account database (Neon) | `Store` (`PostgresStore`; `MemoryStore` in tests) | Live in Production when `DATABASE_URL` is set; previews and local runs stay device-only | Done: the founder connected Neon to the project (Production) |
+| Market prices (Market Gateway via a shared Neon database) | `MarketData` (`PostgresMarket`; `FakeMarket` in tests) | Off until `MARKET_DATABASE_URL` is set: Prices says "Price source not set up yet" | Founder runs the Market Gateway and adds `MARKET_DATABASE_URL` (the contract's `app` role) in Vercel, Production |
 | Studio Accounts | `middleware.js`, `studio_auth.py` | Live | Founder adds Distill's live address in hub admin and turns sign-in on |
 
 ## Key flows

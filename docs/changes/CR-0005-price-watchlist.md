@@ -1,6 +1,6 @@
 # CR-0005: Price watchlist from the shared market database
 
-- **Status:** In progress
+- **Status:** In review
 - **Requested by:** Founder (board, new feature E4)
 - **Date:** 2026-11-26
 - **Release:** (set at release; a feature, so the next minor version, v0.4.0)
@@ -42,7 +42,10 @@ Underneath:
 A second, separate database connection (`MARKET_DATABASE_URL`) behind a new `MarketData` adapter; see [ADR-0005](../adr/0005-market-data-from-shared-database.md).
 
 ## Verification
-(filled in when the tests run)
+- 127 of 127 tests passing (77 pytest, 50 Vitest): 46 new for US-9 across [test_us9_watchlist.py](../../tests/api/test_us9_watchlist.py) and [us9_prices.test.tsx](../../src/__tests__/us9_prices.test.tsx), and every earlier test unchanged.
+- The market SQL runs against a throwaway Postgres shaped like the contract, connected as a role with only the contract's `app` rights (read all four tables, write `watch_symbols`); writing `market.prices` as that role is refused.
+- Compatibility: account and device copies saved by v0.3.0 load with an empty watchlist, and a device on v0.3.0 can't wipe a saved list.
+- Ruff lint and format clean; TypeScript and `npm run build` pass; visual check at 375 px and 1280 px in light and dark (see the [test report](../quality/TEST-REPORT.md)).
 
 ## Notes
 - The Market Gateway (a separate idea on the board) is not built yet, so the live app shows "Price source not set up yet" until the founder runs it and adds `MARKET_DATABASE_URL` to the Vercel project.

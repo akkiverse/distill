@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0004-fresh-feed` (CR-0004) · **Result:** 81 of 81 tests passing (48 pytest, 33 Vitest); all 39 acceptance criteria covered · **Database tests:** against a throwaway local Postgres started by the test run · **Build:** `npm run build` passes (JS 56 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0005-price-watchlist` (CR-0005) · **Result:** 127 of 127 tests passing (77 pytest, 50 Vitest); all 53 acceptance criteria covered · **Database tests:** against a throwaway local Postgres started by the test run · **Build:** `npm run build` passes (JS 56 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -48,6 +48,21 @@ Previous runs: CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of
 | AC-8.6 | `test_us8_fresh_feed.py` (4 tests: replacement label, arriving together, saved card, sync from an older copy); `us8_fresh_feed.test.tsx` "AC-8.6"; compatibility: `test_ac_8_6_cards_saved_by_v0_2_1_still_read` | Pass |
 | AC-8.7 | `us8_fresh_feed.test.tsx` "AC-8.7" (held while scrolled down, the replaced card stays on screen, "1 new" pill scrolls to the top; at the top cards appear at once; scrolling up releases) | Pass |
 | AC-8.8 | `us8_fresh_feed.test.tsx` "AC-8.8" ("Last updated 10:42 AM", next refresh 15 minutes later) | Pass |
+| AC-9.1 | `test_us9_watchlist.py::test_ac_9_1_search_by_symbol_or_name`, `test_ac_9_1_search_is_capped_at_20`, Postgres: `test_ac_9_13_postgres_market_works_as_the_app_role`; `us9_prices.test.tsx` "AC-9.1" | Pass |
+| AC-9.2 | `test_us9_watchlist.py::test_ac_9_2_watchlist_kept_in_account_newer_wins`, `test_ac_9_2_eleventh_item_is_refused`; `us9_prices.test.tsx` "AC-9.2" | Pass |
+| AC-9.3 | `test_us9_watchlist.py::test_ac_9_3_adding_or_opening_upserts_watch_symbols`, `test_ac_9_3_unknown_keys_are_not_watched`, Postgres test (first_wanted_at kept); `us9_prices.test.tsx` "AC-9.3" | Pass |
+| AC-9.4 | `test_us9_watchlist.py::test_ac_9_4_price_change_and_time`; `us9_prices.test.tsx` "AC-9.4" (Rs and $ formats, green and red, "26 Nov, 2:41 PM IST") | Pass |
+| AC-9.5 | `test_us9_watchlist.py::test_ac_9_5_labels` (7 cases), `test_ac_9_5_labels_reach_the_app`; `us9_prices.test.tsx` "AC-9.5" | Pass |
+| AC-9.6 | `test_us9_watchlist.py::test_ac_9_6_paused_after_two_minutes`; `us9_prices.test.tsx` "AC-9.6" | Pass |
+| AC-9.7 | `test_us9_watchlist.py::test_ac_9_7_waiting_and_error`; `us9_prices.test.tsx` "AC-9.7" | Pass |
+| AC-9.8 | `test_us9_watchlist.py::test_ac_9_8_zerodha_prices_for_the_founder_only` (user, signed out, empty role), `test_ac_9_8_founder_sees_zerodha`, `test_ac_9_8_role_comes_from_studio_accounts`; `us9_prices.test.tsx` "AC-9.8" | Pass |
+| AC-9.9 | `us9_prices.test.tsx` "AC-9.9" (3 tests: market hours incl. US daylight saving and weekends; one read for all items, again after 30 s, none in the background; none while folded) | Pass |
+| AC-9.10 | `test_us9_watchlist.py::test_ac_9_10_not_set_up_and_offline`, `test_ac_9_10_unreachable_market_database`; `us9_prices.test.tsx` "AC-9.10" (2 tests) | Pass |
+| AC-9.11 | `test_us9_watchlist.py::test_ac_9_11_order_is_kept`; `us9_prices.test.tsx` "AC-9.11" | Pass |
+| AC-9.12 | `us9_prices.test.tsx` "AC-9.12" (symbol and name matches, whole words only, empty state) | Pass |
+| AC-9.13 | `test_us9_watchlist.py::test_ac_9_13_market_url_is_its_own`, `test_ac_9_13_only_watch_symbols_is_written` (code scan), `test_ac_9_13_postgres_market_works_as_the_app_role` (real SQL as a role with only the contract's `app` rights; writing prices is refused) | Pass |
+| AC-9.14 | `us9_prices.test.tsx` "AC-9.14" | Pass |
+| Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
 
 Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the table check running once per instance, the memory store's sync contract, a database driver that fails to load (answers "will sync later"), health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the hub); the account database is a throwaway local Postgres.
 
@@ -72,6 +87,9 @@ No screen changed; the only interface edit is the "Not synced yet" tooltip text.
 
 ## Visual check (CR-0004)
 Built UI served locally with the API mocked in the browser, sample cards seeded on the device (one replaced report, one with no publish time), screenshots in headless Chromium of the Feed and a post at 375px and 1280px in light and dark. No sideways scroll at either width (page width equals viewport). The publish time and time ago sit on their own line under the source and topic; the "Updated" tag uses the soft teal chip; "Time not given by source" reads clearly. No fixes needed.
+
+## Visual check (CR-0005)
+The built interface was served locally with the API answered by fixed sample prices (TCS, GOLDBEES, EPAM, gold spot) and screenshotted with Chromium at 375 px and 1280 px, light and dark, on the Feed (Prices folded open at the top) and the Prices tab with one item opened to its news. No sideways scroll at either width. Prices align on the right in tabular figures; up is green and down red in both themes; the Live, Delayed and Market closed labels are distinct (teal, amber, grey); move and remove buttons are 44 px. Disabled "move up" on the first item and "move down" on the last are dimmed.
 
 ## Releases
 - v0.3.0 (2026-11-26): CR-0004 publish times and a feed that stays fresh (E3), 81 of 81 tests passing, released through [PR #12](https://github.com/akkiverse/distill/pull/12).
