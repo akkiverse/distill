@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-26
+
 ### Fixed
 - The "AI is offline right now" note no longer stays after the AI is back, and the next refresh replaces headline-only cards with AI summaries. See [CR-0003](docs/changes/CR-0003-ai-offline-note.md).
 
@@ -18,5 +20,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First version (MVP), built from the approved spec. See [CR-0001](docs/changes/CR-0001-mvp.md).
 
+[0.2.1]: https://github.com/akkiverse/distill/pull/10
 [0.2.0]: https://github.com/akkiverse/distill/pull/9
 [0.1.0]: https://github.com/akkiverse/distill/pull/7

@@ -1,9 +1,9 @@
 # CR-0003: "AI is offline" note stays after the AI is back
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board notes, bug fix)
 - **Date:** 2026-11-26
-- **Release:** pending (patch: v0.2.1)
+- **Release:** v0.2.1 (26 Nov 2026)
 - **Pull request:** https://github.com/akkiverse/distill/pull/10
 - **Issue:** refs #3 (US-3: AI curation)
 
