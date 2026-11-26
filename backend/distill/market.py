@@ -4,6 +4,9 @@ Prices are written by the founder's Market Gateway into a separate, shared Neon 
 market data contract in the hub (docs/contracts/market-data.md). Distill connects to it as `MARKET_DATABASE_URL` (the
 contract's `app` role): it reads `instruments`, `prices` and `gateway_status`, and writes only `watch_symbols` (AC-9.13).
 It never uses `DATABASE_URL` for these tables and never calls a price provider itself. See ADR-0005.
+
+From CR-0006 it also reads `market_calendar` and `instruments.category` when the gateway has them (Market Gateway E1),
+and otherwise works them out itself (`names.py`, `hours.py`). See ADR-0006.
 """
 
 from __future__ import annotations
@@ -18,9 +21,14 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel
 
+from . import hours, names
+from .hours import CalendarRow, MarketOut
+
 log = logging.getLogger("distill.market")
 
-MAX_WATCH = 10  # AC-9.2
+MAX_WATCH = 20  # AC-9.2 (changed CR-0006: was 10)
+SEARCH_FETCH = 100  # rows read before the gold kinds are kept apart (AC-10.5)
+FEATURES_TTL = timedelta(minutes=10)  # how long a check for the gateway's optional parts is trusted (AC-10.9)
 SEARCH_LIMIT = 20  # AC-9.1
 PAUSED_AFTER = timedelta(minutes=2)  # AC-9.6
 ADMIN_ROLE = "admin"
@@ -28,7 +36,7 @@ KITE = "kite"  # prices from the founder's Zerodha account: shown to the founder
 KEY_RE = re.compile(r"^[A-Z0-9_]{2,12}:[A-Za-z0-9_.&\-]{1,40}$")
 
 # The only tables Distill touches (AC-9.13).
-TABLES = ("market.instruments", "market.prices", "market.gateway_status", "market.watch_symbols")
+TABLES = ("market.instruments", "market.prices", "market.gateway_status", "market.watch_symbols", "market.market_calendar")
 WRITES = ("market.watch_symbols",)
 
 
@@ -46,6 +54,7 @@ class Instrument:
     type: str
     currency: str
     source: str
+    category: str | None = None  # the gateway's category (contract CR-0002); None on older rows and gateways
 
 
 @dataclass(frozen=True)
@@ -64,16 +73,30 @@ class PriceRow:
     error: str | None
 
 
+@dataclass
+class Snapshot:
+    """One read for the watchlist: price rows, the gateway's last heartbeat and its calendar (None: no calendar table)."""
+
+    rows: dict[str, PriceRow]
+    heartbeat_at: datetime | None
+    calendar: list[CalendarRow] | None
+
+
 class MarketData(Protocol):
-    async def search(self, q: str, *, include_kite: bool, limit: int = SEARCH_LIMIT) -> list[Instrument]: ...
+    async def search(self, q: str, *, include_kite: bool, limit: int = SEARCH_LIMIT, gold: bool = False) -> list[Instrument]: ...
     async def instruments(self, keys: Sequence[str]) -> dict[str, Instrument]: ...
     async def watch(self, keys: Sequence[str], at: datetime) -> None: ...
     async def prices(self, keys: Sequence[str]) -> tuple[dict[str, PriceRow], datetime | None]:
         """The latest price rows for `keys` and the gateway's last heartbeat (None if it never checked in)."""
         ...
 
+    async def snapshot(self, keys: Sequence[str]) -> Snapshot: ...
+
 
 # ---------- API shapes ----------
+Group = Literal["gold", "india", "us"]
+
+
 class InstrumentOut(BaseModel):
     key: str
     symbol: str
@@ -82,6 +105,11 @@ class InstrumentOut(BaseModel):
     type: str
     currency: str
     source: str
+    category: str = names.STOCK  # AC-10.6 (added CR-0006)
+    group: Group = "india"  # AC-10.2
+    display_name: str = ""  # AC-10.10
+    short_name: str = ""  # AC-10.1
+    market: str = ""  # NSE, US, MCX, GOLD or AMFI: whose hours it follows
 
 
 class PriceItem(BaseModel):
@@ -92,6 +120,11 @@ class PriceItem(BaseModel):
     type: str
     currency: str
     source: str
+    category: str = names.STOCK
+    group: Group = "india"
+    display_name: str = ""
+    short_name: str = ""
+    market: str = ""
     status: Literal["ok", "waiting", "error"]
     price: float | None = None
     prev_close: float | None = None
@@ -113,6 +146,7 @@ class PricesResponse(BaseModel):
     items: list[PriceItem]
     hidden: list[str]  # keys this person may not see, or that are unknown
     gateway: GatewayOut
+    markets: dict[str, MarketOut] = {}  # AC-10.9 (added CR-0006): the watched markets, from the calendar or the clock
     read_at: str
 
 
@@ -187,10 +221,28 @@ def _num(v) -> float | None:
     return None if v is None else float(v)
 
 
+def describe(inst: Instrument) -> dict:
+    """AC-10.1, AC-10.2, AC-10.6, AC-10.10: kind, group, tidy and short names, and whose hours the item follows."""
+    cat = names.category_of(inst.key, inst.symbol, inst.name, inst.type, inst.category)
+    return {
+        "category": cat,
+        "group": names.group_of(cat, inst.key),
+        "display_name": names.display_name(inst.key, inst.name),
+        "short_name": names.short_name(inst.key, inst.symbol, inst.name, cat),
+        "market": names.market_of(inst.key, cat),
+    }
+
+
+def instrument_out(inst: Instrument) -> InstrumentOut:
+    fields = {k: v for k, v in inst.__dict__.items() if k != "category"}
+    return InstrumentOut(**fields, **describe(inst))
+
+
 def build_item(inst: Instrument, row: PriceRow | None) -> PriceItem:
     base = PriceItem(
         key=inst.key, symbol=inst.symbol, name=inst.name, exchange=inst.exchange, type=inst.type,
         currency=(row.currency if row and row.currency else inst.currency), source=inst.source, status="waiting",
+        **describe(inst),
     )  # fmt: skip
     if row is None or row.price is None:
         if row is not None and row.error:
@@ -211,12 +263,39 @@ def build_item(inst: Instrument, row: PriceRow | None) -> PriceItem:
     )
 
 
-async def search(data: MarketData, q: str, role: str | None) -> list[InstrumentOut]:
+def gold_query(q: str) -> bool:
+    """A search for gold (AC-10.5): also lists Sovereign Gold Bonds, whose names often don't say gold."""
+    ql = q.lower()
+    return "gold" in ql or ql.startswith(("sgb", "xau")) or ql == "sovereign"
+
+
+def spread(found: list[InstrumentOut], limit: int = SEARCH_LIMIT) -> list[InstrumentOut]:
+    """AC-9.1, AC-10.5: at most `limit`; when there are more, take turns between the kinds so every gold type shows."""
+    if len(found) <= limit:
+        return found
+    buckets: dict[str, list[InstrumentOut]] = {}
+    for i in found:
+        buckets.setdefault(i.category, []).append(i)
+    out: list[InstrumentOut] = []
+    while len(out) < limit and any(buckets.values()):
+        for b in buckets.values():
+            if b and len(out) < limit:
+                out.append(b.pop(0))
+    keep = {i.key for i in out}
+    return [i for i in found if i.key in keep]  # in the database's order (exact symbol first)
+
+
+async def search(data: MarketData, q: str, role: str | None, group: str | None = None) -> list[InstrumentOut]:
     q = (q or "").strip()[:40]
+    if not q and group == "gold":
+        q = "gold"  # AC-10.5: choosing Gold with nothing typed lists the gold types
     if not q:
         return []
-    found = await data.search(q, include_kite=is_founder(role))
-    return [InstrumentOut(**inst.__dict__) for inst in found if visible(inst, role)][:SEARCH_LIMIT]
+    found = await data.search(q, include_kite=is_founder(role), limit=SEARCH_FETCH, gold=gold_query(q))
+    out = [instrument_out(inst) for inst in found if visible(inst, role)]
+    if group in ("gold", "india", "us"):
+        out = [i for i in out if i.group == group]
+    return spread(out)
 
 
 async def watch(data: MarketData, keys: Sequence[str], role: str | None, now: datetime) -> WatchResponse:
@@ -234,12 +313,14 @@ async def prices(data: MarketData, keys: Sequence[str], role: str | None, now: d
     wanted = clean_keys(keys)
     known = await data.instruments(wanted) if wanted else {}
     shown = [k for k in wanted if k in known and visible(known[k], role)]
-    rows, heartbeat = await data.prices(shown)
-    items = [build_item(known[k], rows.get(k)) for k in shown]  # never a Zerodha price for anyone but the founder
+    snap = await data.snapshot(shown)
+    items = [build_item(known[k], snap.rows.get(k)) for k in shown]  # never a Zerodha price for anyone but the founder
+    heartbeat = snap.heartbeat_at
     return PricesResponse(
         items=items,
         hidden=[k for k in keys if k not in shown],
         gateway=GatewayOut(heartbeat_at=iso(heartbeat), paused=paused(heartbeat, now), markets_closed=all_closed(items)),
+        markets=hours.markets_for({i.market for i in items}, snap.calendar, now),
         read_at=iso(now) or "",
     )
 
@@ -253,19 +334,24 @@ class FakeMarket:
     prices_: dict[str, PriceRow] = field(default_factory=dict)
     watch_symbols: dict[str, tuple[datetime, datetime]] = field(default_factory=dict)
     heartbeat_at: datetime | None = None
+    calendar_: list[CalendarRow] | None = None  # None: a gateway without the calendar table (v0.1.0)
     offline: bool = False
 
     def _check(self) -> None:
         if self.offline:
             raise MarketUnavailable("offline")
 
-    async def search(self, q: str, *, include_kite: bool, limit: int = SEARCH_LIMIT) -> list[Instrument]:
+    async def search(self, q: str, *, include_kite: bool, limit: int = SEARCH_LIMIT, gold: bool = False) -> list[Instrument]:
         self._check()
         ql = q.lower()
-        hits = [
-            i for i in self.instruments_.values()
-            if (include_kite or i.source != KITE) and (i.symbol.lower().startswith(ql) or ql in i.name.lower())
-        ]  # fmt: skip
+
+        def hit(i: Instrument) -> bool:
+            if i.symbol.lower().startswith(ql) or ql in i.name.lower():
+                return True
+            s = i.symbol.upper()
+            return gold and (s.startswith("SGB") or s.endswith("-GB") or (i.category or "").startswith("gold"))
+
+        hits = [i for i in self.instruments_.values() if (include_kite or i.source != KITE) and hit(i)]
         hits.sort(key=lambda i: (i.symbol.lower() != ql, not i.symbol.lower().startswith(ql), i.symbol))
         return hits[:limit]
 
@@ -283,19 +369,34 @@ class FakeMarket:
         self._check()
         return {k: self.prices_[k] for k in keys if k in self.prices_}, self.heartbeat_at
 
+    async def snapshot(self, keys: Sequence[str]) -> Snapshot:
+        rows, heartbeat = await self.prices(keys)
+        return Snapshot(rows, heartbeat, list(self.calendar_) if self.calendar_ is not None else None)
 
+
+COLS = "key, symbol, exchange, name, type, currency, source"
+# With the gateway's E1 the category column is read too (AC-10.6); `{cat}` is "" or ", category".
 SEARCH_SQL = """
-select key, symbol, exchange, name, type, currency, source from market.instruments
-where (symbol ilike %(prefix)s or name ilike %(contains)s) and (%(include_kite)s or source <> 'kite')
+select key, symbol, exchange, name, type, currency, source{cat} from market.instruments
+where (symbol ilike %(prefix)s or name ilike %(contains)s or (%(gold)s and (symbol ilike 'SGB%%' or symbol ilike '%%-GB'{gold_cat})))
+  and (%(include_kite)s or source <> 'kite')
 order by (upper(symbol) = upper(%(q)s)) desc, (symbol ilike %(prefix)s) desc, symbol
 limit %(limit)s
 """
-INSTRUMENTS_SQL = "select key, symbol, exchange, name, type, currency, source from market.instruments where key = any(%s)"
+INSTRUMENTS_SQL = "select key, symbol, exchange, name, type, currency, source{cat} from market.instruments where key = any(%s)"
 PRICES_SQL = (
     "select key, price, currency, prev_close, change, change_pct, as_of, fetched_at, market_state, delay, source, error "
     "from market.prices where key = any(%s)"
 )
 STATUS_SQL = "select heartbeat_at from market.gateway_status where id = 1"
+CALENDAR_SQL = (
+    "select market, state, session_opens, session_closes, next_open_at, next_close_at, note, updated_at from market.market_calendar"
+)
+# Which optional parts of the contract this gateway has (AC-10.9): the category column and the calendar table.
+FEATURES_SQL = """
+select table_name, column_name from information_schema.columns
+where table_schema = 'market' and ((table_name = 'instruments' and column_name = 'category') or table_name = 'market_calendar')
+"""
 # The only write (AC-9.3, AC-9.13): first_wanted_at is kept, last_wanted_at moves forward.
 WATCH_SQL = """
 insert into market.watch_symbols (key, first_wanted_at, last_wanted_at)
@@ -308,14 +409,23 @@ def _like(q: str) -> str:
     return q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+@dataclass
+class Features:
+    category: bool = False
+    calendar: bool = False
+    checked_at: datetime | None = None
+
+
 class PostgresMarket:
     """The shared market database. A short connection per request: Vercel functions keep nothing between calls."""
 
     def __init__(self, url: str, connect_timeout: int = 6) -> None:
         self.url = url
         self.connect_timeout = connect_timeout
+        self.features = Features()
 
-    async def _run(self, sql: str, params, *, fetch: bool = True, write: bool = False):
+    async def _with(self, work):
+        """Run `work(conn)` on one short connection; any database error is "unavailable"."""
         try:
             import psycopg
         except ImportError as exc:
@@ -323,30 +433,67 @@ class PostgresMarket:
         try:
             conn = await psycopg.AsyncConnection.connect(self.url, connect_timeout=self.connect_timeout, prepare_threshold=None)
             async with conn:
-                cur = await conn.execute(sql, params)
-                rows = await cur.fetchall() if fetch else []
-                if write:
-                    await conn.commit()
-                return rows
+                return await work(conn)
         except psycopg.Error as exc:
             log.info("market database didn't answer: %s", type(exc).__name__)
             raise MarketUnavailable(type(exc).__name__) from exc
 
-    async def search(self, q: str, *, include_kite: bool, limit: int = SEARCH_LIMIT) -> list[Instrument]:
+    async def _features(self, conn) -> Features:
+        """AC-10.9: ask once every 10 minutes whether the gateway has `instruments.category` and `market_calendar`."""
+        now = datetime.now(UTC)
+        f = self.features
+        if f.checked_at is None or now - f.checked_at > FEATURES_TTL:
+            rows = await (await conn.execute(FEATURES_SQL)).fetchall()
+            self.features = f = Features(
+                category=any(t == "instruments" for t, _ in rows), calendar=any(t == "market_calendar" for t, _ in rows), checked_at=now
+            )
+        return f
+
+    @staticmethod
+    def _inst(r) -> Instrument:
+        return Instrument(*r[:7], category=(r[7] if len(r) > 7 else None))
+
+    async def search(self, q: str, *, include_kite: bool, limit: int = SEARCH_LIMIT, gold: bool = False) -> list[Instrument]:
         like = _like(q)
-        params = {"q": q, "prefix": like + "%", "contains": "%" + like + "%", "include_kite": include_kite, "limit": limit}
-        return [Instrument(*r) for r in await self._run(SEARCH_SQL, params)]
+        params = {"q": q, "prefix": like + "%", "contains": "%" + like + "%", "include_kite": include_kite, "limit": limit, "gold": gold}
+
+        async def work(conn):
+            f = await self._features(conn)
+            sql = SEARCH_SQL.format(cat=", category" if f.category else "", gold_cat=" or category like 'gold%%'" if f.category else "")
+            return [self._inst(r) for r in await (await conn.execute(sql, params)).fetchall()]
+
+        return await self._with(work)
 
     async def instruments(self, keys: Sequence[str]) -> dict[str, Instrument]:
-        return {r[0]: Instrument(*r) for r in await self._run(INSTRUMENTS_SQL, (list(keys),))}
+        async def work(conn):
+            f = await self._features(conn)
+            sql = INSTRUMENTS_SQL.format(cat=", category" if f.category else "")
+            return {r[0]: self._inst(r) for r in await (await conn.execute(sql, (list(keys),))).fetchall()}
+
+        return await self._with(work)
 
     async def watch(self, keys: Sequence[str], at: datetime) -> None:
-        await self._run(WATCH_SQL, {"keys": list(keys), "at": at}, fetch=False, write=True)
+        async def work(conn):
+            await conn.execute(WATCH_SQL, {"keys": list(keys), "at": at})
+            await conn.commit()
+
+        await self._with(work)
+
+    async def snapshot(self, keys: Sequence[str]) -> Snapshot:
+        """Prices, heartbeat and (when the table exists) the calendar, over one connection."""
+
+        async def work(conn):
+            f = await self._features(conn)
+            rows = await (await conn.execute(PRICES_SQL, (list(keys),))).fetchall() if keys else []
+            status = await (await conn.execute(STATUS_SQL)).fetchall()
+            cal = [CalendarRow(*r) for r in await (await conn.execute(CALENDAR_SQL)).fetchall()] if f.calendar else None
+            return Snapshot({r[0]: PriceRow(*r) for r in rows}, status[0][0] if status else None, cal)
+
+        return await self._with(work)
 
     async def prices(self, keys: Sequence[str]) -> tuple[dict[str, PriceRow], datetime | None]:
-        rows = await self._run(PRICES_SQL, (list(keys),)) if keys else []
-        status = await self._run(STATUS_SQL, None)
-        return {r[0]: PriceRow(*r) for r in rows}, (status[0][0] if status else None)
+        snap = await self.snapshot(keys)
+        return snap.rows, snap.heartbeat_at
 
 
 _live: PostgresMarket | None = None

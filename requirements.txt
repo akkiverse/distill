@@ -65,5 +65,7 @@ typing-inspection==0.4.5
     # via
     #   fastapi
     #   pydantic
-tzdata==2026.6 ; sys_platform == 'win32'
-    # via psycopg
+tzdata==2026.6
+    # via
+    #   distill
+    #   psycopg

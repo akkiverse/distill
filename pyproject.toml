@@ -11,6 +11,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "pydantic>=2.9",
     "pyjwt[crypto]>=2.9",
+    "tzdata>=2024.1",
 ]
 
 [dependency-groups]
