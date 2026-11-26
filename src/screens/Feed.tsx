@@ -57,17 +57,16 @@ export function Feed() {
     };
   }, [ready, hasTopics, autoRefresh]);
 
-  // AC-8.7: cards on screen while new ones wait above. Held only after a refresh, while the reader is scrolled down.
+  // AC-8.7: while the reader is scrolled down, cards that weren't on screen yet (from a refresh or a sync) wait above.
   const live = feedOrder(state.cards);
   const shown = useRef<Card[]>(live);
+  const liveRef = useRef(live);
+  liveRef.current = live;
   const held = useRef<Card[] | null>(null);
-  const seenRefresh = useRef(lastOutcome?.at ?? 0);
   const [, rerender] = useReducer((n: number) => n + 1, 0);
-  const refreshAt = lastOutcome?.at ?? 0;
-  if (refreshAt !== seenRefresh.current) {
-    seenRefresh.current = refreshAt;
+  if (held.current === null && window.scrollY > READING_PX) {
     const before = new Set(shown.current.map((c) => c.id));
-    if (held.current === null && window.scrollY > READING_PX && live.some((c) => !before.has(c.id))) held.current = shown.current;
+    if (live.some((c) => !before.has(c.id))) held.current = shown.current;
   }
   const byId = new Map(state.cards.map((c) => [c.id, c]));
   const feed = held.current ? held.current.map((c) => byId.get(c.id) ?? c) : live;
@@ -78,6 +77,7 @@ export function Feed() {
   const release = useCallback(() => {
     if (!held.current) return;
     held.current = null;
+    shown.current = liveRef.current; // everything waiting counts as on screen now
     rerender();
   }, []);
   const showNew = () => {

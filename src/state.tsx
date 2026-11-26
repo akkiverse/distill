@@ -20,8 +20,6 @@ export interface RefreshOutcome {
   failedSources: string[];
   error: string | null;
   added: number;
-  /** Set when the refresh finished; the Feed uses it to hold new cards while the reader is scrolled down (AC-8.7). */
-  at: number;
 }
 
 interface Ctx {
@@ -183,7 +181,7 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     if (topics.sections.length === 0) return;
     running.current = true;
     setPhase({ kind: "fetching" });
-    const outcome: RefreshOutcome = { aiStatus: null, failedSources: [], error: null, added: 0, at: 0 };
+    const outcome: RefreshOutcome = { aiStatus: null, failedSources: [], error: null, added: 0 };
     try {
       // AC-3.6: headline-only cards are not "known", so this refresh can bring their AI summaries.
       // AC-8.5: stories the AI already judged on this device (kept, dropped or replaced since) are known too.
@@ -222,7 +220,6 @@ export function DistillProvider({ children }: { children: ReactNode }) {
       outcome.error = (e as Error).message || "The refresh didn't finish. Try again in a moment.";
     } finally {
       running.current = false;
-      outcome.at = Date.now();
       setPhase({ kind: "idle" });
       setLastOutcome(outcome);
     }

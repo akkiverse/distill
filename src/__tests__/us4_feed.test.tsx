@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import { H, card, deviceOnly, fakeServer, iso, renderApp, seed } from "./helpers";
 
 const topics = { sections: ["finance"], keywords: [], updated_at: iso(H) };
-const fresh = { last_refreshed_at: iso(H), theme: "system" as const };
+const fresh = { last_refreshed_at: iso(5 * 60_000), theme: "system" as const }; // refreshed 5 minutes ago: no refresh on open
 
 describe("US-4: Card feed that ends", () => {
   it("AC-4.1: cards are newest first with source, time ago, \"AI summary\", summary and key points", async () => {
     fakeServer(deviceOnly);
-    seed({ topics, settings: fresh, cards: [card("older", { fetched_at: iso(5 * H), title: "Older story" }), card("newer", { fetched_at: iso(0.5 * H), title: "Newer story", source_name: "The Hindu" })] });
+    seed({ topics, settings: fresh, cards: [card("older", { fetched_at: iso(5 * H), published_at: iso(6 * H), title: "Older story" }), card("newer", { fetched_at: iso(0.5 * H), published_at: iso(H), title: "Newer story", source_name: "The Hindu" })] });
     renderApp();
     const cards = await screen.findAllByTestId("card");
     expect(cards[0]).toHaveTextContent("Newer story");
@@ -54,17 +54,17 @@ describe("US-4: Card feed that ends", () => {
     expect(screen.getByRole("link", { name: "Choose topics" })).toHaveAttribute("href", "#/topics");
   });
 
-  it("AC-4.5: a refresh starts by itself when the last one was more than 3 hours ago", async () => {
+  it("AC-4.5: a refresh starts by itself when the last one was 15 minutes ago or more", async () => {
     const server = fakeServer({ ...deviceOnly, "POST /api/feed/refresh": () => ({ json: { articles: [], failed_sources: [], fetched_at: "now" } }) });
-    seed({ topics, settings: { last_refreshed_at: iso(3.2 * H), theme: "system" } });
+    seed({ topics, settings: { last_refreshed_at: iso(16 * 60_000), theme: "system" } });
     renderApp();
     await waitFor(() => expect(server.calls.some((c) => c.path === "/api/feed/refresh")).toBe(true));
     expect(screen.getByRole("button", { name: /Refresh/ })).toBeInTheDocument();
   });
 
-  it("AC-4.5: no automatic refresh when the last one was 3 hours ago or less; Refresh is still there", async () => {
+  it("AC-4.5: no automatic refresh when the last one was less than 15 minutes ago; Refresh is still there", async () => {
     const server = fakeServer({ ...deviceOnly, "POST /api/feed/refresh": () => ({ json: { articles: [], failed_sources: [], fetched_at: "now" } }) });
-    seed({ topics, settings: { last_refreshed_at: iso(2.9 * H), theme: "system" }, cards: [card("a")] });
+    seed({ topics, settings: { last_refreshed_at: iso(14 * 60_000), theme: "system" }, cards: [card("a")] });
     renderApp();
     await screen.findByTestId("up-to-date");
     await new Promise((r) => setTimeout(r, 50));
