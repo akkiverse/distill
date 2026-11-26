@@ -63,11 +63,30 @@ class Settings(BaseModel):
     theme: Literal["system", "light", "dark"] = "system"
 
 
+StripSetting = Literal["every", "feed", "off"]
+
+WATCHLIST_VERSION = 2  # CR-0006
+MAX_ITEMS = 20  # AC-9.2 (changed CR-0006)
+MAX_PINNED = 6  # AC-10.3
+
+
 class Watchlist(BaseModel):
-    """The founder's price watchlist (US-9, added CR-0005): market keys in display order."""
+    """The price watchlist (US-9, added CR-0005; version 2 in CR-0006): market keys in display order.
+
+    `keys` holds the first 10 items, as v0.4.0 saved them (and can still read them); `more` holds items 11 to 20.
+    `pinned` (in strip order), `strip` and `version` are absent in copies saved by v0.4.0, which `upgrade_watchlist`
+    (rules.py) upgrades on load (AC-10.12).
+    """
 
     keys: list[str] = Field(default_factory=list, max_length=10)
+    more: list[str] | None = Field(default=None, max_length=10)
+    pinned: list[str] | None = Field(default=None, max_length=MAX_PINNED)
+    strip: StripSetting | None = None
+    version: int | None = None
     updated_at: str | None = None
+
+    def all_keys(self) -> list[str]:
+        return list(dict.fromkeys([*self.keys, *(self.more or [])]))[:MAX_ITEMS]
 
 
 class UserState(BaseModel):

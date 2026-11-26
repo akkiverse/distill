@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
 
-from .models import Card, Topics, UserState, Watchlist
+from .models import MAX_PINNED, WATCHLIST_VERSION, Card, Topics, UserState, Watchlist
 from .textutil import word_overlap
 
 EXPIRY = timedelta(hours=24)  # AC-6.1
@@ -88,11 +88,29 @@ def newer_topics(a: Topics, b: Topics) -> Topics:
     return b if parse_time(b.updated_at) >= parse_time(a.updated_at) else a
 
 
+def upgrade_watchlist(w: Watchlist) -> Watchlist:
+    """The watchlist migration, version 1 (v0.4.0: keys only) to 2 (CR-0006, AC-10.12): the first 6 items are pinned, so the
+    Feed keeps showing them on top, and the strip is on every screen. Also tidies any copy: no repeats, at most 20 items,
+    pins only of items in the list."""
+    every = w.all_keys()
+    pinned = [k for k in dict.fromkeys(every[:MAX_PINNED] if w.pinned is None else w.pinned) if k in every][:MAX_PINNED]
+    return Watchlist(
+        keys=every[:10], more=every[10:], pinned=pinned, strip=w.strip or "every", version=WATCHLIST_VERSION, updated_at=w.updated_at
+    )
+
+
 def newer_watchlist(a: Watchlist, b: Watchlist) -> Watchlist:
-    """Like topics: the newer change wins. A device on v0.3.0 sends none (no updated_at), which never wins (CR-0005)."""
-    if not b.updated_at:
-        return a
-    return b if parse_time(b.updated_at) >= parse_time(a.updated_at) else a
+    """Like topics: the newer change wins. A device on v0.3.0 sends none (no updated_at), which never wins (CR-0005).
+
+    A newer change from a device still on v0.4.0 has only `keys` (the 10 items it shows): its keys win, and the stored items
+    11 to 20, pins and strip setting are kept (AC-10.12)."""
+    if not b.updated_at or parse_time(b.updated_at) < parse_time(a.updated_at):
+        return upgrade_watchlist(a)
+    if b.version is None and b.more is None and b.pinned is None and b.strip is None:  # sent by v0.4.0
+        old = upgrade_watchlist(a)
+        rest = [k for k in old.all_keys()[10:] if k not in b.keys]
+        b = Watchlist(keys=b.keys[:10], more=rest, pinned=old.pinned, strip=old.strip, version=WATCHLIST_VERSION, updated_at=b.updated_at)
+    return upgrade_watchlist(b)
 
 
 def merge_states(stored: UserState, incoming: UserState, now: datetime | None = None) -> UserState:

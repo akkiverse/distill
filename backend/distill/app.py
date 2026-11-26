@@ -26,7 +26,7 @@ from .models import (
     StateResponse,
     UserState,
 )
-from .rules import iso, merge_cards, merge_states
+from .rules import iso, merge_cards, merge_states, upgrade_watchlist
 from .selection import select_for_ai
 
 VERSION = "0.1.0"
@@ -171,7 +171,8 @@ async def read_state(user_id: Annotated[str | None, Depends(get_user_id)], data:
     except store.StoreUnavailable as exc:
         raise HTTPException(503, detail={"code": "data_offline", "message": "Saved on this device, will sync later."}) from exc
     t = now()
-    saved = saved.model_copy(update={"cards": merge_cards(saved.cards, [], t)})
+    # AC-10.12: a watchlist saved by v0.4.0 is upgraded as it is read
+    saved = saved.model_copy(update={"cards": merge_cards(saved.cards, [], t), "watchlist": upgrade_watchlist(saved.watchlist)})
     return StateResponse(state=saved, synced_at=iso(t))
 
 
@@ -207,10 +208,11 @@ RoleDep = Annotated[str | None, Depends(get_user_role)]
 
 
 @app.get("/api/market/search", response_model=list[market.InstrumentOut])
-async def market_search(data: MarketDep, role: RoleDep, q: str = ""):
-    """AC-9.1, AC-9.8: instruments matching a symbol or name; Zerodha items only for the founder."""
+async def market_search(data: MarketDep, role: RoleDep, q: str = "", group: str = ""):
+    """AC-9.1, AC-9.8, AC-10.5: instruments matching a symbol or name (optionally one group: gold, india, us), each with its
+    kind and tidy name; Zerodha items only for the founder."""
     try:
-        return await market.search(_market(data), q, role)
+        return await market.search(_market(data), q, role, group or None)
     except market.MarketUnavailable as exc:
         raise _market_offline(exc) from exc
 

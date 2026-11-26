@@ -53,9 +53,19 @@ export interface Settings {
   theme: "system" | "light" | "dark";
 }
 
-/** The price watchlist (US-9, added CR-0005): market keys such as "NSE:TCS", in display order. */
+export type StripSetting = "every" | "feed" | "off";
+
+/**
+ * The price watchlist (US-9, added CR-0005; version 2 in CR-0006): market keys such as "NSE:TCS", in display order.
+ * `keys` holds the first 10 (as v0.4.0 saved them), `more` items 11 to 20. `pinned` (strip order), `strip` and `version`
+ * are absent in copies saved by v0.4.0; upgradeWatchlist (watch.ts) fills them in.
+ */
 export interface Watchlist {
   keys: string[];
+  more?: string[] | null;
+  pinned?: string[] | null;
+  strip?: StripSetting | null;
+  version?: number | null;
   updated_at: string | null;
 }
 
@@ -69,6 +79,9 @@ export interface UserState {
   updated_at: string | null;
 }
 
+export type Category = "stock" | "etf" | "gold_spot" | "gold_india" | "gold_etf" | "gold_bond" | "gold_mf";
+export type Group = "gold" | "india" | "us";
+
 export interface Instrument {
   key: string;
   symbol: string;
@@ -77,6 +90,23 @@ export interface Instrument {
   type: string;
   currency: string;
   source: string;
+  /** CR-0006: the kind (from the gateway, or worked out by the server), group, tidy name, strip name and market. */
+  category?: Category;
+  group?: Group;
+  display_name?: string;
+  short_name?: string;
+  market?: string;
+}
+
+/** CR-0006: a market's state from the gateway's calendar, or Distill's own clock. */
+export interface MarketInfo {
+  market: string;
+  state: "open" | "closing" | "closed";
+  next_open_at: string | null;
+  next_close_at: string | null;
+  note: string | null;
+  holiday: boolean;
+  source: "gateway" | "clock";
 }
 
 export interface PriceItem extends Instrument {
@@ -95,6 +125,7 @@ export interface PricesResult {
   items: PriceItem[];
   hidden: string[];
   gateway: { heartbeat_at: string | null; paused: boolean; markets_closed?: boolean };
+  markets?: Record<string, MarketInfo>;
   read_at: string;
 }
 

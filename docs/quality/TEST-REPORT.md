@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0005-price-watchlist` (CR-0005) · **Result:** 132 of 132 tests passing (79 pytest, 53 Vitest); all 54 acceptance criteria covered · **Database tests:** against a throwaway local Postgres started by the test run · **Build:** `npm run build` passes (JS 56 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0006-watchlist-strip` (CR-0006) · **Result:** 194 of 194 tests passing (122 pytest, 72 Vitest); all 66 acceptance criteria covered · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 65 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -49,20 +49,34 @@ Previous runs: CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of
 | AC-8.7 | `us8_fresh_feed.test.tsx` "AC-8.7" (held while scrolled down, the replaced card stays on screen, "1 new" pill scrolls to the top; at the top cards appear at once; scrolling up releases) | Pass |
 | AC-8.8 | `us8_fresh_feed.test.tsx` "AC-8.8" ("Last updated 10:42 AM", next refresh 15 minutes later) | Pass |
 | AC-9.1 | `test_us9_watchlist.py::test_ac_9_1_search_by_symbol_or_name`, `test_ac_9_1_search_is_capped_at_20`, Postgres: `test_ac_9_13_postgres_market_works_as_the_app_role`; `us9_prices.test.tsx` "AC-9.1" | Pass |
-| AC-9.2 | `test_us9_watchlist.py::test_ac_9_2_watchlist_kept_in_account_newer_wins`, `test_ac_9_2_eleventh_item_is_refused`; `us9_prices.test.tsx` "AC-9.2" | Pass |
+| AC-9.2 (changed CR-0006) | `test_us9_watchlist.py::test_ac_9_2_watchlist_kept_in_account_newer_wins`, `test_ac_9_2_twenty_first_item_is_refused` (20 allowed, 21st refused; items 11 to 20 in `more`); `us9_prices.test.tsx` "AC-9.2" | Pass |
 | AC-9.3 | `test_us9_watchlist.py::test_ac_9_3_adding_or_opening_upserts_watch_symbols`, `test_ac_9_3_unknown_keys_are_not_watched`, Postgres test (first_wanted_at kept); `us9_prices.test.tsx` "AC-9.3" | Pass |
 | AC-9.4 | `test_us9_watchlist.py::test_ac_9_4_price_change_and_time`; `us9_prices.test.tsx` "AC-9.4" (Rs and $ formats, green and red, "26 Nov, 2:41 PM IST") | Pass |
 | AC-9.5 | `test_us9_watchlist.py::test_ac_9_5_labels` (7 cases), `test_ac_9_5_labels_reach_the_app`; `us9_prices.test.tsx` "AC-9.5" | Pass |
-| AC-9.6 | `test_us9_watchlist.py::test_ac_9_6_paused_after_two_minutes`; `us9_prices.test.tsx` "AC-9.6" | Pass |
-| AC-9.7 | `test_us9_watchlist.py::test_ac_9_7_waiting_and_error`; `us9_prices.test.tsx` "AC-9.7" | Pass |
+| AC-9.6 (changed CR-0006) | `test_us9_watchlist.py::test_ac_9_6_paused_after_two_minutes`; `us9_prices.test.tsx` "AC-9.6" (paused only while NSE is open); `us10_watchlist.test.tsx` "AC-10.8" | Pass |
+| AC-9.7 (changed CR-0006) | `test_us9_watchlist.py::test_ac_9_7_waiting_and_error`; `us9_prices.test.tsx` "AC-9.7" ("First price when NSE opens, Fri 9:15 AM IST" while closed, "Waiting for the first price" while open, error keeps the last price) | Pass |
 | AC-9.8 | `test_us9_watchlist.py::test_ac_9_8_zerodha_prices_for_the_founder_only` (user, signed out, empty role), `test_ac_9_8_founder_sees_zerodha`, `test_ac_9_8_role_comes_from_studio_accounts`; `us9_prices.test.tsx` "AC-9.8" | Pass |
-| AC-9.9 | `us9_prices.test.tsx` "AC-9.9" (3 tests: market hours incl. US daylight saving and weekends; one read for all items, again after 30 s, none in the background; none while folded) | Pass |
+| AC-9.9 (changed CR-0006) | `us9_prices.test.tsx` "AC-9.9" (3 tests: market hours incl. US daylight saving and weekends; one read for all items, again after 30 s, none in the background; none on the Feed with the strip Off); `us10_watchlist.test.tsx` "AC-10.9", "AC-10.11" | Pass |
 | AC-9.10 | `test_us9_watchlist.py::test_ac_9_10_not_set_up_and_offline`, `test_ac_9_10_unreachable_market_database`; `us9_prices.test.tsx` "AC-9.10" (2 tests) | Pass |
-| AC-9.11 | `test_us9_watchlist.py::test_ac_9_11_order_is_kept`; `us9_prices.test.tsx` "AC-9.11" | Pass |
-| AC-9.12 | `us9_prices.test.tsx` "AC-9.12" (symbol and name matches, whole words only, empty state) | Pass |
+| AC-9.11 (changed CR-0006) | `test_us9_watchlist.py::test_ac_9_11_order_is_kept`; `us9_prices.test.tsx` "AC-9.11" (Edit mode) | Pass |
+| AC-9.12 (changed CR-0006) | `us9_prices.test.tsx` "AC-9.12" (row links to the item's detail; symbol and name matches, whole words only, empty state) | Pass |
 | AC-9.13 | `test_us9_watchlist.py::test_ac_9_13_market_url_is_its_own`, `test_ac_9_13_only_watch_symbols_is_written` (code scan), `test_ac_9_13_postgres_market_works_as_the_app_role` (real SQL as a role with only the contract's `app` rights; writing prices is refused) | Pass |
 | AC-9.14 | `us9_prices.test.tsx` "AC-9.14" | Pass |
-| AC-9.15 | `test_us9_watchlist.py::test_ac_9_15_markets_closed_when_every_item_is_closed`, `::test_ac_9_15_one_open_market_keeps_prices_paused`; `us9_prices.test.tsx` "AC-9.15" (3) | Pass |
+| AC-9.15 (changed CR-0006) | `test_us9_watchlist.py::test_ac_9_15_markets_closed_when_every_item_is_closed`, `::test_ac_9_15_one_open_market_keeps_prices_paused`; `us9_prices.test.tsx` "AC-9.15" (3: closed with the next opening, open still paused, the clock fallback) | Pass |
+| AC-10.1 | `test_us10_watchlist_strip.py::test_ac_10_1_short_names_for_the_strip`; `us10_watchlist.test.tsx` "AC-10.1" (2: short name, badge, price, change, detail link, "2 more slots · Edit"; six pinned in order) | Pass |
+| AC-10.2 | `test_us10_watchlist_strip.py::test_ac_10_6_and_10_2_items_carry_kind_and_group`; `us10_watchlist.test.tsx` "AC-10.2" (navigation, `#/prices` opens the Watchlist, groups with counts) | Pass |
+| AC-10.3 | `test_us10_watchlist_strip.py::test_ac_10_3_pins_kept_in_the_account_newer_wins`; `us10_watchlist.test.tsx` "AC-10.3" (2: star with `aria-pressed`, 7th refused, synced; new items pinned while there is room) | Pass |
+| AC-10.4 | `us10_watchlist.test.tsx` "AC-10.4" (2: within-group up and down, drag within a group, no drop across groups, remove; strip order by buttons and drag) | Pass |
+| AC-10.5 | `test_us10_watchlist_strip.py::test_ac_10_5_searching_gold_lists_every_gold_type`, `::test_ac_10_5_filter_chips_and_gold_with_nothing_typed`, `::test_ac_10_5_twenty_results_keep_the_kinds_apart`; `us10_watchlist.test.tsx` "AC-10.5" (2: five headings with explanations, Added, chips send `group`) | Pass |
+| AC-10.6 | `test_us10_watchlist_strip.py::test_ac_10_6_category_is_worked_out_when_the_gateway_has_none` (12 cases), `::test_ac_10_6_the_gateways_category_wins`, Postgres E1 test (category column alone marks a gold ETF); `us10_watchlist.test.tsx` "AC-10.6" (badges) | Pass |
+| AC-10.7 | `us10_watchlist.test.tsx` "AC-10.7" (2: SGB detail with price, change, closed line with next opening, "What this is", source, news, note, pin and remove; item no longer in the list) | Pass |
+| AC-10.8 | `us10_watchlist.test.tsx` "AC-10.8" (2: every message and when amber shows; the strip's one-line note and Watchlist link) | Pass |
+| AC-10.9 | `test_us10_watchlist_strip.py::test_ac_10_9_clock_fallback_knows_the_next_opening`, `::test_ac_10_9_gateway_calendar_is_used_when_it_fits`, `::test_ac_10_9_a_stale_row_is_replaced_by_the_clock`, `::test_ac_10_9_works_with_the_gateway_as_released`, Postgres: `::test_ac_10_9_postgres_against_the_gateway_as_released`, `::test_ac_10_9_postgres_against_the_gateway_with_e1`; `us10_watchlist.test.tsx` "AC-10.9" | Pass |
+| AC-10.10 | `test_us10_watchlist_strip.py::test_ac_10_10_tidy_names` (11 cases); `us10_watchlist.test.tsx` "AC-10.10" | Pass |
+| AC-10.11 | `test_us10_watchlist_strip.py::test_ac_10_11_strip_setting_kept_in_the_account`; `us10_watchlist.test.tsx` "AC-10.11" (Every screen, Feed only, Off; synced; no reads with Off) | Pass |
+| AC-10.12 | `test_us10_watchlist_strip.py::test_ac_10_12_v040_account_copy_is_upgraded`, `::test_ac_10_12_a_v040_device_cant_wipe_the_new_fields`, `::test_ac_10_12_v050_copy_stays_readable_by_v040`, `::test_ac_10_12_migration_tidies_any_copy`; `us10_watchlist.test.tsx` "AC-10.12" (2: v0.4.0 device copy upgraded and shown on the strip; items 11 to 20 kept apart, bad data tidied) | Pass |
+| AC-9.8 with CR-0006 | `test_us10_watchlist_strip.py::test_ac_9_8_india_gold_rate_and_bonds_are_founder_only` (MCX gold rate and Sovereign Gold Bonds come from Zerodha) | Pass |
+| Compatibility (CR-0006) | Account copies and device copies saved by v0.4.0 (`AC-10.12` tests above); a copy saved by v0.5.0 validates against v0.4.0's watchlist model, so a rollback stays safe | Pass |
 | Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
 
 Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the table check running once per instance, the memory store's sync contract, a database driver that fails to load (answers "will sync later"), health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the hub); the account database is a throwaway local Postgres.
@@ -94,7 +108,23 @@ The built interface was served locally with the API answered by fixed sample pri
 
 Markets-closed note (AC-9.15, founder note 26 Nov): served the same way with TCS and gold both closed on a Saturday and the gateway quiet; at 375 px and 1280 px, light and dark, the list shows a quiet grey note with a moon icon, "Markets closed, prices from the last close", above the last prices, and no amber "Prices paused". No sideways scroll. No fixes needed.
 
+## Visual check (CR-0006)
+The built interface was served locally with the API answered in the browser by sample answers that Distill's own market code produced from a fake market (sample prices; Thursday 26 Nov evening, US closed for Thanksgiving, NSE and MCX closed), and screenshotted with Chromium at 375 px and 1280 px, light and dark: the Feed with the pinned strip, the Watchlist, Edit mode, the Add sheet searching "gold", and an item's detail; plus the paused (amber) and unreachable states on the Feed. No sideways scroll on any screen. Screenshots: [docs/quality/screenshots/](screenshots/) (`cr0006-*.png`).
+
+Fixes made after looking: the Watchlist title row now keeps Edit and Add beside the title on a phone, with the pin count under it (as in the design); on a wide screen the table columns got fixed widths so prices, changes and times stay on one line, and Edit mode hides the change and time columns so names keep their room; the "Add an item" label lost a double space; the closed-markets line no longer names gold spot when its hours only follow NSE and the US market; the MetalCharts credit on an item's detail shows only for gold spot; the sheet's backdrop is a fixed dark tint in both themes.
+
+Round-1 designs followed, with these small departures: the Watchlist keeps the app header and navigation on a phone (the mockup shows the page alone) and hides the strip there, since the page lists the same prices; the pin star keeps one label ("Pin <name>") with `aria-pressed` for its state instead of switching between "Pin" and "Unpin"; the Add sheet's MCX result is named "Gold rate, India" like everywhere else (the mockup says "Gold Mini, MCX"); the holiday message adds the holiday's name in brackets when the gateway gives one; the table's time column shows the price time with its label underneath.
+
+## Design checklist (CR-0006)
+- [x] New colours as tokens with designed dark values (`--gold`, `--gold-soft`); amber kept for real problems only
+- [x] 375 px and 1280 px with no sideways scroll; the strip scrolls sideways inside itself on a phone; tap targets 44 px (strip tiles, stars, arrows, chips, Add buttons)
+- [x] Labelled controls: the strip is a `nav` named "Pinned prices", the setting a named button group with `aria-pressed`, the Add sheet a modal dialog that closes with Escape or Done
+- [x] Plain-English states: closed with the next opening, before the first price, holiday, paused, unreachable, not set up, item gone
+- [x] Inline SVG icons (star, grip, calendar, clock, moon, pause, warning); no emoji
+- [x] Motion: only the sheet's short slide-in, off with `prefers-reduced-motion`
+
 ## Releases
+- v0.5.0 (2026-11-26): CR-0006 Watchlist page and pinned prices strip (E5), 194 of 194 tests passing, released through [PR #16](https://github.com/akkiverse/distill/pull/16).
 - v0.4.0 (2026-11-26): CR-0005 price watchlist (E4), 132 of 132 tests passing, released through [PR #14](https://github.com/akkiverse/distill/pull/14).
 - v0.3.0 (2026-11-26): CR-0004 publish times and a feed that stays fresh (E3), 81 of 81 tests passing, released through [PR #12](https://github.com/akkiverse/distill/pull/12).
 - v0.2.1 (2026-11-26): CR-0003 "AI is offline" note fix, 63 of 63 tests passing, released through [PR #10](https://github.com/akkiverse/distill/pull/10).

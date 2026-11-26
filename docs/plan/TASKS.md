@@ -66,6 +66,20 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 6 | Tests, lint, build, visual check, records, pull request, preview check | all | Yes |
 | 7 | Founder note (26 Nov): "Markets closed, prices from the last close" instead of "Prices paused" when every watched market is shut; tests, records, visual check | AC-9.15 | Yes |
 
+## CR-0006: Watchlist page and pinned prices strip (feature, minor)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue #15 (US-10), milestone v0.5.0; branch `cr/0006-watchlist-strip` from `main`; CR-0006, spec, plan, ADR-0006 | all | Yes |
+| 2 | Market adapter: categories, tidy names, calendar with clock fallback, one-connection snapshot, feature detection, search by group, limit 20 | AC-9.2, AC-10.5, AC-10.6, AC-10.9, AC-10.10 | Yes |
+| 3 | Watchlist version 2 (`more`, `pinned`, `strip`), migration, merge rules, v0.4.0 compatibility | AC-10.3, AC-10.11, AC-10.12 | Yes |
+| 4 | Shared price reader, Watchlist tab and routes, pinned strip with its setting | AC-10.1, AC-10.2, AC-10.11, AC-9.9 | Yes |
+| 5 | Watchlist page: groups, pin toggle, Edit mode (drag, up and down, remove), strip order, desktop table | AC-10.2, AC-10.3, AC-10.4, AC-9.11 | Yes |
+| 6 | Add sheet with filter chips and gold headings; item detail | AC-10.5, AC-10.7, AC-9.12 | Yes |
+| 7 | Calm states from the calendar; tests (pytest, Vitest), lint, build | AC-10.8, AC-9.6, AC-9.7, AC-9.15, all | Yes |
+| 8 | Visual check at 375 px and 1280 px, light and dark; screenshots | design | Yes |
+| 9 | Records, pull request, CI and preview check | all | Yes |
+
 ## Release v0.2.0
 - [x] Released 2026-11-26: merge commit 52e1563, Vercel deployment dpl_CcLnpx8cRaVZxp9MoX3QXT7ofQaM.
 - [ ] Tag pending: add tag v0.2.0 on 52e1563 by hand if wanted.

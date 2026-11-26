@@ -79,13 +79,17 @@ def test_ac_9_2_watchlist_kept_in_account_newer_wins(client, env):
     assert got["keys"] == ["US:EPAM", "NSE:TCS"]
 
 
-def test_ac_9_2_eleventh_item_is_refused(mclient):
-    """AC-9.2: at most 10 items; an 11th is refused with a plain message."""
-    keys = [f"US:A{n:02d}" for n in range(11)]
+def test_ac_9_2_twenty_first_item_is_refused(mclient):
+    """AC-9.2 (changed CR-0006): at most 20 items; a 21st is refused with a plain message."""
+    keys = [f"US:A{n:02d}" for n in range(21)]
     r = mclient.post("/api/market/watch", json={"keys": keys})
-    assert r.status_code == 422 and r.json()["error"]["message"] == "You can watch up to 10 items."
-    r = mclient.put("/api/me/state", json={"watchlist": {"keys": keys, "updated_at": "2026-11-25T08:00:00Z"}})
+    assert r.status_code == 422 and r.json()["error"]["message"] == "You can watch up to 20 items."
+    assert mclient.get("/api/market/prices", params={"keys": ",".join(keys)}).status_code == 422
+    assert mclient.post("/api/market/watch", json={"keys": keys[:20]}).status_code == 200
+    r = mclient.put("/api/me/state", json={"watchlist": {"keys": keys[:10], "more": keys[10:], "updated_at": "2026-11-25T08:00:00Z"}})
     assert r.status_code == 422
+    r = mclient.put("/api/me/state", json={"watchlist": {"keys": keys[:10], "more": keys[10:20], "updated_at": "2026-11-25T08:00:00Z"}})
+    assert r.status_code == 200 and len(r.json()["state"]["watchlist"]["more"]) == 10
 
 
 def test_ac_9_3_adding_or_opening_upserts_watch_symbols(mclient, mk):
@@ -271,7 +275,7 @@ def test_compat_v030_copy_loads_with_empty_watchlist(client, env):
             "cards": [], "settings": {"last_refreshed_at": None, "theme": "system"}, "updated_at": "2026-11-25T07:00:00Z"}  # fmt: skip
     env.store.rows["u_test"] = UserState.model_validate(v030).model_dump_json(exclude={"watchlist"})
     got = client.get("/api/me/state").json()["state"]
-    assert got["topics"]["keywords"] == ["gold rate"] and got["watchlist"] == {"keys": [], "updated_at": None}
+    assert got["topics"]["keywords"] == ["gold rate"] and (got["watchlist"]["keys"], got["watchlist"]["updated_at"]) == ([], None)
     asyncio.run(
         env.store.sync(
             "u_test", lambda s: s.model_copy(update={"watchlist": Watchlist(keys=["US:EPAM"], updated_at="2026-11-25T08:00:00Z")})

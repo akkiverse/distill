@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { watchAiStatus } from "./ai-status.js";
 import { IconBookmark, IconFeed, IconPrices, IconTopics, IconX } from "./components/Icons";
-import { Prices } from "./components/Prices";
+import { Strip } from "./components/Strip";
+import { PricesProvider } from "./prices";
 import { Feed } from "./screens/Feed";
+import { Item } from "./screens/Item";
 import { Post } from "./screens/Post";
 import { Saved } from "./screens/Saved";
 import { Topics } from "./screens/Topics";
+import { Watchlist } from "./screens/Watchlist";
 import { DistillProvider, useDistill } from "./state";
+import { pinnedKeys, stripSetting } from "./watch";
 
 export function useHashRoute(): string {
   const [route, setRoute] = useState(() => window.location.hash.replace(/^#/, "") || "/");
@@ -23,14 +27,14 @@ export function useHashRoute(): string {
 
 const NAV = [
   { href: "#/", route: "/", label: "Feed", Icon: IconFeed },
-  { href: "#/prices", route: "/prices", label: "Prices", Icon: IconPrices },
+  { href: "#/watchlist", route: "/watchlist", label: "Watchlist", Icon: IconPrices }, // replaces Prices (CR-0006)
   { href: "#/saved", route: "/saved", label: "Saved", Icon: IconBookmark },
   { href: "#/topics", route: "/topics", label: "Topics", Icon: IconTopics },
 ];
 
 function Shell() {
   const route = useHashRoute();
-  const { notice, dismissNotice, sync } = useDistill();
+  const { notice, dismissNotice, sync, state } = useDistill();
   const banner = useRef<HTMLDivElement>(null);
   const [me, setMe] = useState<string | null>(null);
 
@@ -44,12 +48,22 @@ function Shell() {
   }, []);
 
   let screen;
+  const onWatchlist = route === "/watchlist" || route === "/watchlist/add" || route === "/prices"; // the v0.4.0 Prices link opens it
+  const onItem = route.startsWith("/item/");
   if (route.startsWith("/post/")) screen = <Post id={decodeURIComponent(route.slice(6))} />;
-  else if (route === "/prices") screen = <Prices />;
+  else if (onWatchlist) screen = <Watchlist adding={route === "/watchlist/add"} />;
+  else if (onItem) screen = <Item k={decodeURIComponent(route.slice(6))} />;
   else if (route === "/saved") screen = <Saved />;
   else if (route === "/topics") screen = <Topics />;
   else screen = <Feed />;
-  const active = route.startsWith("/post/") ? "/" : route;
+  const active = route.startsWith("/post/") ? "/" : onWatchlist || onItem ? "/watchlist" : route;
+  const isFeed = active === "/";
+
+  // AC-10.1, AC-10.11: the strip on every screen, on the Feed only, or off; prices are read only while some are on screen (AC-9.9).
+  const setting = stripSetting(state.watchlist);
+  const stripOn = pinnedKeys(state.watchlist).length > 0 && (setting === "every" || (setting === "feed" && isFeed));
+  const reading = stripOn || onWatchlist || onItem;
+  const wide = onWatchlist;
 
   return (
     <div className="shell">
@@ -70,7 +84,10 @@ function Shell() {
           {me && <><span className="small muted">{me}</span> <a className="small" href="/auth/logout">Sign out</a></>}
         </div>
       </header>
-      <main id="main" tabIndex={-1}>{screen}</main>
+      <PricesProvider active={reading}>
+        {stripOn && <div className={onWatchlist ? "strip-slot on-watchlist" : "strip-slot"}><Strip showLink={isFeed} /></div>}
+        <main id="main" tabIndex={-1}><div className={wide ? "page wide" : "page"}>{screen}</div></main>
+      </PricesProvider>
       {notice && (
         <div className="toast" role="status">
           <span>{notice}</span>

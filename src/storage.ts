@@ -1,5 +1,6 @@
 import { EXPIRY_MS } from "./time";
 import type { Card, UserState } from "./types";
+import { upgradeWatchlist } from "./watch";
 
 const KEY = "distill.v1";
 
@@ -8,7 +9,7 @@ export const emptyState = (): UserState => ({
   topics: { sections: [], keywords: [], updated_at: null },
   cards: [],
   settings: { last_refreshed_at: null, theme: "system" },
-  watchlist: { keys: [], updated_at: null },
+  watchlist: upgradeWatchlist(null),
   updated_at: null,
 });
 
@@ -30,10 +31,8 @@ export function loadLocal(): Local {
       topics: { ...base.topics, ...(j.state?.topics ?? {}) },
       settings: { ...base.settings, ...(j.state?.settings ?? {}) },
       cards: Array.isArray(j.state?.cards) ? j.state.cards : [],
-      // CR-0005: copies saved by v0.3.0 have no watchlist
-      watchlist: Array.isArray(j.state?.watchlist?.keys)
-        ? { keys: j.state.watchlist.keys.filter((k: unknown) => typeof k === "string").slice(0, 10), updated_at: j.state.watchlist.updated_at ?? null }
-        : { keys: [], updated_at: null },
+      // CR-0005: copies saved by v0.3.0 have no watchlist; CR-0006: v0.4.0's (keys only) is upgraded to version 2 (AC-10.12)
+      watchlist: upgradeWatchlist(j.state?.watchlist),
     };
     return { state, pendingSync: !!j.pendingSync };
   } catch {

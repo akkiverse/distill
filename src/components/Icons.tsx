@@ -50,3 +50,18 @@ export const IconMoon = (p: SVGProps<SVGSVGElement>) => (
 export const IconPrices = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M4 19h16" /><path d="M5 15l4-4 3 3 6-7" /><path d="M15 7h3v3" /></svg>
 );
+export const IconStar = ({ filled, ...p }: SVGProps<SVGSVGElement> & { filled?: boolean }) => (
+  <svg {...base(p)} fill={filled ? "currentColor" : "none"}><path d="M12 2.8l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.1 6.4 20l1.1-6.2L3 9.4l6.2-.9z" /></svg>
+);
+export const IconGrip = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" /></svg>
+);
+export const IconClock = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+);
+export const IconCalendar = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>
+);
+export const IconAlert = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M12 3l9 16H3z" /><path d="M12 10v4M12 17v.5" /></svg>
+);

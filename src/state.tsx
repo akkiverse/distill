@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { api, ApiError } from "./api";
 import { dropExpired, loadLocal, loadSeen, MAX_KNOWN, rememberSeen, saveLocal, type Local } from "./storage";
 import { nowIso } from "./time";
-import type { AiStatus, Card, Section, SyncStatus, UserState } from "./types";
+import type { AiStatus, Card, Section, StripSetting, SyncStatus, UserState } from "./types";
+import { changedWatchlist } from "./watch";
 
 export const FALLBACK_SECTIONS: Section[] = [
   ["world", "World"], ["india", "India"], ["business", "Business"], ["finance", "Finance"],
@@ -33,8 +34,8 @@ interface Ctx {
   aiOnline: boolean | null;
   ready: boolean;
   saveTopics: (sections: string[], keywords: string[]) => Promise<boolean>;
-  /** US-9: the price watchlist, kept with topics in the account (AC-9.2, AC-9.11). */
-  saveWatchlist: (keys: string[]) => Promise<void>;
+  /** US-9, US-10: the price watchlist, its pins and the strip setting, kept with topics in the account (AC-9.2, AC-9.11, AC-10.3, AC-10.11). */
+  saveWatchlist: (change: { keys?: string[]; pinned?: string[]; strip?: StripSetting }) => Promise<void>;
   toggleSave: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
   dismissNotice: () => void;
@@ -165,8 +166,8 @@ export function DistillProvider({ children }: { children: ReactNode }) {
   );
 
   const saveWatchlist = useCallback(
-    async (keys: string[]) => {
-      const state = { ...latest.current.state, watchlist: { keys: keys.slice(0, 10), updated_at: nowIso() } };
+    async (change: { keys?: string[]; pinned?: string[]; strip?: StripSetting }) => {
+      const state = { ...latest.current.state, watchlist: changedWatchlist(latest.current.state.watchlist, change) };
       commit({ state, pendingSync: true });
       await pushSync(state, { quiet: true });
     },
