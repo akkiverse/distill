@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-26
+
+### Added
+- A Prices watchlist at the top of the Feed (it folds away) and as its own tab: search and add up to 10 items (gold, Indian and US shares), each with its latest price, the change since the previous close and the exact time of the price in Indian time, labelled Live, Delayed or Market closed; "Prices paused" when the Market Gateway is quiet while a watched market is open, and "Markets closed, prices from the last close" when every watched market is shut; news cards that mention an item. Zerodha prices are shown to the founder only. See [CR-0005](docs/changes/CR-0005-price-watchlist.md).
+
 ## [0.3.0] - 2026-11-26
 
 ### Added
@@ -29,6 +34,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First version (MVP), built from the approved spec. See [CR-0001](docs/changes/CR-0001-mvp.md).
 
+[0.4.0]: https://github.com/akkiverse/distill/pull/14
 [0.3.0]: https://github.com/akkiverse/distill/pull/12
 [0.2.1]: https://github.com/akkiverse/distill/pull/10
 [0.2.0]: https://github.com/akkiverse/distill/pull/9

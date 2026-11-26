@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
 
-from .models import Card, Topics, UserState
+from .models import Card, Topics, UserState, Watchlist
 from .textutil import word_overlap
 
 EXPIRY = timedelta(hours=24)  # AC-6.1
@@ -88,6 +88,13 @@ def newer_topics(a: Topics, b: Topics) -> Topics:
     return b if parse_time(b.updated_at) >= parse_time(a.updated_at) else a
 
 
+def newer_watchlist(a: Watchlist, b: Watchlist) -> Watchlist:
+    """Like topics: the newer change wins. A device on v0.3.0 sends none (no updated_at), which never wins (CR-0005)."""
+    if not b.updated_at:
+        return a
+    return b if parse_time(b.updated_at) >= parse_time(a.updated_at) else a
+
+
 def merge_states(stored: UserState, incoming: UserState, now: datetime | None = None) -> UserState:
     """Combine what the data server has with what a device sends."""
     now = now or datetime.now(UTC)
@@ -97,5 +104,6 @@ def merge_states(stored: UserState, incoming: UserState, now: datetime | None = 
         topics=newer_topics(stored.topics, incoming.topics),
         cards=merge_cards(stored.cards, incoming.cards, now),
         settings=settings,
+        watchlist=newer_watchlist(stored.watchlist, incoming.watchlist),
         updated_at=iso(now),
     )

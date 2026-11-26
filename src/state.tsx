@@ -33,6 +33,8 @@ interface Ctx {
   aiOnline: boolean | null;
   ready: boolean;
   saveTopics: (sections: string[], keywords: string[]) => Promise<boolean>;
+  /** US-9: the price watchlist, kept with topics in the account (AC-9.2, AC-9.11). */
+  saveWatchlist: (keys: string[]) => Promise<void>;
   toggleSave: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
   dismissNotice: () => void;
@@ -162,6 +164,15 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     [commit, pushSync],
   );
 
+  const saveWatchlist = useCallback(
+    async (keys: string[]) => {
+      const state = { ...latest.current.state, watchlist: { keys: keys.slice(0, 10), updated_at: nowIso() } };
+      commit({ state, pendingSync: true });
+      await pushSync(state, { quiet: true });
+    },
+    [commit, pushSync],
+  );
+
   const toggleSave = useCallback(
     async (id: string) => {
       const cards = latest.current.state.cards.map((c) =>
@@ -228,9 +239,9 @@ export function DistillProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(
     () => ({
       state: local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready,
-      saveTopics, toggleSave, refresh, dismissNotice: () => setNotice(null),
+      saveTopics, saveWatchlist, toggleSave, refresh, dismissNotice: () => setNotice(null),
     }),
-    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, toggleSave, refresh],
+    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, saveWatchlist, toggleSave, refresh],
   );
   return <DistillContext.Provider value={value}>{children}</DistillContext.Provider>;
 }

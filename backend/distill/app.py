@@ -13,7 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from . import curator as curator_mod
-from . import feeds, sources, store, studio_ai, studio_auth
+from . import feeds, market, sources, store, studio_ai, studio_auth
 from .curator import Curator, curate
 from .models import (
     CurateRequest,
@@ -57,6 +57,16 @@ def get_user_id(request: Request) -> str | None:
     return str(claims["sub"]) if claims and claims.get("sub") else None
 
 
+def get_market() -> market.MarketData | None:
+    return market.live_market()
+
+
+def get_user_role(request: Request) -> str | None:
+    """The person's Studio Accounts role for Distill ("admin" is the founder), or None when signed out."""
+    claims = studio_auth.optional_user(request)
+    return str(claims.get("role") or "") or None if claims else None
+
+
 def now() -> datetime:
     return datetime.now(UTC)
 
@@ -83,7 +93,13 @@ async def _invalid(_request, exc: RequestValidationError):
 # ---------- routes ----------
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "version": VERSION, "ai_configured": studio_ai.configured(), "sync_configured": store.configured()}
+    return {
+        "status": "ok",
+        "version": VERSION,
+        "ai_configured": studio_ai.configured(),
+        "sync_configured": store.configured(),
+        "market_configured": market.configured(),
+    }
 
 
 @app.get("/api/sections", response_model=list[Section])
@@ -173,6 +189,54 @@ async def write_state(
     except store.StoreUnavailable as exc:
         raise HTTPException(503, detail={"code": "data_offline", "message": "Saved on this device, will sync later."}) from exc
     return StateResponse(state=merged, synced_at=iso(t))
+
+
+# ---------- prices (US-9, added CR-0005) ----------
+def _market(data: market.MarketData | None) -> market.MarketData:
+    if data is None:  # AC-9.10
+        raise HTTPException(409, detail={"code": "market_not_set_up", "message": "Price source not set up yet."})
+    return data
+
+
+def _market_offline(exc: Exception) -> HTTPException:
+    return HTTPException(503, detail={"code": "market_offline", "message": "Prices can't be reached right now."})
+
+
+MarketDep = Annotated[market.MarketData | None, Depends(get_market)]
+RoleDep = Annotated[str | None, Depends(get_user_role)]
+
+
+@app.get("/api/market/search", response_model=list[market.InstrumentOut])
+async def market_search(data: MarketDep, role: RoleDep, q: str = ""):
+    """AC-9.1, AC-9.8: instruments matching a symbol or name; Zerodha items only for the founder."""
+    try:
+        return await market.search(_market(data), q, role)
+    except market.MarketUnavailable as exc:
+        raise _market_offline(exc) from exc
+
+
+@app.post("/api/market/watch", response_model=market.WatchResponse)
+async def market_watch(body: market.WatchRequest, data: MarketDep, role: RoleDep):
+    """AC-9.3: tell the Market Gateway which keys are wanted (the only market write, AC-9.13)."""
+    if len(body.keys) > market.MAX_WATCH:
+        raise HTTPException(422, detail={"code": "too_many", "message": f"You can watch up to {market.MAX_WATCH} items."})
+    try:
+        return await market.watch(_market(data), body.keys, role, now())
+    except market.MarketUnavailable as exc:
+        raise _market_offline(exc) from exc
+
+
+@app.get("/api/market/prices", response_model=market.PricesResponse)
+async def market_prices(data: MarketDep, role: RoleDep, keys: str = ""):
+    """AC-9.4 to AC-9.8: the latest prices for the watchlist, one request for all items."""
+    wanted = [k for k in keys.split(",") if k.strip()]
+    if len(wanted) > market.MAX_WATCH:
+        raise HTTPException(422, detail={"code": "too_many", "message": f"You can watch up to {market.MAX_WATCH} items."})
+    try:
+        result = await market.prices(_market(data), wanted, role, now())
+    except market.MarketUnavailable as exc:
+        raise _market_offline(exc) from exc
+    return JSONResponse(result.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/feeds/check")

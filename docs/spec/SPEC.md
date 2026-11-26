@@ -78,6 +78,24 @@ As a reader I want to see when each story was published and have the feed refres
 - **AC-8.7** Given I'm scrolled down the Feed, when new cards arrive, then nothing on screen moves; a "N new" pill appears and tapping it (or scrolling back to the top) shows them at the top. At the top, new cards appear straight away. *(added CR-0004)*
 - **AC-8.8** Given a refresh has happened, then the top of the Feed shows "Last updated &lt;time&gt;" (Indian time). *(added CR-0004)*
 
+### US-9: Price watchlist *(added CR-0005)*
+As the founder I want a short list of prices (gold, Indian and US shares) at the top of my Feed, each with the exact time of the price, so that I can check them without opening another app and never mistake an old price for a live one.
+- **AC-9.1** Given instruments in the shared market database, when I search by symbol or name (for example "tcs"), then up to 20 matching items are listed (exact symbol matches first) with name, symbol and exchange. *(added CR-0005)*
+- **AC-9.2** Given my watchlist, when I add an item, then it is kept with my topics in my account (synced like topics: the newer change wins); given 10 items already, then an 11th is refused with "You can watch up to 10 items". *(added CR-0005)*
+- **AC-9.3** Given I add an item, or open the watchlist, then its keys are upserted into `market.watch_symbols` with `last_wanted_at` set to now, so the Market Gateway starts or keeps fetching them. *(added CR-0005)*
+- **AC-9.4** Given a price, then the item shows name and symbol, the price with its currency (e.g. "Rs 4,182.50", "$185.20"), the change since the previous close as an amount and a percentage, green when up and red when down, and the time of that price from `as_of` in Indian time, e.g. "26 Nov, 2:41 PM IST". *(added CR-0005)*
+- **AC-9.5** Given a price's `delay` and `market_state`, then it is labelled "Market closed, last close" when the market is closed, otherwise "Live" for a live price and "Delayed 15 min" (or the delay given) for a delayed one. *(added CR-0005)*
+- **AC-9.6** Given `gateway_status.heartbeat_at` is more than 2 minutes old (or missing), then the list shows "Prices paused since &lt;time&gt;" and keeps showing the last prices with their times. *(added CR-0005)*
+- **AC-9.7** Given an item with no price yet, then it shows "Waiting for the first price"; given a price row with an error, then the last price stays with the error in plain words. *(added CR-0005)*
+- **AC-9.8** Given a person who is not the founder (Studio Accounts role other than admin, or not signed in), then items whose source is Zerodha (`kite`) are hidden from search, can't be added or watched, and their prices are never sent; the founder sees them. *(added CR-0005)*
+- **AC-9.9** Given the Prices list is on screen, then prices are read every 30 seconds while any item's market is open (NSE and BSE 9:15 AM to 3:30 PM IST on weekdays, US 9:30 AM to 4 PM New York time on weekdays, gold spot on weekdays) and every 15 minutes otherwise, in one request for all items; given the app is in the background or Prices is not on screen, then no reads run. *(added CR-0005)*
+- **AC-9.10** Given `MARKET_DATABASE_URL` is not set (or the market database can't be reached), then Prices shows "Price source not set up yet" (or "Prices can't be reached right now") and every other part of Distill works. *(added CR-0005)*
+- **AC-9.11** Given my watchlist, when I remove an item or move it up or down, then the list keeps the new order on this device and in my account. *(added CR-0005)*
+- **AC-9.12** Given I tap an item, then it opens and shows the latest news cards in my feed that mention its symbol or name (or "No news cards mention it right now"). *(added CR-0005)*
+- **AC-9.13** Given the market adapter, then Distill only reads `market.instruments`, `market.prices` and `market.gateway_status`, writes only `market.watch_symbols`, and uses `MARKET_DATABASE_URL`, never `DATABASE_URL`, for market tables. *(added CR-0005)*
+- **AC-9.14** Given the Prices list, then it shows "For information only. Not investment advice. Prices may be delayed." and, when a gold spot price is shown, the MetalCharts credit link. *(added CR-0005)*
+- **AC-9.15** Given the gateway is quiet (as in AC-9.6), every watched item has a last price whose `market_state` is closed, and by the market hours in AC-9.9 none of their markets is open now, then the list shows "Markets closed, prices from the last close" instead of "Prices paused", and keeps the last prices with their times; if any watched market is open (or an item has no price yet), it still shows "Prices paused since &lt;time&gt;". *(added CR-0005, founder note 26 Nov 2026)*
+
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
 |---|---|---|---|
@@ -86,8 +104,9 @@ As a reader I want to see when each story was published and have the feed refres
 | Topics | Multi-select section grid, keyword input with chips, Save | No keywords is fine | "Pick at least one section" |
 | Post detail | Summary, key points, chart, source link, Save toggle, Back | n/a | "This post has expired" + Back to feed |
 | Saved | Saved cards, newest first, Unsave | "Nothing saved yet. Tap the bookmark on any post." | n/a |
+| Prices (top of Feed, foldable, and its own tab) *(added CR-0005)* | Watchlist items with price, change, time in IST and Live / Delayed / Closed label; search to add; move up, move down, remove; tap for news cards that mention the item; the information-only note | "Add gold or a share to follow its price" + search | "Price source not set up yet"; "Prices paused since &lt;time&gt;"; "Markets closed, prices from the last close"; "Prices can't be reached right now" |
 
-Flow: sign in → Topics (first time) → Feed → Refresh (progress shows "Fetching news", then "Summarising 3 of 12") → tap card → detail → back. Bottom navigation on phones: Feed, Saved, Topics.
+Flow: sign in → Topics (first time) → Feed → Refresh (progress shows "Fetching news", then "Summarising 3 of 12") → tap card → detail → back. Bottom navigation on phones: Feed, Prices, Saved, Topics. *(changed CR-0005)*
 
 ## Look and feel
 - **Personality:** calm, clear, finished.
@@ -111,6 +130,9 @@ News sources sit behind a `NewsSource` adapter: GDELT DOC API, Google News and a
 | POST | /api/feed/refresh | Takes topics (sections, keywords) and existing story keys; returns candidate articles (or curated cards), `ai_status` and failed sources |
 | POST | /api/feed/curate | Curates one article (used to show progress card by card within the function time limit) |
 | POST | /api/feed/merge | Applies the expiry and replacement rules to a set of cards (works without the account database) |
+| GET | /api/market/search | Search the shared market database's instruments (Zerodha items for the founder only) *(added CR-0005)* |
+| POST | /api/market/watch | Upsert keys into `market.watch_symbols` (AC-9.3) *(added CR-0005)* |
+| GET | /api/market/prices | Latest prices for the given keys, with labels and the gateway's paused state *(added CR-0005)* |
 | GET, PUT | /api/me/state | Reads and syncs the signed-in person's topics, cards and settings with the account database |
 
 ## Data model
@@ -121,6 +143,9 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 | Topics | sections (list), keywords (list), updated_at |
 | Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status, replaced_at (optional, added CR-0004) |
 | Settings | last_refreshed_at, theme |
+| Watchlist *(added CR-0005)* | keys (up to 10 market keys such as `NSE:TCS`, `US:EPAM`, `GOLD:XAU_USD`, in display order), updated_at |
+
+Prices are not stored by Distill: they are read from the founder's shared market database (`MARKET_DATABASE_URL`, the contract's `app` role) through a `MarketData` adapter; see [ADR-0005](../adr/0005-market-data-from-shared-database.md). *(added CR-0005)*
 
 ## Non-functional requirements
 - Works from 360px wide with no sideways scroll; bottom navigation on phones.
@@ -133,7 +158,8 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 ## Out of scope
 - Push or email digests; any refresh while the app is in the background. *(changed CR-0004: refreshing on a timer while the Feed is open and visible is now in scope, AC-8.4)*
 - AI-drawn diagrams beyond simple charts and key points.
-- A second database or storage service; everything stays in the one Neon database. *(changed CR-0002)*
+- A second database or storage service for Distill's own data; everything Distill keeps stays in the one Neon database. *(changed CR-0002; CR-0005 only reads the founder's separate market database)*
+- Calling Zerodha, Finnhub or MetalCharts from Distill, price charts and alerts. *(added CR-0005)*
 - Paid news APIs, payments, ads, sharing, comments, multiple languages.
 - Calling Ollama from the browser.
 
