@@ -212,6 +212,7 @@ def test_ac_9_10_not_set_up_and_offline(env, monkeypatch):
 
 def test_ac_9_11_order_is_kept(client):
     """AC-9.11: removing and reordering keep the new order in the account."""
+
     def put(keys, at):
         r = client.put("/api/me/state", json={"watchlist": {"keys": keys, "updated_at": at}})
         return r.json()["state"]["watchlist"]["keys"]
