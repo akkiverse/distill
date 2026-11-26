@@ -1,6 +1,6 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0005-price-watchlist` (CR-0005) · **Result:** 127 of 127 tests passing (77 pytest, 50 Vitest); all 53 acceptance criteria covered · **Database tests:** against a throwaway local Postgres started by the test run · **Build:** `npm run build` passes (JS 56 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0005-price-watchlist` (CR-0005) · **Result:** 132 of 132 tests passing (79 pytest, 53 Vitest); all 54 acceptance criteria covered · **Database tests:** against a throwaway local Postgres started by the test run · **Build:** `npm run build` passes (JS 56 kB gzipped); Ruff lint and format clean
 
 Previous runs: CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
@@ -62,6 +62,7 @@ Previous runs: CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of
 | AC-9.12 | `us9_prices.test.tsx` "AC-9.12" (symbol and name matches, whole words only, empty state) | Pass |
 | AC-9.13 | `test_us9_watchlist.py::test_ac_9_13_market_url_is_its_own`, `test_ac_9_13_only_watch_symbols_is_written` (code scan), `test_ac_9_13_postgres_market_works_as_the_app_role` (real SQL as a role with only the contract's `app` rights; writing prices is refused) | Pass |
 | AC-9.14 | `us9_prices.test.tsx` "AC-9.14" | Pass |
+| AC-9.15 | `test_us9_watchlist.py::test_ac_9_15_markets_closed_when_every_item_is_closed`, `::test_ac_9_15_one_open_market_keeps_prices_paused`; `us9_prices.test.tsx` "AC-9.15" (3) | Pass |
 | Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
 
 Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the table check running once per instance, the memory store's sync contract, a database driver that fails to load (answers "will sync later"), health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the hub); the account database is a throwaway local Postgres.
@@ -90,6 +91,8 @@ Built UI served locally with the API mocked in the browser, sample cards seeded 
 
 ## Visual check (CR-0005)
 The built interface was served locally with the API answered by fixed sample prices (TCS, GOLDBEES, EPAM, gold spot) and screenshotted with Chromium at 375 px and 1280 px, light and dark, on the Feed (Prices folded open at the top) and the Prices tab with one item opened to its news. No sideways scroll at either width. Prices align on the right in tabular figures; up is green and down red in both themes; the Live, Delayed and Market closed labels are distinct (teal, amber, grey); move and remove buttons are 44 px. Disabled "move up" on the first item and "move down" on the last are dimmed.
+
+Markets-closed note (AC-9.15, founder note 26 Nov): served the same way with TCS and gold both closed on a Saturday and the gateway quiet; at 375 px and 1280 px, light and dark, the list shows a quiet grey note with a moon icon, "Markets closed, prices from the last close", above the last prices, and no amber "Prices paused". No sideways scroll. No fixes needed.
 
 ## Releases
 - v0.3.0 (2026-11-26): CR-0004 publish times and a feed that stays fresh (E3), 81 of 81 tests passing, released through [PR #12](https://github.com/akkiverse/distill/pull/12).

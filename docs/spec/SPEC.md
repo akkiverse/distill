@@ -94,6 +94,7 @@ As the founder I want a short list of prices (gold, Indian and US shares) at the
 - **AC-9.12** Given I tap an item, then it opens and shows the latest news cards in my feed that mention its symbol or name (or "No news cards mention it right now"). *(added CR-0005)*
 - **AC-9.13** Given the market adapter, then Distill only reads `market.instruments`, `market.prices` and `market.gateway_status`, writes only `market.watch_symbols`, and uses `MARKET_DATABASE_URL`, never `DATABASE_URL`, for market tables. *(added CR-0005)*
 - **AC-9.14** Given the Prices list, then it shows "For information only. Not investment advice. Prices may be delayed." and, when a gold spot price is shown, the MetalCharts credit link. *(added CR-0005)*
+- **AC-9.15** Given the gateway is quiet (as in AC-9.6), every watched item has a last price whose `market_state` is closed, and by the market hours in AC-9.9 none of their markets is open now, then the list shows "Markets closed, prices from the last close" instead of "Prices paused", and keeps the last prices with their times; if any watched market is open (or an item has no price yet), it still shows "Prices paused since &lt;time&gt;". *(added CR-0005, founder note 26 Nov 2026)*
 
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
@@ -103,7 +104,7 @@ As the founder I want a short list of prices (gold, Indian and US shares) at the
 | Topics | Multi-select section grid, keyword input with chips, Save | No keywords is fine | "Pick at least one section" |
 | Post detail | Summary, key points, chart, source link, Save toggle, Back | n/a | "This post has expired" + Back to feed |
 | Saved | Saved cards, newest first, Unsave | "Nothing saved yet. Tap the bookmark on any post." | n/a |
-| Prices (top of Feed, foldable, and its own tab) *(added CR-0005)* | Watchlist items with price, change, time in IST and Live / Delayed / Closed label; search to add; move up, move down, remove; tap for news cards that mention the item; the information-only note | "Add gold or a share to follow its price" + search | "Price source not set up yet"; "Prices paused since &lt;time&gt;"; "Prices can't be reached right now" |
+| Prices (top of Feed, foldable, and its own tab) *(added CR-0005)* | Watchlist items with price, change, time in IST and Live / Delayed / Closed label; search to add; move up, move down, remove; tap for news cards that mention the item; the information-only note | "Add gold or a share to follow its price" + search | "Price source not set up yet"; "Prices paused since &lt;time&gt;"; "Markets closed, prices from the last close"; "Prices can't be reached right now" |
 
 Flow: sign in → Topics (first time) → Feed → Refresh (progress shows "Fetching news", then "Summarising 3 of 12") → tap card → detail → back. Bottom navigation on phones: Feed, Prices, Saved, Topics. *(changed CR-0005)*
 
