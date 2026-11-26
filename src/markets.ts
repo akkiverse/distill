@@ -1,7 +1,8 @@
 /** Prices (US-9, CR-0005): market hours, refresh timing and how prices are written. */
-import type { Card } from "./types";
+import type { Card, MarketInfo } from "./types";
 
-export const MAX_WATCH = 10; // AC-9.2
+export const MAX_WATCH = 20; // AC-9.2 (changed CR-0006: was 10)
+export const MAX_PINNED = 6; // AC-10.3
 export const OPEN_EVERY_MS = 30_000; // AC-9.9: while any item's market is open
 export const CLOSED_EVERY_MS = 15 * 60_000; // AC-9.9: otherwise
 export const TOO_MANY = `You can watch up to ${MAX_WATCH} items`;
@@ -9,7 +10,8 @@ export const NOT_SET_UP = "Price source not set up yet"; // AC-9.10
 export const UNREACHABLE = "Prices can't be reached right now"; // AC-9.10
 export const WAITING = "Waiting for the first price"; // AC-9.7
 export const MARKETS_CLOSED = "Markets closed, prices from the last close"; // AC-9.15
-export const DISCLAIMER = "For information only. Not investment advice. Prices may be delayed."; // AC-9.14
+export const DISCLAIMER = "For information only. Not investment advice. Prices may be delayed."; // AC-9.14, AC-10.7
+export const STRIP_FULL = "The strip holds up to 6 items. Unpin one first"; // AC-10.3
 
 export type Market = "india" | "us" | "spot";
 
@@ -54,8 +56,14 @@ export function quietBecauseClosed(keys: string[], marketsClosed: boolean | unde
   return Boolean(marketsClosed) && keys.length > 0 && !keys.some((k) => isOpen(marketOf(k), now));
 }
 
-/** AC-9.9: how long until the next read of the list. */
-export function refreshEvery(keys: string[], now = Date.now()): number {
+/**
+ * AC-9.9: how long until the next read of the list. With the server's market states (CR-0006: the gateway's calendar or
+ * its clock) those decide; otherwise this device's clock.
+ */
+export function refreshEvery(keys: string[], now = Date.now(), markets?: Record<string, MarketInfo>): number {
+  if (markets && Object.keys(markets).length > 0) {
+    return Object.values(markets).some((m) => m.state !== "closed") ? OPEN_EVERY_MS : CLOSED_EVERY_MS;
+  }
   return keys.some((k) => isOpen(marketOf(k), now)) ? OPEN_EVERY_MS : CLOSED_EVERY_MS;
 }
 
@@ -69,21 +77,29 @@ export function money(value: number, currency: string): string {
   return `${c} ${fixed2(value, "en-US")}`;
 }
 
-/** AC-9.4: "+10.00 (+0.24%)" or "-4.80 (-2.53%)". */
+export const MINUS = "\u2212";
+
+/** AC-9.4: "+10.00 (+0.24%)" or "−4.80 (−2.53%)" (a true minus sign, CR-0006). */
 export function changeText(change: number, pct: number | null): string {
-  const sign = change > 0 ? "+" : change < 0 ? "-" : "";
+  const sign = change > 0 ? "+" : change < 0 ? MINUS : "";
   const abs = fixed2(Math.abs(change), "en-US");
   if (pct === null) return `${sign}${abs}`;
   return `${sign}${abs} (${sign}${fixed2(Math.abs(pct), "en-US")}%)`;
+}
+
+/** AC-10.1: the strip's short change, "+0.24%" or "−2.53%". */
+export function pctText(pct: number): string {
+  const sign = pct > 0 ? "+" : pct < 0 ? MINUS : "";
+  return `${sign}${fixed2(Math.abs(pct), "en-US")}%`;
 }
 
 export const direction = (change: number | null) => (change === null || change === 0 ? "flat" : change > 0 ? "up" : "down");
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** AC-9.12: news cards that mention the item's symbol or name, newest first. */
-export function cardsMentioning(cards: Card[], symbol: string, name: string): Card[] {
-  const words = [symbol, name].map((w) => w.trim()).filter((w) => w.length >= 3);
+/** AC-9.12: news cards that mention the item's symbol or name (or its tidy name, CR-0006), newest first. */
+export function cardsMentioning(cards: Card[], symbol: string, name: string, ...more: string[]): Card[] {
+  const words = [...new Set([symbol, name, ...more].map((w) => (w ?? "").trim()).filter((w) => w.length >= 3))];
   if (words.length === 0) return [];
   const re = new RegExp(`(^|[^A-Za-z0-9])(${words.map(escape).join("|")})(?![A-Za-z0-9])`, "i");
   return cards

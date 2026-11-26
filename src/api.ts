@@ -44,7 +44,7 @@ export const api = {
   sync: (state: UserState) => call<{ state: UserState; synced_at: string }>("/api/me/state", { method: "PUT", body: JSON.stringify(state) }),
   aiStatus: () => call<{ configured?: boolean; online?: boolean }>("/api/ai/status"),
   me: () => call<{ signed_in: boolean; user?: { name: string } }>("/auth/me"),
-  marketSearch: (q: string) => call<Instrument[]>(`/api/market/search?q=${encodeURIComponent(q)}`),
+  marketSearch: (q: string, group = "") => call<Instrument[]>(`/api/market/search?q=${encodeURIComponent(q)}${group ? `&group=${group}` : ""}`),
   marketWatch: (keys: string[]) => post<{ watched: string[]; refused: string[] }>("/api/market/watch", { keys }),
   marketPrices: (keys: string[]) => call<PricesResult>(`/api/market/prices?keys=${keys.map(encodeURIComponent).join(",")}`),
 };

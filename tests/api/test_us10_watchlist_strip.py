@@ -180,7 +180,10 @@ def test_ac_10_9_clock_fallback_knows_the_next_opening():
     assert us.state == "open" and us.next_close_at == "2026-11-26T21:00:00Z"
     sat = datetime(2026, 11, 28, 6, 0, tzinfo=UTC)
     assert hours.clock("NSE", sat).next_open_at == "2026-11-30T03:45:00Z"  # Monday
-    assert hours.clock("GOLD", sat).state == "closed" and hours.clock("GOLD", THU_8PM_IST).state == "open"
+    # gold spot follows the gateway's passes: open while NSE or the US market is open, so a quiet evening isn't a fault
+    assert hours.clock("GOLD", sat).state == "closed" and hours.clock("GOLD", THU_8PM_IST).state == "open"  # US open by the clock
+    evening = datetime(2026, 11, 26, 12, 0, tzinfo=UTC)  # 5:30 PM IST: NSE shut, New York not open yet
+    assert (hours.clock("GOLD", evening).state, hours.clock("GOLD", evening).next_open_at) == ("closed", "2026-11-26T14:30:00Z")
     mcx_winter = hours.clock("MCX", datetime(2026, 11, 26, 18, 0, tzinfo=UTC))  # 11:30 PM IST, New York on standard time
     assert mcx_winter.state == "open" and mcx_winter.next_close_at == "2026-11-26T18:25:00Z"
     mcx_summer = hours.clock("MCX", datetime(2026, 7, 1, 18, 0, tzinfo=UTC))

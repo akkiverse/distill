@@ -68,17 +68,27 @@ def _session(market: str, day) -> tuple[datetime, datetime] | None:
         # The contract: MCX closes 23:30 IST while New York is on daylight saving time and 23:55 IST otherwise.
         dst = datetime.combine(day, time(12), NEW_YORK).dst() != timedelta(0)
         return datetime.combine(day, time(9, 0), IST), datetime.combine(day, time(23, 30) if dst else time(23, 55), IST)
-    # GOLD spot: weekdays in India, as Distill v0.4.0 counted it.
-    return datetime.combine(day, time(0, 0), IST), datetime.combine(day + timedelta(days=1), time(0, 0), IST)
+    raise ValueError(market)
 
 
 def _zone(market: str) -> ZoneInfo:
     return NEW_YORK if market == "US" else IST
 
 
-def clock(market: str, now: datetime) -> MarketOut:
-    """AC-10.9: the market's state and next opening and close from its regular hours (no holidays)."""
+def clock(market: str, now: datetime, parts: list[MarketOut] | None = None) -> MarketOut:
+    """AC-10.9: the market's state and next opening and close from its regular hours (no holidays).
+
+    Gold spot trades around the clock on weekdays, but the gateway only checks in while NSE or the US market is open (no
+    off-hours passes, contract), so by the clock gold counts as open exactly then; otherwise a quiet gateway on a weekday
+    evening would look like a fault. `parts` are NSE's and the US market's states (from the calendar when known).
+    """
     now = _utc(now) or datetime.now(UTC)
+    if market == "GOLD":
+        parts = parts or [clock("NSE", now), clock("US", now)]
+        live = [m for m in parts if is_open(m)]
+        if live:
+            return MarketOut(market=market, state="open", next_close_at=max(m.next_close_at or "" for m in live) or None, source="clock")
+        return MarketOut(market=market, state="closed", next_open_at=min(m.next_open_at or "~" for m in parts), source="clock")
     local = now.astimezone(_zone(market)).date()
     for d in range(0, 9):
         s = _session(market, local + timedelta(days=d))
@@ -115,11 +125,11 @@ def fits(row: CalendarRow, now: datetime) -> bool:
     return nxt is None or nxt > now
 
 
-def effective(market: str, row: CalendarRow | None, now: datetime) -> MarketOut:
+def effective(market: str, row: CalendarRow | None, now: datetime, parts: list[MarketOut] | None = None) -> MarketOut:
     """AC-10.9: the gateway's row when it fits the current time, otherwise the clock."""
     now = _utc(now) or datetime.now(UTC)
     if row is None or not fits(row, now):
-        return clock(market, now)
+        return clock(market, now, parts)
     state: State = row.state.lower()  # type: ignore[assignment]
     holiday = state == "closed" and row.session_opens is None and bool(row.note) and now.astimezone(_zone(market)).weekday() < 5
     return MarketOut(
@@ -130,7 +140,8 @@ def effective(market: str, row: CalendarRow | None, now: datetime) -> MarketOut:
 
 def markets_for(wanted: set[str], rows: list[CalendarRow] | None, now: datetime) -> dict[str, MarketOut]:
     by = {r.market.upper(): r for r in rows or []}
-    return {m: effective(m, by.get(m), now) for m in MARKETS if m in wanted}
+    base = [effective(m, by.get(m), now) for m in ("NSE", "US")]  # gold spot without a calendar row follows these two
+    return {m: effective(m, by.get(m), now, base) for m in MARKETS if m in wanted}
 
 
 def is_open(m: MarketOut) -> bool:

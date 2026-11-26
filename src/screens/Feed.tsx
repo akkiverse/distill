@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { CardView } from "../components/CardView";
-import { Prices } from "../components/Prices";
 import { IconArrowUp, IconCheck, IconCloudOff, IconRefresh } from "../components/Icons";
 import { sectionLabel, useDistill } from "../state";
 import { AUTO_REFRESH_MS, AUTO_TICK_MS, clock, hasTime, refreshIsDue } from "../time";
@@ -97,14 +96,11 @@ export function Feed() {
 
   if (!hasTopics) {
     return (
-      <>
-      <Prices folded />
       <section className="empty" aria-labelledby="empty-title">
         <h1 id="empty-title" className="empty-title">Choose your topics to start</h1>
         <p>Pick a few sections and, if you like, exact keywords. Distill gathers them into one short feed that ends.</p>
         <a className="btn primary" href="#/topics">Choose topics</a>
       </section>
-      </>
     );
   }
 
@@ -115,7 +111,6 @@ export function Feed() {
 
   return (
     <section aria-labelledby="feed-title">
-      <Prices folded />
       {waiting > 0 && (
         <button type="button" className="new-pill" onClick={showNew}>
           <IconArrowUp width={18} height={18} /> {waiting} new
