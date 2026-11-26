@@ -13,9 +13,9 @@ Distill is a purposeful alternative to scrolling social media for news. You pick
 
 | | |
 |---|---|
-| Stage | Live: v0.1.0, released 25 Nov 2026 ([live app](https://distill-akkiverse.vercel.app)) |
-| Acceptance tests | 51 of 51 passing ([report](docs/quality/TEST-REPORT.md)) |
-| Latest change | [CR-0001](docs/changes/CR-0001-mvp.md): first version (MVP) |
+| Stage | Live: v0.2.0, released 26 Nov 2026 ([live app](https://distill-akkiverse.vercel.app)) |
+| Acceptance tests | 58 of 58 passing on v0.2.0 ([report](docs/quality/TEST-REPORT.md)) |
+| Latest change | [CR-0002](docs/changes/CR-0002-neon-sync.md): topics and saved cards kept in each person's account (released in v0.2.0) |
 
 ## Stack
 
@@ -30,7 +30,7 @@ npm ci && npm run dev                     # interface on http://localhost:5173 (
 uv run pytest && npm test                 # all acceptance tests
 ```
 
-Without `AI_ENDPOINTS` and `AI_GATEWAY_KEY` the app shows headline-only cards and "AI is offline right now". Without `DATA_ENDPOINT` and `DATA_GATEWAY_KEY` everything is kept on the device only.
+Without `AI_ENDPOINTS` and `AI_GATEWAY_KEY` the app shows headline-only cards and "AI is offline right now". Without `DATABASE_URL` (the Neon database, set for Production only) everything is kept on the device only; set `DISTILL_MEMORY_STORE=1` to try sync locally with a memory store. The database tests start a throwaway local Postgres if one is installed.
 
 ## How this repo is organised
 

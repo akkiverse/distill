@@ -25,6 +25,9 @@ jobs:
       - name: Python acceptance tests
         if: hashFiles('pyproject.toml') != ''
         run: uv run pytest -q
+        env:
+          # the account-database tests start a throwaway local Postgres; fail rather than skip if it's missing
+          DISTILL_REQUIRE_PG: "1"
 
       # JavaScript user interface (tier R, or no back end)
       - uses: actions/setup-node@v4

@@ -1,6 +1,6 @@
 # ADR-0003: Sync through a data server at home, with the device copy first
 
-- **Status:** Accepted
+- **Status:** Accepted; storage superseded by [ADR-0004](0004-account-database-on-neon.md) (26 Nov 2026)
 - **Date:** 2026-11-25
 - **Change request:** CR-0001
 

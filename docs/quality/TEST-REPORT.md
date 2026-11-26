@@ -1,6 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-25 · **Commit:** latest on `cr/0001-mvp` (CR-0001) · **Result:** 51 of 51 tests passing (34 pytest, 17 Vitest); all 23 acceptance criteria covered · **Preview:** `/api/health` and the app shell load on the preview · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0002-neon-sync` (CR-0002) · **Result:** 58 of 58 tests passing (41 pytest, 17 Vitest); all 29 acceptance criteria covered · **Database tests:** against a throwaway local Postgres 16 started by the test run · **Build:** `npm run build` passes (JS 54 kB gzipped); Ruff lint and format clean
+
+Previous run (CR-0001, 2026-11-25): 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -29,9 +31,15 @@
 | AC-6.3 | `test_us6_save_expire.py::test_ac_6_3_newer_card_on_same_story_replaces_older`, `test_ac_6_3_saved_card_is_never_replaced` | Pass |
 | AC-6.4 | `test_us6_save_expire.py::test_ac_6_4_unsaved_card_follows_normal_expiry`; `us6_saved.test.tsx` "AC-6.4" | Pass |
 | AC-6.5 | `test_us6_save_expire.py::test_ac_6_5_saved_on_one_device_appears_on_another` | Pass |
-| AC-6.6 | `test_us6_save_expire.py::test_ac_6_6_data_server_offline_answers_will_sync_later`; `us6_saved.test.tsx` "AC-6.6" | Pass |
+| AC-6.6 | `test_us6_save_expire.py::test_ac_6_6_database_offline_answers_will_sync_later`; `us6_saved.test.tsx` "AC-6.6" | Pass |
+| AC-7.1 | `test_us7_account.py::test_ac_7_1_topics_and_cards_follow_the_person_to_another_device` (real Postgres) | Pass |
+| AC-7.2 | `test_us7_account.py::test_ac_7_2_table_is_created_when_missing` (real Postgres, fresh database) | Pass |
+| AC-7.3 | `test_us7_account.py::test_ac_7_3_without_a_database_everything_stays_on_the_device` | Pass |
+| AC-7.4 | `test_us7_account.py::test_ac_7_4_unreachable_database_says_will_sync_later` | Pass |
+| AC-7.5 | `test_us7_account.py::test_ac_7_5_two_devices_syncing_at_once_keep_both_changes` (8 syncs at once; fails if the row lock is removed) | Pass |
+| AC-7.6 | `test_us7_account.py::test_ac_7_6_rows_saved_by_v0_1_0_read_unchanged` (compatibility with v0.1.0 data) | Pass |
 
-Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the PostgREST store (read, upsert, offline), health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the data server, the hub).
+Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over HTTP, which sources each refresh asks, known links skipped, the Studio AI happy path and not-configured path, untrusted AI answers, sync without sign-in or set-up, the table check running once per instance, the memory store's sync contract, a database driver that fails to load (answers "will sync later"), health, AI status, error shape, the user id from the Studio session, and the feed check. External services are always mocked (news, Studio AI, the hub); the account database is a throwaway local Postgres.
 
 ## Design checklist
 - [x] Colours as CSS custom properties with a designed dark theme (`prefers-color-scheme`)
@@ -49,5 +57,9 @@ Built UI served locally with the API, sample cards (marked "Sample:") seeded on 
 ## Feed check
 Checked from the Vercel preview (Singapore) with `/api/feeds/check` on 2026-11-25: **74 of 76** feeds answered with stories (all 12 Google News section feeds among them). Business Standard (latest) and Yahoo Finance answered with HTTP errors and are listed in `feeds.DROPPED`, so they are not asked; every section still has working feeds.
 
+## Visual check (CR-0002)
+No screen changed; the only interface edit is the "Not synced yet" tooltip text. The 17 interface tests and the production build pass unchanged.
+
 ## Releases
+- v0.2.0 (2026-11-26): CR-0002 topics and saved cards kept in each person's account (Neon), 58 of 58 tests passing, released through [PR #9](https://github.com/akkiverse/distill/pull/9).
 - v0.1.0 (2026-11-25): CR-0001 first version (MVP), 51 of 51 tests passing, released through [PR #7](https://github.com/akkiverse/distill/pull/7).
