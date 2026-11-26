@@ -5,6 +5,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+- B6: searching "gold" (or choosing Gold) in the Add sheet always shows gold spot, and the India gold rate whenever the price service has it, however many gold bonds, ETFs and funds also match; when the India rate isn't there yet, its heading says why. See [CR-0007](docs/changes/CR-0007-gold-search-fixed-rows.md).
+
 ## [0.5.0] - 2026-11-26
 
 ### Added

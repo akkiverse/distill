@@ -110,6 +110,7 @@ As the founder I want the prices I care about most in a slim pinned strip on top
 - **AC-10.10** Tidy names: "TATA CONSULTANCY SERV LT" shows as "Tata Consultancy Services": a short-name list for common items and title case for other all-capital names, keeping ETF, NSE, SGB and similar in capitals. *(added CR-0006)*
 - **AC-10.11** Strip setting: Every screen (default), Feed only, Off; kept with the watchlist in the account; prices are read only while the strip, the Watchlist or an item is on screen. *(added CR-0006)*
 - **AC-10.12** Existing watchlists: a watchlist saved by v0.4.0 loads with its first 6 items pinned and the strip on every screen; a device still on v0.4.0 can't wipe pins, the setting or items 11 to 20; a copy saved by v0.5.0 stays readable by v0.4.0. *(added CR-0006)*
+- **AC-10.13** Gold search keeps the fixed gold rows: searching "gold" (or choosing Gold) always lists gold spot, and the India gold rate for the founder (AC-9.8), whenever the gateway has them, however many bonds, ETFs and funds also match; they join only when every word typed is in their names, after an exact symbol match; Sovereign Gold Bonds are read after the other gold rows; when the India rate isn't in the price service, its heading says it comes from the studio's Zerodha connection. *(added CR-0007)*
 
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
