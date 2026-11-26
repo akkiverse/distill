@@ -63,7 +63,7 @@ function Shell() {
           ))}
         </nav>
         <div className="who">
-          {sync === "pending" && <span className="sync-dot" title="Changes will sync when the data server is back">Not synced yet</span>}
+          {sync === "pending" && <span className="sync-dot" title="Changes will sync when the connection is back">Not synced yet</span>}
           {me && <><span className="small muted">{me}</span> <a className="small" href="/auth/logout">Sign out</a></>}
         </div>
       </header>

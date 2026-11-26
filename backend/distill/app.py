@@ -132,7 +132,7 @@ async def curate_one(body: CurateRequest, curator: Annotated[Curator | None, Dep
 
 @app.post("/api/feed/merge", response_model=MergeResponse)
 async def merge(body: MergeRequest):
-    """Apply expiry and replacement to a set of cards (US-6). Works without the data server."""
+    """Apply expiry and replacement to a set of cards (US-6). Works without the account database."""
     return MergeResponse(cards=merge_cards(body.cards, body.new_cards, now()))
 
 
@@ -165,13 +165,11 @@ async def write_state(
     user_id: Annotated[str | None, Depends(get_user_id)],
     data: Annotated[store.Store | None, Depends(get_store)],
 ):
-    """Sync this device's copy with the data server: both are combined, then the result is saved (AC-6.5, AC-6.6)."""
+    """Sync this device's copy with the account: both are combined and saved in one step (AC-6.5, AC-6.6, AC-7.1, AC-7.5)."""
     uid, st = _sync_target(user_id, data)
     t = now()
     try:
-        stored = await st.load(uid) or UserState()
-        merged = merge_states(stored, body, t)
-        await st.save(uid, merged)
+        merged = await st.sync(uid, lambda stored: merge_states(stored, body, t))
     except store.StoreUnavailable as exc:
         raise HTTPException(503, detail={"code": "data_offline", "message": "Saved on this device, will sync later."}) from exc
     return StateResponse(state=merged, synced_at=iso(t))

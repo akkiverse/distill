@@ -1,13 +1,9 @@
 """US-6: Save, expire and replace (server side; the device copy is tested in src/*.test.tsx)."""
 
-import json
 from datetime import timedelta
 
-import httpx
 from conftest import NOW, card, iso
-from distill.models import UserState
 from distill.rules import merge_cards
-from distill.store import PostgrestStore
 
 
 def dump(cards):
@@ -72,8 +68,8 @@ def test_ac_6_5_saved_on_one_device_appears_on_another(client, env):
     assert client.get("/api/me/state").json()["state"]["cards"][0]["saved"] is True
 
 
-def test_ac_6_6_data_server_offline_answers_will_sync_later(client, env):
-    """AC-6.6: with the data server down the API says so plainly; the device keeps the change (tested in the UI)."""
+def test_ac_6_6_database_offline_answers_will_sync_later(client, env):
+    """AC-6.6: with the account database unreachable the API says so plainly; the device keeps the change (tested in the UI)."""
     env.store.offline = True
     r = client.put("/api/me/state", json={"topics": {}, "cards": [], "settings": {}})
     assert r.status_code == 503
@@ -85,48 +81,9 @@ def test_ac_6_6_data_server_offline_answers_will_sync_later(client, env):
 
 
 def test_sync_needs_sign_in_and_set_up(client, env):
-    """Without a signed-in person, or without the data server, sync says so and the app stays device-only."""
+    """Without a signed-in person, or without the account database, sync says so and the app stays device-only."""
     env.user_id = None
     r = client.get("/api/me/state")
     assert r.status_code == 409 and r.json()["error"]["code"] == "sync_needs_signin"
     env.user_id, env.store = "u", None
     assert client.get("/api/me/state").json()["error"]["code"] == "sync_not_set_up"
-
-
-def test_postgrest_store_reads_and_upserts():
-    """The live store talks to PostgREST with the gateway key and upserts one row per person."""
-    seen = []
-    saved_state = UserState(cards=[card("c", "Story", saved=True)]).model_dump(mode="json")
-
-    def handler(req: httpx.Request):
-        seen.append(req)
-        assert req.headers["authorization"] == "Bearer secret-key"
-        if req.method == "GET":
-            return httpx.Response(200, json=[{"state": saved_state}])
-        assert "merge-duplicates" in req.headers["prefer"]
-        body = json.loads(req.content)
-        assert body[0]["user_id"] == "u_1" and body[0]["state"]["cards"][0]["id"] == "c"
-        return httpx.Response(201)
-
-    import asyncio
-
-    s = PostgrestStore("https://data.test", "secret-key", transport=httpx.MockTransport(handler))
-    got = asyncio.run(s.load("u_1"))
-    assert got.cards[0].id == "c"
-    asyncio.run(s.save("u_1", got))
-    assert seen[0].url.params["user_id"] == "eq.u_1"
-
-
-def test_postgrest_store_offline_raises_store_unavailable():
-    """A data server that doesn't answer becomes StoreUnavailable (shown as "will sync later")."""
-    import asyncio
-
-    import pytest
-    from distill.store import StoreUnavailable
-
-    def down(req):
-        raise httpx.ConnectError("off")
-
-    s = PostgrestStore("https://data.test", "k", transport=httpx.MockTransport(down))
-    with pytest.raises(StoreUnavailable):
-        asyncio.run(s.load("u"))
