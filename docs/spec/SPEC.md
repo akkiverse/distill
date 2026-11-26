@@ -42,7 +42,7 @@ As a reader I want an Instagram-style feed that stops so that I don't keep scrol
 - **AC-4.2** Given a card with 2 or more key figures in the same unit, then it shows a small chart; otherwise it shows key-figure chips or key points only. *(added CR-0001)*
 - **AC-4.3** Given the last card, then the line "You're up to date" appears below it and no more cards load. *(added CR-0001)*
 - **AC-4.4** Given no topics saved, then the Feed shows "Choose your topics to start" with a button to Topics. *(added CR-0001)*
-- **AC-4.5** Given the last refresh was more than 3 hours ago, when the Feed opens, then a refresh starts automatically; given it was 3 hours ago or less, then it does not. The Refresh button is always available. *(added CR-0001)*
+- **AC-4.5** Given the last refresh was 15 minutes ago or more, when the Feed opens, then a refresh starts automatically; given it was less than 15 minutes ago, then it does not. The Refresh button is always available. *(added CR-0001, changed CR-0004: was 3 hours)*
 
 ### US-5: Read a post in detail
 As a reader I want to open a card so that I can see everything and reach the original article.
@@ -67,11 +67,22 @@ As a signed-in reader I want my topics and saved cards kept in my account so tha
 - **AC-7.5** Given two devices sync for the same person at the same moment, then both changes are kept (the combine-and-save happens in one database transaction). *(added CR-0002)*
 - **AC-7.6** Given topics and cards saved in the format Distill v0.1.0 used, when they are loaded from the account database, then they read unchanged. *(added CR-0002)*
 
+### US-8: See when each story was published, and a feed that stays fresh *(added CR-0004)*
+As a reader I want to see when each story was published and have the feed refresh itself while I have it open, so that I know how current each card is without pressing Refresh.
+- **AC-8.1** Given a card whose source gave a publish time, then the card and its post detail show it as a full date and time in Indian time, e.g. "26 Nov 2026, 9:14 AM IST", next to the time ago. *(added CR-0004)*
+- **AC-8.2** Given a card whose source gave no publish time, then it shows "Time not given by source" instead of a guessed time. *(added CR-0004)*
+- **AC-8.3** Given cards in the feed, then they are ordered newest first by publish time (a card without one is placed by when it was fetched). *(added CR-0004)*
+- **AC-8.4** Given the Feed is open and visible, then it refreshes by itself every 15 minutes, and when I come back to the tab or app after 15 minutes or more; given the app is in the background, then no refresh runs. The manual Refresh button stays. *(added CR-0004)*
+- **AC-8.5** Given stories the AI has already judged (kept, dropped or since replaced), when the feed refreshes, then their links are sent as known and they are not sent to the AI again; headline-only cards are still re-sent once the AI is back (AC-3.6). *(added CR-0004)*
+- **AC-8.6** Given an unsaved card and a newer report on the same story (AC-6.3), when the feed refreshes, then the newer card replaces it and shows "Updated &lt;time&gt;" (Indian time). *(added CR-0004)*
+- **AC-8.7** Given I'm scrolled down the Feed, when new cards arrive, then nothing on screen moves; a "N new" pill appears and tapping it (or scrolling back to the top) shows them at the top. At the top, new cards appear straight away. *(added CR-0004)*
+- **AC-8.8** Given a refresh has happened, then the top of the Feed shows "Last updated &lt;time&gt;" (Indian time). *(added CR-0004)*
+
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
 |---|---|---|---|
 | Sign-in (Studio Accounts kit) | Email and password | n/a | "Wrong email or password" |
-| Feed (home) | Topic chips, Refresh button, last refreshed time, card list, "You're up to date" | "Choose your topics to start" + button | "AI is offline right now" banner with headline-only cards; "Couldn't reach &lt;source&gt;" note |
+| Feed (home) | Topic chips, Refresh button, "Last updated" time, "N new" pill while new cards wait, card list with publish times, "You're up to date" | "Choose your topics to start" + button | "AI is offline right now" banner with headline-only cards; "Couldn't reach &lt;source&gt;" note |
 | Topics | Multi-select section grid, keyword input with chips, Save | No keywords is fine | "Pick at least one section" |
 | Post detail | Summary, key points, chart, source link, Save toggle, Back | n/a | "This post has expired" + Back to feed |
 | Saved | Saved cards, newest first, Unsave | "Nothing saved yet. Tap the bookmark on any post." | n/a |
@@ -108,7 +119,7 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 | Entity | Fields |
 |---|---|
 | Topics | sections (list), keywords (list), updated_at |
-| Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status |
+| Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status, replaced_at (optional, added CR-0004) |
 | Settings | last_refreshed_at, theme |
 
 ## Non-functional requirements
@@ -120,7 +131,7 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 - No full article text stored or shown; only headline, snippet and the AI summary.
 
 ## Out of scope
-- Push or email digests, background refresh on a timer.
+- Push or email digests; any refresh while the app is in the background. *(changed CR-0004: refreshing on a timer while the Feed is open and visible is now in scope, AC-8.4)*
 - AI-drawn diagrams beyond simple charts and key points.
 - A second database or storage service; everything stays in the one Neon database. *(changed CR-0002)*
 - Paid news APIs, payments, ads, sharing, comments, multiple languages.
@@ -130,7 +141,7 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 - **Database:** saved posts and topics sync across devices. *(changed CR-0002)* On 26 Nov 2026 the founder chose Neon (hosted Postgres, Singapore) over the home data server, to be able to check usage; it is connected to the Vercel project as `DATABASE_URL` for Production only. Up to 4 people, signed in with Studio Accounts. The home data server kit in `data-server/` is no longer used.
 - **News keys:** the founder adds free keys in Vercel when wanted; GDELT, Google News and RSS are always on.
 - **RSS defaults:** the founder's list, approved 25 Nov 2026, is in [backend/distill/feeds.py](../../backend/distill/feeds.py). Each section fetches only its own feeds, in parallel with an 8-second timeout. Dead feeds found during the build are dropped. Cards are built from the headline and snippet only.
-- **Refresh:** automatic when the Feed opens and the last refresh is older than 3 hours, plus a manual Refresh button.
+- **Refresh:** automatic when the Feed opens and the last refresh is 15 minutes old or more, every 15 minutes while the Feed is open and visible, and on coming back after 15 minutes or more, plus a manual Refresh button. *(changed CR-0004, 26 Nov 2026)*
 
 ## Open questions
 - Whether to turn Distill into a business is revisited after 30 days of use.

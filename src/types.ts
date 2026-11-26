@@ -27,6 +27,8 @@ export interface Card {
   saved: boolean;
   saved_changed_at: string | null;
   ai_status: AiStatus;
+  /** When a newer report on the same story replaced an older card (AC-8.6); absent on cards saved before v0.3.0. */
+  replaced_at?: string | null;
 }
 
 export interface Article {

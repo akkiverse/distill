@@ -49,6 +49,7 @@ class Card(BaseModel):
     saved: bool = False
     saved_changed_at: str | None = None
     ai_status: AiStatus = "ok"
+    replaced_at: str | None = None  # when a newer report on the same story replaced an older card (AC-8.6, added CR-0004)
 
 
 class Topics(BaseModel):

@@ -1,5 +1,5 @@
 import { sectionLabel, useDistill } from "../state";
-import { timeAgo } from "../time";
+import { clock, hasTime, publishedLabel, timeAgo } from "../time";
 import type { Card } from "../types";
 import { Figures } from "./FigureChart";
 import { IconBookmark } from "./Icons";
@@ -20,6 +20,29 @@ export function SaveButton({ card }: { card: Card }) {
   );
 }
 
+/** AC-8.1, AC-8.2, AC-8.6: the source's publish time in Indian time, the time ago, and "Updated" after a replacement. */
+export function WhenPublished({ card }: { card: Card }) {
+  const published = hasTime(card.published_at);
+  return (
+    <span className="when">
+      {published ? (
+        <>
+          <time dateTime={card.published_at!} className="published">{publishedLabel(card.published_at)}</time>
+          <span aria-hidden="true">·</span>
+          <span>{timeAgo(card.published_at)}</span>
+        </>
+      ) : (
+        <>
+          <span className="published">{publishedLabel(null)}</span>
+          <span aria-hidden="true">·</span>
+          <span>fetched {timeAgo(card.fetched_at)}</span>
+        </>
+      )}
+      {hasTime(card.replaced_at) && <span className="updated-tag">Updated {clock(Date.parse(card.replaced_at))}</span>}
+    </span>
+  );
+}
+
 export function CardView({ card, index = 0 }: { card: Card; index?: number }) {
   const { sections } = useDistill();
   const summarised = card.ai_status === "ok" && !!card.summary;
@@ -27,9 +50,8 @@ export function CardView({ card, index = 0 }: { card: Card; index?: number }) {
     <article className="card" style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }} data-testid="card">
       <div className="card-meta">
         <span className="source">{card.source_name}</span>
-        <span aria-hidden="true">·</span>
-        <time dateTime={card.published_at ?? card.fetched_at}>{timeAgo(card.published_at ?? card.fetched_at)}</time>
         <span className="topic">{sectionLabel(card.topic_section, sections)}</span>
+        <WhenPublished card={card} />
       </div>
       <h2 className="card-title">
         <a href={`#/post/${card.id}`} className="card-link">{card.title}</a>

@@ -1,8 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { CardView } from "../components/CardView";
-import { IconCheck, IconCloudOff, IconRefresh } from "../components/Icons";
+import { IconArrowUp, IconCheck, IconCloudOff, IconRefresh } from "../components/Icons";
 import { sectionLabel, useDistill } from "../state";
-import { AUTO_REFRESH_MS, clock, refreshIsDue, timeAgo } from "../time";
+import { AUTO_REFRESH_MS, AUTO_TICK_MS, clock, hasTime, refreshIsDue } from "../time";
+import type { Card } from "../types";
+
+/** Scrolled further than this, the reader is reading: new cards wait above (AC-8.7). */
+export const READING_PX = 120;
+
+/** AC-8.3: newest first by the source's publish time; a card without one sorts by when it was fetched. */
+export function feedOrder(cards: Card[]): Card[] {
+  const when = (c: Card) => (hasTime(c.published_at) ? Date.parse(c.published_at) : Date.parse(c.fetched_at));
+  return [...cards].sort((a, b) => when(b) - when(a) || Date.parse(b.fetched_at) - Date.parse(a.fetched_at));
+}
+
+const visible = () => typeof document === "undefined" || document.visibilityState !== "hidden";
 
 export const AI_OFFLINE = "AI is offline right now"; // AC-3.4
 
@@ -11,13 +23,76 @@ export function Feed() {
   const { topics, settings } = state;
   const hasTopics = topics.sections.length > 0;
   const tried = useRef(false);
+  const last = settings.last_refreshed_at;
+  const lastRef = useRef(last);
+  lastRef.current = last;
+  const attempted = useRef(0);
 
-  // AC-4.5: refresh on open only when the last refresh is more than 3 hours old.
+  /** An automatic refresh, at most once per 15 minutes even if one fails (AC-8.4). */
+  const autoRefresh = useCallback(() => {
+    if (!visible()) return; // never in the background (AC-8.4)
+    const now = Date.now();
+    if (now - attempted.current < AUTO_REFRESH_MS || !refreshIsDue(lastRef.current, now)) return;
+    attempted.current = now;
+    void refresh();
+  }, [refresh]);
+
+  // AC-4.5: refresh on open when the last refresh is 15 minutes old or more.
   useEffect(() => {
     if (!ready || tried.current || !hasTopics) return;
     tried.current = true;
-    if (refreshIsDue(settings.last_refreshed_at)) void refresh();
-  }, [ready, hasTopics, settings.last_refreshed_at, refresh]);
+    autoRefresh();
+  }, [ready, hasTopics, autoRefresh]);
+
+  // AC-8.4: while the Feed is open and visible, every 15 minutes, and on coming back after 15 minutes or more.
+  useEffect(() => {
+    if (!ready || !hasTopics) return;
+    const timer = setInterval(autoRefresh, AUTO_TICK_MS);
+    document.addEventListener("visibilitychange", autoRefresh);
+    window.addEventListener("focus", autoRefresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", autoRefresh);
+      window.removeEventListener("focus", autoRefresh);
+    };
+  }, [ready, hasTopics, autoRefresh]);
+
+  // AC-8.7: while the reader is scrolled down, cards that weren't on screen yet (from a refresh or a sync) wait above.
+  const live = feedOrder(state.cards);
+  const shown = useRef<Card[]>(live);
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const held = useRef<Card[] | null>(null);
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+  if (held.current === null && window.scrollY > READING_PX) {
+    const before = new Set(shown.current.map((c) => c.id));
+    if (live.some((c) => !before.has(c.id))) held.current = shown.current;
+  }
+  const byId = new Map(state.cards.map((c) => [c.id, c]));
+  const feed = held.current ? held.current.map((c) => byId.get(c.id) ?? c) : live;
+  const heldIds = new Set(feed.map((c) => c.id));
+  const waiting = held.current ? live.filter((c) => !heldIds.has(c.id)).length : 0;
+  shown.current = feed;
+
+  const release = useCallback(() => {
+    if (!held.current) return;
+    held.current = null;
+    shown.current = liveRef.current; // everything waiting counts as on screen now
+    rerender();
+  }, []);
+  const showNew = () => {
+    release();
+    const smooth = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
+  };
+  // Back at the top by themselves: the waiting cards can go in without moving anything being read.
+  useEffect(() => {
+    const onScroll = () => {
+      if (held.current && window.scrollY <= READING_PX) release();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [release]);
 
   if (!hasTopics) {
     return (
@@ -29,20 +104,23 @@ export function Feed() {
     );
   }
 
-  const feed = [...state.cards].sort((a, b) => Date.parse(b.fetched_at) - Date.parse(a.fetched_at) || Date.parse(b.published_at ?? "") - Date.parse(a.published_at ?? "")); // AC-4.1
   const busy = phase.kind !== "idle";
-  const last = settings.last_refreshed_at;
   const next = last ? Date.parse(last) + AUTO_REFRESH_MS : null;
   // AC-3.5: only the live status check or the latest refresh decide this, never the older cards on screen.
   const offline = aiOnline === false;
 
   return (
     <section aria-labelledby="feed-title">
+      {waiting > 0 && (
+        <button type="button" className="new-pill" onClick={showNew}>
+          <IconArrowUp width={18} height={18} /> {waiting} new
+        </button>
+      )}
       <div className="feed-head">
         <div>
           <h1 id="feed-title" className="screen-title">Your feed</h1>
           <p className="muted small" aria-live="polite">
-            {phase.kind === "fetching" ? "Fetching news" : phase.kind === "summarising" ? `Summarising ${phase.done} of ${phase.total}` : last ? `Refreshed ${timeAgo(last)}` : "Not refreshed yet"}
+            {phase.kind === "fetching" ? "Fetching news" : phase.kind === "summarising" ? `Summarising ${phase.done} of ${phase.total}` : last ? `Last updated ${clock(Date.parse(last))}` : "Not refreshed yet"}
           </p>
         </div>
         <button type="button" className="btn" onClick={() => void refresh()} disabled={busy} aria-busy={busy}>

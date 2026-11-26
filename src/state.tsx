@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, ApiError } from "./api";
-import { dropExpired, loadLocal, saveLocal, type Local } from "./storage";
+import { dropExpired, loadLocal, loadSeen, MAX_KNOWN, rememberSeen, saveLocal, type Local } from "./storage";
 import { nowIso } from "./time";
 import type { AiStatus, Card, Section, SyncStatus, UserState } from "./types";
 
@@ -184,7 +184,8 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     const outcome: RefreshOutcome = { aiStatus: null, failedSources: [], error: null, added: 0 };
     try {
       // AC-3.6: headline-only cards are not "known", so this refresh can bring their AI summaries.
-      const known = cards.filter((c) => !isHeadlineOnly(c)).map((c) => c.source_url);
+      // AC-8.5: stories the AI already judged on this device (kept, dropped or replaced since) are known too.
+      const known = [...new Set([...cards.filter((c) => !isHeadlineOnly(c)).map((c) => c.source_url), ...Object.keys(loadSeen())])].slice(0, MAX_KNOWN);
       const got = await api.refresh({ sections: topics.sections, keywords: topics.keywords, known_urls: known });
       outcome.failedSources = got.failed_sources;
       const fresh: Card[] = [];
@@ -194,6 +195,7 @@ export function DistillProvider({ children }: { children: ReactNode }) {
         try {
           const r = await api.curate({ article: got.articles[i], sections: topics.sections, keywords: topics.keywords });
           statuses.add(r.ai_status);
+          if (r.ai_status === "ok") rememberSeen([got.articles[i].url]); // judged by the AI: never sent again (AC-8.5)
           if (r.card) fresh.push(r.card);
         } catch {
           statuses.add("error");
@@ -245,7 +247,8 @@ export function localMerge(existing: Card[], fresh: Card[]): Card[] {
     const base = isHeadlineOnly(old) !== isHeadlineOnly(c) ? (isHeadlineOnly(c) ? old : c) : Date.parse(c.fetched_at) >= Date.parse(old.fetched_at) ? c : old;
     const when = (x: Card) => (x.saved_changed_at ? Date.parse(x.saved_changed_at) : -Infinity);
     const flag = when(c) > when(old) ? c : old;
-    byId.set(c.id, { ...base, saved: flag.saved, saved_changed_at: flag.saved_changed_at });
+    const replaced = [old.replaced_at, c.replaced_at].filter(Boolean).sort().at(-1) ?? null;
+    byId.set(c.id, { ...base, saved: flag.saved, saved_changed_at: flag.saved_changed_at, ...(replaced ? { replaced_at: replaced } : {}) });
   }
   return [...byId.values()];
 }

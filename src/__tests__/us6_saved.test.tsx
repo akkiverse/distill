@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { H, card, deviceOnly, fakeServer, iso, renderApp, seed } from "./helpers";
 
 const topics = { sections: ["finance"], keywords: [], updated_at: iso(H) };
-const settings = { last_refreshed_at: iso(H), theme: "system" as const };
+const settings = { last_refreshed_at: iso(5 * 60_000), theme: "system" as const };
 const offline = { status: 503, json: { error: { code: "data_offline", message: "Saved on this device, will sync later." } } };
 
 describe("US-6: Save, expire and replace (on the device)", () => {

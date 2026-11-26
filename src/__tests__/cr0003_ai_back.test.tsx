@@ -4,7 +4,7 @@ import { localMerge } from "../state";
 import { H, card, deviceOnly, fakeServer, iso, renderApp, seed } from "./helpers";
 
 const topics = { sections: ["finance"], keywords: [], updated_at: iso(H) };
-const recent = { last_refreshed_at: iso(H), theme: "system" as const }; // no refresh on open
+const recent = { last_refreshed_at: iso(5 * 60_000), theme: "system" as const }; // no refresh on open
 const due = { last_refreshed_at: iso(4 * H), theme: "system" as const }; // refresh on open
 const headlineOnly = (id: string, over = {}) => card(id, { summary: "", key_points: [], ai_status: "offline", ...over });
 
