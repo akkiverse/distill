@@ -1,8 +1,7 @@
-import { SaveButton } from "../components/CardView";
+import { SaveButton, WhenPublished } from "../components/CardView";
 import { Figures } from "../components/FigureChart";
 import { IconBack, IconExternal } from "../components/Icons";
 import { sectionLabel, useDistill } from "../state";
-import { timeAgo } from "../time";
 
 export function Post({ id }: { id: string }) {
   const { state, sections } = useDistill();
@@ -23,8 +22,9 @@ export function Post({ id }: { id: string }) {
         <SaveButton card={card} />
       </div>
       <p className="card-meta">
-        <span className="source">{card.source_name}</span> <span aria-hidden="true">·</span> {timeAgo(card.published_at ?? card.fetched_at)}
+        <span className="source">{card.source_name}</span>
         <span className="topic">{sectionLabel(card.topic_section, sections)}</span>
+        <WhenPublished card={card} />
       </p>
       <h1 id="post-title" className="post-title">{card.title}</h1>
       {card.summary ? (

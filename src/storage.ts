@@ -51,3 +51,34 @@ export function saveLocal(local: Local): void {
 export function dropExpired(cards: Card[], now = Date.now()): Card[] {
   return cards.filter((c) => c.saved || now - Date.parse(c.fetched_at) <= EXPIRY_MS);
 }
+
+const SEEN_KEY = "distill.seen.v1";
+export const SEEN_KEEP_MS = 36 * 3_600_000; // the server ignores stories older than 36 hours anyway
+export const MAX_KNOWN = 500; // the refresh request accepts up to 500 known links
+
+/**
+ * Links the AI has already judged on this device (kept or not), with when (AC-8.5). Device-only and
+ * separate from the synced copy, so the synced data shape is unchanged.
+ */
+export function loadSeen(now = Date.now()): Record<string, number> {
+  try {
+    const j = JSON.parse(localStorage.getItem(SEEN_KEY) ?? "{}");
+    const out: Record<string, number> = {};
+    for (const [url, at] of Object.entries(j ?? {})) if (typeof at === "number" && now - at <= SEEN_KEEP_MS) out[url] = at;
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+export function rememberSeen(urls: string[], now = Date.now()): void {
+  if (urls.length === 0) return;
+  const seen = loadSeen(now);
+  for (const u of urls) seen[u] = now;
+  const newest = Object.entries(seen).sort((a, b) => b[1] - a[1]).slice(0, MAX_KNOWN);
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify(Object.fromEntries(newest)));
+  } catch {
+    /* storage full or blocked: at worst a story is judged again */
+  }
+}
