@@ -51,3 +51,11 @@ export function refreshIsDue(lastRefreshedAt: string | null, now = Date.now()): 
   if (!lastRefreshedAt) return true;
   return now - Date.parse(lastRefreshedAt) >= AUTO_REFRESH_MS;
 }
+
+/** A price's time in Indian time without the year, e.g. "26 Nov, 2:41 PM IST" (AC-9.4). */
+export function priceTime(iso: string | null | undefined): string {
+  const ms = iso ? Date.parse(iso) : NaN;
+  if (Number.isNaN(ms)) return "";
+  const { date, time } = ist(ms);
+  return `${date.replace(/ \d{4}$/, "")}, ${time} IST`;
+}

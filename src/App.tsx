@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { watchAiStatus } from "./ai-status.js";
-import { IconBookmark, IconFeed, IconTopics, IconX } from "./components/Icons";
+import { IconBookmark, IconFeed, IconPrices, IconTopics, IconX } from "./components/Icons";
+import { Prices } from "./components/Prices";
 import { Feed } from "./screens/Feed";
 import { Post } from "./screens/Post";
 import { Saved } from "./screens/Saved";
@@ -22,6 +23,7 @@ export function useHashRoute(): string {
 
 const NAV = [
   { href: "#/", route: "/", label: "Feed", Icon: IconFeed },
+  { href: "#/prices", route: "/prices", label: "Prices", Icon: IconPrices },
   { href: "#/saved", route: "/saved", label: "Saved", Icon: IconBookmark },
   { href: "#/topics", route: "/topics", label: "Topics", Icon: IconTopics },
 ];
@@ -43,6 +45,7 @@ function Shell() {
 
   let screen;
   if (route.startsWith("/post/")) screen = <Post id={decodeURIComponent(route.slice(6))} />;
+  else if (route === "/prices") screen = <Prices />;
   else if (route === "/saved") screen = <Saved />;
   else if (route === "/topics") screen = <Topics />;
   else screen = <Feed />;

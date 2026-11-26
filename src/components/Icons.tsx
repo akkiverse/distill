@@ -35,3 +35,15 @@ export const IconX = (p: SVGProps<SVGSVGElement>) => (
 export const IconArrowUp = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M12 19V5" /><path d="m5 12 7-7 7 7" /></svg>
 );
+export const IconChevron = ({ dir = "down", ...p }: SVGProps<SVGSVGElement> & { dir?: "up" | "down" }) => (
+  <svg {...base(p)}><path d={dir === "up" ? "m6 15 6-6 6 6" : "m6 9 6 6 6-6"} /></svg>
+);
+export const IconPlus = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M12 5v14M5 12h14" /></svg>
+);
+export const IconPause = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M10 9v6M14 9v6" /></svg>
+);
+export const IconPrices = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M4 19h16" /><path d="M5 15l4-4 3 3 6-7" /><path d="M15 7h3v3" /></svg>
+);
