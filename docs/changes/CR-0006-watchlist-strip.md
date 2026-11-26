@@ -1,9 +1,9 @@
 # CR-0006: Watchlist page and pinned prices strip
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board, new feature E5)
 - **Date:** 2026-11-26
-- **Release:** v0.5.0 (once released; feature, minor)
+- **Release:** v0.5.0 (feature, minor; released 2026-11-26)
 - **Pull request:** https://github.com/akkiverse/distill/pull/16
 - **Issue:** closes #15 (US-10); changes criteria of US-9 (#13)
 

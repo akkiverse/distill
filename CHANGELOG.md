@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-26
+
 ### Added
 - E5: a slim strip of up to 6 pinned prices under the header on every screen (or the Feed only, or off), each with a short name, a type badge, the price and the change; tap one for its detail. See [CR-0006](docs/changes/CR-0006-watchlist-strip.md).
 - E5: a Watchlist page replaces the Prices tab: items grouped Gold, Indian shares and US shares, a star to pin each, Edit mode to reorder and remove, the strip's order and the strip setting. See [CR-0006](docs/changes/CR-0006-watchlist-strip.md).
@@ -47,6 +49,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First version (MVP), built from the approved spec. See [CR-0001](docs/changes/CR-0001-mvp.md).
 
+[0.5.0]: https://github.com/akkiverse/distill/pull/16
 [0.4.0]: https://github.com/akkiverse/distill/pull/14
 [0.3.0]: https://github.com/akkiverse/distill/pull/12
 [0.2.1]: https://github.com/akkiverse/distill/pull/10
