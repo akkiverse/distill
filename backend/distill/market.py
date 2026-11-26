@@ -106,6 +106,7 @@ class PriceItem(BaseModel):
 class GatewayOut(BaseModel):
     heartbeat_at: str | None
     paused: bool
+    markets_closed: bool = False  # AC-9.15: every watched item's last price says its market is closed
 
 
 class PricesResponse(BaseModel):
@@ -177,6 +178,11 @@ def paused(heartbeat_at: datetime | None, now: datetime) -> bool:
     return now - heartbeat_at > PAUSED_AFTER
 
 
+def all_closed(items: Sequence[PriceItem]) -> bool:
+    """AC-9.15: every watched item has a last price and that price says its market is closed."""
+    return bool(items) and all(i.price is not None and i.market_state == "closed" for i in items)
+
+
 def _num(v) -> float | None:
     return None if v is None else float(v)
 
@@ -229,10 +235,11 @@ async def prices(data: MarketData, keys: Sequence[str], role: str | None, now: d
     known = await data.instruments(wanted) if wanted else {}
     shown = [k for k in wanted if k in known and visible(known[k], role)]
     rows, heartbeat = await data.prices(shown)
+    items = [build_item(known[k], rows.get(k)) for k in shown]  # never a Zerodha price for anyone but the founder
     return PricesResponse(
-        items=[build_item(known[k], rows.get(k)) for k in shown],  # never a Zerodha price for anyone but the founder
+        items=items,
         hidden=[k for k in keys if k not in shown],
-        gateway=GatewayOut(heartbeat_at=iso(heartbeat), paused=paused(heartbeat, now)),
+        gateway=GatewayOut(heartbeat_at=iso(heartbeat), paused=paused(heartbeat, now), markets_closed=all_closed(items)),
         read_at=iso(now) or "",
     )
 

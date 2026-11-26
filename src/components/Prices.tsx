@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, api } from "../api";
 import {
-  DISCLAIMER, MAX_WATCH, NOT_SET_UP, TOO_MANY, UNREACHABLE, WAITING, cardsMentioning, changeText, direction, money, refreshEvery,
+  DISCLAIMER, MARKETS_CLOSED, MAX_WATCH, NOT_SET_UP, TOO_MANY, UNREACHABLE, WAITING, cardsMentioning, changeText, direction, money,
+  quietBecauseClosed, refreshEvery,
 } from "../markets";
 import { useDistill } from "../state";
 import { priceTime } from "../time";
 import type { Instrument, PriceItem, PricesResult } from "../types";
-import { IconChevron, IconPause, IconPlus, IconX } from "./Icons";
+import { IconChevron, IconMoon, IconPause, IconPlus, IconX } from "./Icons";
 
 type Status = "idle" | "loading" | "ok" | "not_set_up" | "offline";
 const FOLD_KEY = "distill.prices.open";
@@ -114,13 +115,21 @@ export function Prices({ folded = false }: { folded?: boolean }) {
 
   const byKey = new Map((result?.items ?? []).map((i) => [i.key, i]));
   const rows = keys.filter((k) => byKey.has(k) || !result).map((k) => byKey.get(k) ?? null);
+  const shownKeys = (result?.items ?? []).map((i) => i.key);
+  const closedNow = quietBecauseClosed(shownKeys, result?.gateway.markets_closed); // AC-9.15
   const showsGold = (result?.items ?? []).some((i) => i.source === "metalcharts" && i.price !== null);
 
   const body = (
     <div className="prices-body">
       {status === "not_set_up" && <p className="note" role="status">{NOT_SET_UP}. Everything else in Distill works as usual.</p>}
       {status === "offline" && <p className="note error" role="status">{UNREACHABLE}. The last prices stay until it's back.</p>}
-      {status === "ok" && result?.gateway.paused && (
+      {status === "ok" && result?.gateway.paused && closedNow && (
+        <p className="note closed" role="status">
+          <IconMoon />
+          {MARKETS_CLOSED}
+        </p>
+      )}
+      {status === "ok" && result?.gateway.paused && !closedNow && (
         <p className="note paused" role="status">
           <IconPause />
           {result.gateway.heartbeat_at ? `Prices paused since ${priceTime(result.gateway.heartbeat_at)}` : "Prices paused: the price service hasn't checked in yet"}

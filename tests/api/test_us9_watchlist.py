@@ -150,10 +150,30 @@ def test_ac_9_6_paused_after_two_minutes(mclient, mk):
     assert mclient.get("/api/market/prices", params={"keys": "NSE:TCS"}).json()["gateway"]["paused"] is False
     mk.heartbeat_at = NOW - timedelta(minutes=2, seconds=1)
     got = mclient.get("/api/market/prices", params={"keys": "NSE:TCS"}).json()
-    assert got["gateway"] == {"heartbeat_at": "2026-11-25T08:57:59Z", "paused": True}
+    assert got["gateway"] == {"heartbeat_at": "2026-11-25T08:57:59Z", "paused": True, "markets_closed": False}
     assert got["items"][0]["price"] == 4182.5
     mk.heartbeat_at = None
     assert mclient.get("/api/market/prices", params={"keys": "NSE:TCS"}).json()["gateway"]["paused"] is True
+
+
+def test_ac_9_15_markets_closed_when_every_item_is_closed(mclient, mk):
+    """AC-9.15: a quiet gateway with every watched item's last price saying "closed" is flagged as markets closed."""
+    mk.heartbeat_at = NOW - timedelta(hours=3)
+    mk.prices_["NSE:TCS"] = row("NSE:TCS", 4182.5, state="closed")
+    got = mclient.get("/api/market/prices", params={"keys": "NSE:TCS,GOLD:XAU_USD"}).json()
+    assert got["gateway"]["paused"] is True and got["gateway"]["markets_closed"] is True
+    assert [i["price"] for i in got["items"]] == [4182.5, 2650.0]  # the last close is still shown
+
+
+def test_ac_9_15_one_open_market_keeps_prices_paused(mclient, mk):
+    """AC-9.15: if any watched item is open, or has no price yet, the flag stays off, so the app says "Prices paused"."""
+    mk.heartbeat_at = NOW - timedelta(hours=3)
+    got = mclient.get("/api/market/prices", params={"keys": "NSE:TCS,GOLD:XAU_USD"}).json()
+    assert got["gateway"]["paused"] is True and got["gateway"]["markets_closed"] is False
+    mk.prices_["NSE:TCS"] = row("NSE:TCS", None, state="closed")
+    got = mclient.get("/api/market/prices", params={"keys": "NSE:TCS,GOLD:XAU_USD"}).json()
+    assert got["gateway"]["markets_closed"] is False
+    assert mclient.get("/api/market/prices", params={"keys": ""}).json()["gateway"]["markets_closed"] is False
 
 
 def test_ac_9_7_waiting_and_error(mclient, mk):

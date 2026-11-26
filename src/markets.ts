@@ -8,6 +8,7 @@ export const TOO_MANY = `You can watch up to ${MAX_WATCH} items`;
 export const NOT_SET_UP = "Price source not set up yet"; // AC-9.10
 export const UNREACHABLE = "Prices can't be reached right now"; // AC-9.10
 export const WAITING = "Waiting for the first price"; // AC-9.7
+export const MARKETS_CLOSED = "Markets closed, prices from the last close"; // AC-9.15
 export const DISCLAIMER = "For information only. Not investment advice. Prices may be delayed."; // AC-9.14
 
 export type Market = "india" | "us" | "spot";
@@ -43,6 +44,14 @@ export function isOpen(market: Market, now = Date.now()): boolean {
     return weekday(d) && minutes >= 9 * 60 + 30 && minutes < 16 * 60;
   }
   return weekday(partsIn("Asia/Kolkata", now).weekday);
+}
+
+/**
+ * AC-9.15: the gateway is quiet only because the markets are shut: every watched item's last price says closed, and
+ * by the clock none of their markets is open now. If either disagrees, a quiet gateway still means "Prices paused".
+ */
+export function quietBecauseClosed(keys: string[], marketsClosed: boolean | undefined, now = Date.now()): boolean {
+  return Boolean(marketsClosed) && keys.length > 0 && !keys.some((k) => isOpen(marketOf(k), now));
 }
 
 /** AC-9.9: how long until the next read of the list. */

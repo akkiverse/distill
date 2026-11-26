@@ -1,6 +1,6 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CLOSED_EVERY_MS, OPEN_EVERY_MS, cardsMentioning, changeText, isOpen, money, refreshEvery } from "../markets";
+import { CLOSED_EVERY_MS, OPEN_EVERY_MS, cardsMentioning, changeText, isOpen, money, quietBecauseClosed, refreshEvery } from "../markets";
 import { loadLocal } from "../storage";
 import { priceTime } from "../time";
 import type { PriceItem, PricesResult } from "../types";
@@ -104,6 +104,36 @@ describe("US-9: Price watchlist (CR-0005)", () => {
     renderApp("#/prices");
     expect(await screen.findByText("Prices paused since 26 Nov, 2:35 PM IST")).toBeInTheDocument();
     expect(screen.getByText("Rs 4,182.50")).toBeInTheDocument();
+  });
+
+  it("AC-9.15: a quiet gateway while every watched market is closed says Markets closed, prices from the last close", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: Date.parse("2026-11-28T06:00:00Z") }); // Saturday
+    const closed = [item("NSE:TCS", { label: "Market closed, last close", market_state: "closed" }), { ...GOLD }];
+    priceServer(() => ({ json: result(closed, { gateway: { heartbeat_at: "2026-11-27T10:05:00Z", paused: true, markets_closed: true } }) }));
+    seed({ watchlist: watchlist(["NSE:TCS", "GOLD:XAU_USD"]) });
+    renderApp("#/prices");
+    expect(await screen.findByText("Markets closed, prices from the last close")).toBeInTheDocument();
+    expect(screen.queryByText(/Prices paused/)).not.toBeInTheDocument();
+    expect(screen.getByText("Rs 4,182.50")).toBeInTheDocument();
+  });
+
+  it("AC-9.15: a quiet gateway while a watched market is open still says Prices paused", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: Date.parse("2026-11-26T05:00:00Z") }); // Thursday 10:30 AM IST: NSE open
+    const closed = [item("NSE:TCS", { label: "Market closed, last close", market_state: "closed" })];
+    priceServer(() => ({ json: result(closed, { gateway: { heartbeat_at: "2026-11-25T10:05:00Z", paused: true, markets_closed: true } }) }));
+    seed({ watchlist: watchlist(["NSE:TCS"]) });
+    renderApp("#/prices");
+    expect(await screen.findByText("Prices paused since 25 Nov, 3:35 PM IST")).toBeInTheDocument();
+    expect(screen.queryByText("Markets closed, prices from the last close")).not.toBeInTheDocument();
+  });
+
+  it("AC-9.15: the clock rule: closed only when no watched market is open", () => {
+    const sat = Date.parse("2026-11-28T06:00:00Z");
+    const thuNight = Date.parse("2026-11-26T18:00:00Z"); // 11:30 PM IST, 1 PM New York: US open
+    expect(quietBecauseClosed(["NSE:TCS"], true, sat)).toBe(true);
+    expect(quietBecauseClosed(["NSE:TCS"], false, sat)).toBe(false);
+    expect(quietBecauseClosed(["NSE:TCS", "US:EPAM"], true, thuNight)).toBe(false);
+    expect(quietBecauseClosed([], true, sat)).toBe(false);
   });
 
   it("AC-9.7: no price yet says Waiting for the first price; an error keeps the last price", async () => {

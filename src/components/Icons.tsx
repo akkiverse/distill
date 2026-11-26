@@ -44,6 +44,9 @@ export const IconPlus = (p: SVGProps<SVGSVGElement>) => (
 export const IconPause = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M10 9v6M14 9v6" /></svg>
 );
+export const IconMoon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>
+);
 export const IconPrices = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M4 19h16" /><path d="M5 15l4-4 3 3 6-7" /><path d="M15 7h3v3" /></svg>
 );

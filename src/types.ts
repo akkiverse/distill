@@ -94,7 +94,7 @@ export interface PriceItem extends Instrument {
 export interface PricesResult {
   items: PriceItem[];
   hidden: string[];
-  gateway: { heartbeat_at: string | null; paused: boolean };
+  gateway: { heartbeat_at: string | null; paused: boolean; markets_closed?: boolean };
   read_at: string;
 }
 

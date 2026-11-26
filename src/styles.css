@@ -234,5 +234,6 @@ legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
 .search-hits { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .search-hits li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; }
 .note.paused { background: var(--amber-soft); color: var(--amber); border-color: transparent; }
+.note.closed { color: var(--muted); }
 .disclaimer { margin: 6px 0 0; }
 .prices-empty { margin: 4px 0 8px; }
