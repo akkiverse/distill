@@ -406,6 +406,9 @@ def _duplicate(cat: catalog.Catalog, url: str, except_id: str | None = None) -> 
 
 
 async def _checked(checker: catalog.Checker, url: str) -> catalog.FeedCheck:
+    problem = catalog.address_problem(url)
+    if problem:
+        raise catalog.SourceRejected(problem, catalog.REASONS[problem])
     result = await checker(url)
     if not result.ok:
         raise catalog.SourceRejected(result.code or "check_failed", result.message or "The feed didn't pass the check.")
