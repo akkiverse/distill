@@ -34,11 +34,11 @@ describe("US-10: Watchlist page and pinned prices strip (CR-0006)", () => {
     const tcs = tiles.find((t) => t.getAttribute("href") === "#/item/NSE%3ATCS")!;
     expect(within(tcs).getByText("TCS")).toBeInTheDocument();
     expect(within(tcs).getByText("NSE")).toHaveClass("badge");
-    expect(within(tcs).getByText("Rs 4,182.50")).toBeInTheDocument();
+    expect(within(tcs).getByText("₹4,182.50")).toBeInTheDocument();
     expect(within(tcs).getByText("+0.24%")).toBeInTheDocument();
     const epam = within(strip).getByText("EPAM").closest("a")!;
     expect(within(epam).getByText("−2.53%").closest(".tc")).toHaveClass("down");
-    expect(within(within(strip).getByText("Gold India").closest("a")!).getByText("Rs/10 g")).toHaveClass("gold");
+    expect(within(within(strip).getByText("Gold India").closest("a")!).getByText("₹/10 g")).toHaveClass("gold");
     expect(within(strip).getByRole("link", { name: "2 more slots · Edit" })).toHaveAttribute("href", "#/watchlist");
     expect(within(strip).queryByText("Gold spot")).toBeNull(); // not pinned
   });
@@ -165,7 +165,7 @@ describe("US-10: Watchlist page and pinned prices strip (CR-0006)", () => {
     fireEvent.change(screen.getByLabelText("Search by name or symbol"), { target: { value: "gold" } });
     await screen.findByRole("button", { name: "Add HDFC Gold ETF" }, { timeout: 2000 });
     const headings = within(screen.getByRole("dialog")).getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
-    expect(headings).toEqual(["Rs/10 gGold rate, India", "SpotInternational gold", "ETFGold ETFs", "SGBSovereign Gold Bonds", "MFGold mutual funds"]);
+    expect(headings).toEqual(["₹/10 gGold rate, India", "SpotInternational gold", "ETFGold ETFs", "SGBSovereign Gold Bonds", "MFGold mutual funds"]);
     expect(screen.getByText("Government bonds: 1 unit = 1 g of gold, plus 2.5% interest a year. Few trades a day.")).toBeInTheDocument();
     expect(screen.getByText("What 10 g of 24K gold costs in India today, from MCX. Before GST.")).toBeInTheDocument();
     const etfs = screen.getByRole("region", { name: /Gold ETFs$/ });
@@ -201,7 +201,7 @@ describe("US-10: Watchlist page and pinned prices strip (CR-0006)", () => {
   });
 
   it("AC-10.6: each kind has its badge", () => {
-    expect([GOLDM, GOLD, GOLDBEES, SGB, GOLDMF, TCS, EPAM].map((i) => badgeOf(i).text)).toEqual(["Rs/10 g", "Spot", "ETF", "SGB", "MF", "NSE", "US"]);
+    expect([GOLDM, GOLD, GOLDBEES, SGB, GOLDMF, TCS, EPAM].map((i) => badgeOf(i).text)).toEqual(["₹/10 g", "Spot", "ETF", "SGB", "MF", "NSE", "US"]);
     expect(badgeOf(GOLDBEES).gold).toBe(true);
     expect(badgeOf(item("NSE:NIFTYBEES", { category: "etf" })).text).toBe("ETF");
     expect(badgeOf(item("NSE:NIFTYBEES", { category: "etf" })).gold).toBe(false);
@@ -214,12 +214,12 @@ describe("US-10: Watchlist page and pinned prices strip (CR-0006)", () => {
     seed({ watchlist: watchlist(["NSE:SGBJUN31I-GB", "NSE:TCS"], { pinned: ["NSE:TCS"] }), cards: [card("n1", { title: "SGBJUN31I trades at a discount" })] });
     renderApp("#/item/NSE%3ASGBJUN31I-GB");
     expect(await screen.findByRole("heading", { level: 1, name: "SGBJUN31I" })).toBeInTheDocument();
-    expect(screen.getByText("Rs 7,480.00")).toBeInTheDocument();
-    expect(screen.getByText("+12.00 (+0.16%)")).toHaveClass("up");
+    expect(screen.getByText("₹7,480.00")).toBeInTheDocument();
+    expect(screen.getByText("+₹12.00 (+0.16%)").closest(".change")).toHaveClass("up"); // changed CR-0012: ₹ and an arrow
     expect(screen.getByText("since the previous close")).toBeInTheDocument();
     expect(screen.getByText("Market closed, last close at 26 Nov, 3:30 PM IST. Opens Fri 9:15 AM IST.")).toBeInTheDocument();
     expect(screen.getByText(/^Sovereign Gold Bond: 1 unit = 1 g of gold, 2.5% yearly interest/)).toBeInTheDocument();
-    expect(screen.getByText("Zerodha (your account)")).toBeInTheDocument();
+    expect(screen.getByText("Zerodha (the studio's connection)")).toBeInTheDocument(); // changed CR-0012
     expect(screen.getByRole("link", { name: "SGBJUN31I trades at a discount" })).toBeInTheDocument();
     expect(screen.getByText(/For information only. Not investment advice./)).toBeInTheDocument();
     const pin = screen.getByRole("button", { name: "Pin on top" });

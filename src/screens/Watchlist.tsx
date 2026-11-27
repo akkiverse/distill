@@ -2,7 +2,9 @@ import { useState, type DragEvent } from "react";
 import { AddSheet } from "../components/AddSheet";
 import { IconChevron, IconGrip, IconPlus, IconStar, IconX } from "../components/Icons";
 import { Badge, Disclaimer, NoticeView } from "../components/PriceBits";
-import { MAX_PINNED, NOT_SET_UP, STRIP_FULL, changeText, direction, money, pctText } from "../markets";
+import { Arrow, ChangeText, PriceText, Spark } from "../components/Trend";
+import { NO_RATE, rateText, shown } from "../rupees";
+import { MAX_PINNED, NOT_SET_UP, STRIP_FULL, direction, pctText } from "../markets";
 import { usePrices } from "../prices";
 import { useDistill } from "../state";
 import { priceTime } from "../time";
@@ -26,7 +28,9 @@ export function Watchlist({ adding = false }: { adding?: boolean }) {
   const shown = keys.filter((k) => !result || item(k)); // AC-9.8: items the server hides are not shown
   const groupOfKey = (k: string) => {
     const it = item(k);
-    return it ? groupOf(it) : k.startsWith("US:") ? "us" : k.startsWith("GOLD:") || k.startsWith("MCX:") || k.startsWith("MF:") ? "gold" : "india";
+    if (it) return groupOf(it);
+    if (k.startsWith("FX:")) return "currency";
+    return k.startsWith("US:") ? "us" : k.startsWith("GOLD:") || k.startsWith("MCX:") || k.startsWith("MF:") ? "gold" : "india";
   };
   const notices = priceNotices(status, result);
 
@@ -93,7 +97,7 @@ export function Watchlist({ adding = false }: { adding?: boolean }) {
           ) : (
             <>
               <div className="wl-cols" aria-hidden="true">
-                <span>Item</span><span>Type</span><span className="num">Price</span><span className="num">Change</span><span>Price time (IST)</span><span />
+                <span>Item</span><span>Type</span><span>Today</span><span className="num">Price</span><span className="num">Change</span><span>Price time (IST)</span><span />
               </div>
               {GROUPS.map((g) => {
                 const ks = shown.filter((k) => groupOfKey(k) === g.id);
@@ -161,9 +165,12 @@ function Row(props: {
 }) {
   const { k, it, pinned, editing, first, last } = props;
   const { result } = usePrices();
+  const [showRate, setShowRate] = useState(false);
   const name = it ? nameOf(it) : k;
   const has = it && it.price !== null;
-  const dir = direction(it?.change ?? null);
+  const s = it ? shown(it) : null;
+  const dir = direction(s?.delta ?? it?.change ?? null);
+  const rate = s?.usd ? rateText(result?.fx) : null;
   const href = `#/item/${encodeURIComponent(k)}`;
   return (
     <li className={`wl-row${props.dragging ? " dragging" : ""}`} data-testid="price-row" {...props.dragProps}>
@@ -173,17 +180,29 @@ function Row(props: {
         <span className="wl-sub">{it && <Badge item={it} />}<span>{it ? subLine(it) : k}</span></span>
       </div>
       <span className="wl-type">{it && <span className="badge plain">{typeLabel(it as Instrument)}</span>}</span>
+      <span className="wl-spark">{has && <Spark it={it} />}</span>
       <span className="wl-price num">
         {has ? (
           <>
-            <b>{money(it.price!, it.currency)}</b>
-            <span className={`wl-pct ${dir}`}>{it.change_pct !== null && it.change !== null ? pctText(it.change_pct) : it.market === "AMFI" ? "Daily" : "Last close"}</span>
+            {rate ? (
+              // AC-14.2: tap (or hover) the price for the rate it uses
+              <button type="button" className="price-btn" aria-expanded={showRate} onClick={() => setShowRate(!showRate)} title={rate}>
+                <b><PriceText it={it} usdClass="wl-usd" /></b>
+              </button>
+            ) : (
+              <b><PriceText it={it} usdClass="wl-usd" showNoRate={false} /></b>
+            )}
+            {s?.noRate && <span className="no-rate small">{NO_RATE}</span>}
+            {showRate && rate && <span className="rate-line small">{rate}</span>}
+            <span className={`wl-pct ${dir}`}>
+              {it.change_pct !== null && it.change !== null ? <><Arrow dir={dir} size={10} />{pctText(it.change_pct)}</> : it.market === "AMFI" ? "Daily" : it.market === "FX" ? "Daily rate" : "Last close"}
+            </span>
           </>
         ) : (
           <span className="muted small">{it?.status === "error" ? it.error : it ? waitingText(it, result) : "Loading"}</span>
         )}
       </span>
-      <span className={`wl-change num ${dir}`}>{has && it.change !== null ? changeText(it.change, it.change_pct) : ""}</span>
+      <span className="wl-change num">{has && it.change !== null ? <ChangeText it={it} /> : ""}</span>
       <span className="wl-time small">
         {has && <time dateTime={it.as_of ?? undefined}>{priceTime(it.as_of)}</time>}
         {has && <span className={`wl-label ${it.market_state === "closed" ? "closed" : it.label === "Live" ? "live" : "delayed"}`}>{it.label}</span>}

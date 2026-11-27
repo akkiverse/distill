@@ -149,8 +149,8 @@ export interface UserState {
   updated_at: string | null;
 }
 
-export type Category = "stock" | "etf" | "gold_spot" | "gold_india" | "gold_etf" | "gold_bond" | "gold_mf";
-export type Group = "gold" | "india" | "us";
+export type Category = "stock" | "etf" | "gold_spot" | "gold_india" | "gold_etf" | "gold_bond" | "gold_mf" | "fx";
+export type Group = "gold" | "india" | "us" | "currency"; // "fx" and "currency" added CR-0012
 
 export interface Instrument {
   key: string;
@@ -189,6 +189,33 @@ export interface PriceItem extends Instrument {
   label: string;
   market_state: string;
   error: string | null;
+  /** CR-0012 (AC-14.1): a US-dollar price in rupees at the gateway's rate; absent from v0.8.0 servers and without a rate. */
+  price_inr?: number | null;
+  prev_close_inr?: number | null;
+  change_inr?: number | null;
+}
+
+/** CR-0012 (AC-14.2): the USD to INR rate the rupee prices use, and when it is from. */
+export interface FxRate {
+  key: string;
+  rate: number;
+  as_of: string | null;
+  error: string | null;
+}
+
+export type HistoryRange = "1d" | "1w" | "1m";
+export interface HistoryPoint {
+  at: string;
+  price: number;
+}
+
+/** CR-0012 (AC-14.7, AC-14.8): price history for the trend graphs; `available` is false before Market Gateway E4. */
+export interface HistoryResult {
+  range: HistoryRange;
+  available: boolean;
+  series: Record<string, HistoryPoint[]>;
+  hidden: string[];
+  read_at: string;
 }
 
 export interface PricesResult {
@@ -196,7 +223,15 @@ export interface PricesResult {
   hidden: string[];
   gateway: { heartbeat_at: string | null; paused: boolean; markets_closed?: boolean };
   markets?: Record<string, MarketInfo>;
+  fx?: FxRate | null;
   read_at: string;
 }
 
 export type SyncStatus = "synced" | "pending" | "device-only" | "unknown";
+
+/** CR-0012 (AC-14.9): the founder's switch "Share Zerodha prices with other users". */
+export interface MarketSharing {
+  share_kite: boolean;
+  updated_at: string | null;
+  saved_in_database: boolean;
+}
