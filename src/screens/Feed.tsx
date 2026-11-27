@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { CardView } from "../components/CardView";
-import { IconArrowUp, IconCheck, IconCloudOff, IconRefresh } from "../components/Icons";
+import { topicHue } from "../components/Cover";
+import { IconArrowUp, IconCheck, IconCloudOff, IconRefresh, IconSection } from "../components/Icons";
 import { sectionLabel, useDistill } from "../state";
 import { AUTO_REFRESH_MS, AUTO_TICK_MS, clock, hasTime, refreshIsDue } from "../time";
 import type { Card } from "../types";
@@ -128,7 +129,9 @@ export function Feed() {
         </button>
       </div>
       <ul className="chips" aria-label="Your topics">
-        {topics.sections.map((s) => <li key={s} className="chip">{sectionLabel(s, sections)}</li>)}
+        {topics.sections.map((s) => (
+          <li key={s} className="chip topic-chip" style={{ "--chip": topicHue(s) } as React.CSSProperties}><IconSection id={s} />{sectionLabel(s, sections)}</li>
+        ))}
         {topics.keywords.map((k) => <li key={k} className="chip keyword">“{k}”</li>)}
       </ul>
       {busy && phase.kind === "summarising" && (

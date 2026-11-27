@@ -39,7 +39,7 @@ As a reader I want my own AI to keep only useful stories and summarise them so t
 ### US-4: Card feed that ends
 As a reader I want an Instagram-style feed that stops so that I don't keep scrolling.
 - **AC-4.1** Given cards exist, then they are shown newest first, each with source name, time ago, the label "AI summary", the summary and its key points. *(added CR-0001)*
-- **AC-4.2** Given a card with 2 or more key figures in the same unit, then it shows a small chart; otherwise it shows key-figure chips or key points only. *(added CR-0001)*
+- **AC-4.2** Given a card with 2 or more key figures in the same unit, then it shows a small chart; otherwise it shows key-figure chips or key points only. A card with an AI diagram (AC-11.5) shows that instead. *(added CR-0001, changed CR-0008)*
 - **AC-4.3** Given the last card, then the line "You're up to date" appears below it and no more cards load. *(added CR-0001)*
 - **AC-4.4** Given no topics saved, then the Feed shows "Choose your topics to start" with a button to Topics. *(added CR-0001)*
 - **AC-4.5** Given the last refresh was 15 minutes ago or more, when the Feed opens, then a refresh starts automatically; given it was less than 15 minutes ago, then it does not. The Refresh button is always available. *(added CR-0001, changed CR-0004: was 3 hours)*
@@ -112,13 +112,23 @@ As the founder I want the prices I care about most in a slim pinned strip on top
 - **AC-10.12** Existing watchlists: a watchlist saved by v0.4.0 loads with its first 6 items pinned and the strip on every screen; a device still on v0.4.0 can't wipe pins, the setting or items 11 to 20; a copy saved by v0.5.0 stays readable by v0.4.0. *(added CR-0006)*
 - **AC-10.13** Gold search keeps the fixed gold rows: searching "gold" (or choosing Gold) always lists gold spot, and the India gold rate for the founder (AC-9.8), whenever the gateway has them, however many bonds, ETFs and funds also match; they join only when every word typed is in their names, after an exact symbol match; Sovereign Gold Bonds are read after the other gold rows; when the India rate isn't in the price service, its heading says it comes from the studio's Zerodha connection. *(added CR-0007)*
 
+### US-11: A smoother look, a theme switch and AI-drawn story diagrams *(added CR-0008, #18)*
+As a reader I want a polished app I can switch between light and dark, with each story given a short theme and a small diagram by the AI, so that the feed is pleasant to open and a story's shape is clear at a glance.
+- **AC-11.1** Given any screen, then the header has a theme switch with System, Light and Dark (the current one marked `aria-checked`); choosing one applies it at once to every screen, keeps it on the device and saves it with my topics in the account; System follows the device's setting. *(added CR-0008)*
+- **AC-11.2** Given a theme saved on this device, when the app opens, then that theme is applied before the app draws (no flash of the other theme), and the browser's bar colour (`theme-color`) matches it. *(added CR-0008)*
+- **AC-11.3** Given two devices with different theme choices, when they sync, then the choice made last wins; given a device that sends no theme time (v0.5.1), then it can't overwrite a newer choice. *(added CR-0008)*
+- **AC-11.4** Given an AI-summarised card, then it has a cover band in its topic's colour showing the theme the AI gave the story (2 to 5 words, trimmed to 40 characters, e.g. "The AI chip rush"); given no theme from the AI, then the band shows the topic's name. Headline-only cards keep the plain look. *(added CR-0008)*
+- **AC-11.5** Given the AI's answer, then it may add one diagram of a kind it picks for the story: bars (2 to 6 numbers in the same unit), change (a value before and after, e.g. a price from 72,300 to 74,100), trend (3 to 8 values in time order) or steps (2 to 5 short stages, each at most 60 characters); every number must appear in the headline or snippet (as AC-3.3); a diagram that fails a check, or has too few points, is dropped and the card falls back to AC-4.2. *(added CR-0008)*
+- **AC-11.6** Given a card with a diagram, then the feed card shows it compactly and the post shows it full size with its title; each diagram has a text version (`role="img"` with an `aria-label` listing its values or steps). *(added CR-0008)*
+- **AC-11.7** Given cards and settings saved by v0.5.1 (no cover, diagram or theme time), when they load on the device or from the account, then they read unchanged and show with the topic's cover colour and the key-figure chart as before; v0.5.1 can still read what v0.6.0 saves. *(added CR-0008)*
+
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
 |---|---|---|---|
 | Sign-in (Studio Accounts kit) | Email and password | n/a | "Wrong email or password" |
 | Feed (home) | Topic chips, Refresh button, "Last updated" time, "N new" pill while new cards wait, card list with publish times, "You're up to date" | "Choose your topics to start" + button | "AI is offline right now" banner with headline-only cards; "Couldn't reach &lt;source&gt;" note |
 | Topics | Multi-select section grid, keyword input with chips, Save | No keywords is fine | "Pick at least one section" |
-| Post detail | Summary, key points, chart, source link, Save toggle, Back | n/a | "This post has expired" + Back to feed |
+| Post detail | Cover band with the AI theme, summary, key points, AI diagram or chart, source link, Save toggle, Back *(changed CR-0008)* | n/a | "This post has expired" + Back to feed |
 | Saved | Saved cards, newest first, Unsave | "Nothing saved yet. Tap the bookmark on any post." | n/a |
 | Pinned strip (under the header) *(added CR-0006)* | Up to 6 pinned items: short name, type badge, price, change; a calm one-line note; on wide screens "N more slots · Edit" | Hidden when nothing is pinned or the setting is Off | One-line amber "Prices paused" only while a watched market is open; "Prices can't be reached right now" |
 | Watchlist (its own tab; replaces Prices) *(added CR-0005, changed CR-0006)* | Items grouped Gold, Indian shares, US shares with price, change and a star to pin; Edit mode (reorder, remove); "On top of every screen" order; "Show pinned prices" setting; the information-only note | "Add gold or a share to follow its price" + Add button | "Price source not set up yet"; "Prices paused since &lt;time&gt; while NSE is open"; "Markets closed, prices from the last close. NSE opens Fri 9:15 AM IST"; "Prices start when the market opens (NSE 9:15 AM IST)"; "US market closed today for a holiday"; "Prices can't be reached right now" |
@@ -128,10 +138,11 @@ As the founder I want the prices I care about most in a slim pinned strip on top
 Flow: sign in → Topics (first time) → Feed → Refresh (progress shows "Fetching news", then "Summarising 3 of 12") → tap card → detail → back. Bottom navigation on phones: Feed, Watchlist, Saved, Topics (the old `#/prices` link opens the Watchlist). *(changed CR-0005, CR-0006)*
 
 ## Look and feel
-- **Personality:** calm, clear, finished.
+*(changed CR-0008: the founder asked for a smoother, cooler look with a light and dark switch; see [CR-0008](../changes/CR-0008-ui-refresh.md) and [DESIGN.md](../design/DESIGN.md))*
+- **Personality:** calm, clear, finished; smooth and cool ("Night desk").
 - **Feels right for:** someone on a phone in a short break who wants to be done in two minutes, and at a desk in the morning.
-- **Colour mood:** quiet paper-like neutrals with one deep teal accent (#0F766E); no red alert colours except real errors.
-- **Typography:** crisp sans for UI (system), editorial serif for card headlines (Source Serif).
+- **Colour mood:** deep blue-black glass in dark mode and crisp cool white in light mode, with a teal-to-cyan accent and one colour per topic for card covers; no red alert colours except real errors. *(changed CR-0008)*
+- **Typography:** crisp sans for UI (system), Sora (geometric display) for headlines. *(changed CR-0008)*
 - **Take cues from:** a single-column card rhythm, editorial headline typography, calm spacing. No ad slots, no infinite scroll, no busy colour blocks.
 - **Avoid:** autoplay, red badges and counters, "trending" sections, streaks or anything that pulls you back.
 - **Delight moment:** reaching the end: a gentle "You're up to date" with a small check and the time of the next refresh.
@@ -160,8 +171,8 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 | Entity | Fields |
 |---|---|
 | Topics | sections (list), keywords (list), updated_at |
-| Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status, replaced_at (optional, added CR-0004) |
-| Settings | last_refreshed_at, theme |
+| Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status, replaced_at (optional, added CR-0004), cover (optional, added CR-0008), visual (optional {kind, title, unit, points: [{label, value}], steps: [text]}, added CR-0008) |
+| Settings | last_refreshed_at, theme (`system`, `light` or `dark`), theme_changed_at (optional, added CR-0008) |
 | Watchlist *(added CR-0005, changed CR-0006)* | keys (the first 10 market keys such as `NSE:TCS`, `US:EPAM`, `GOLD:XAU_USD`, in display order), more (items 11 to 20), pinned (up to 6 keys, in strip order), strip (`every`, `feed` or `off`), version (2; absent in v0.4.0 copies, which the migration upgrades), updated_at |
 
 Prices are not stored by Distill: they are read from the founder's shared market database (`MARKET_DATABASE_URL`, the contract's `app` role) through a `MarketData` adapter; see [ADR-0005](../adr/0005-market-data-from-shared-database.md). *(added CR-0005)*
@@ -170,13 +181,13 @@ Prices are not stored by Distill: they are read from the founder's shared market
 - Works from 360px wide with no sideways scroll; bottom navigation on phones.
 - First load under 2 seconds on 4G; a refresh of 3 topics finishes in under 60 seconds when Studio AI is up.
 - Accessible: labels on every control, AA contrast, keyboard navigation, alt text for charts (a one-line text version of the figures).
-- Light and dark themes following the system setting.
+- Light and dark themes: follow the system setting by default, or the reader's choice (AC-11.1). *(changed CR-0008)*
 - Clear error messages; every card links to its source and shows the source name (attribution).
 - No full article text stored or shown; only headline, snippet and the AI summary.
 
 ## Out of scope
 - Push or email digests; any refresh while the app is in the background. *(changed CR-0004: refreshing on a timer while the Feed is open and visible is now in scope, AC-8.4)*
-- AI-drawn diagrams beyond simple charts and key points.
+- AI-drawn diagrams beyond the four kinds in AC-11.5 (bars, change, trend, steps); AI-made images. *(changed CR-0008)*
 - A second database or storage service for Distill's own data; everything Distill keeps stays in the one Neon database. *(changed CR-0002; CR-0005 only reads the founder's separate market database)*
 - Calling Zerodha, Finnhub or MetalCharts from Distill, price charts and alerts. *(added CR-0005)*
 - Paid news APIs, payments, ads, sharing, comments, multiple languages.

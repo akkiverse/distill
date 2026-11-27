@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
 
-from .models import MAX_PINNED, WATCHLIST_VERSION, Card, Topics, UserState, Watchlist
+from .models import MAX_PINNED, WATCHLIST_VERSION, Card, Settings, Topics, UserState, Watchlist
 from .textutil import word_overlap
 
 EXPIRY = timedelta(hours=24)  # AC-6.1
@@ -113,11 +113,22 @@ def newer_watchlist(a: Watchlist, b: Watchlist) -> Watchlist:
     return upgrade_watchlist(b)
 
 
+def newer_theme(stored: Settings, incoming: Settings) -> Settings:
+    """AC-11.3: the theme chosen last wins. A device on v0.5.1 sends no `theme_changed_at`, so it never beats a choice
+    that has one; between two copies without one (both older than CR-0008) the incoming copy wins, as before."""
+    if stored.theme_changed_at and parse_time(incoming.theme_changed_at) < parse_time(stored.theme_changed_at):
+        return stored
+    return incoming
+
+
 def merge_states(stored: UserState, incoming: UserState, now: datetime | None = None) -> UserState:
     """Combine what the data server has with what a device sends."""
     now = now or datetime.now(UTC)
     last = max(parse_time(stored.settings.last_refreshed_at), parse_time(incoming.settings.last_refreshed_at))
-    settings = incoming.settings.model_copy(update={"last_refreshed_at": iso(last) if last.year > 1 else None})
+    theme = newer_theme(stored.settings, incoming.settings)
+    settings = incoming.settings.model_copy(
+        update={"last_refreshed_at": iso(last) if last.year > 1 else None, "theme": theme.theme, "theme_changed_at": theme.theme_changed_at}
+    )
     return UserState(
         topics=newer_topics(stored.topics, incoming.topics),
         cards=merge_cards(stored.cards, incoming.cards, now),

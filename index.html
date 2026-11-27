@@ -8,11 +8,25 @@
     <meta property="og:title" content="Distill" />
     <meta property="og:description" content="A calm news feed that ends: your topics, summarised by your own AI." />
     <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#0f766e" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121715" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#eef2f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#070b12" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/site.webmanifest" />
+    <script>
+      /* AC-11.2: apply the theme saved on this device before the app draws (src/theme.ts does the same afterwards). */
+      (function () {
+        try {
+          var t = JSON.parse(localStorage.getItem("distill.v1") || "{}").state.settings.theme;
+          if (t === "light" || t === "dark") {
+            document.documentElement.dataset.theme = t;
+            document.documentElement.style.colorScheme = t;
+            var c = t === "dark" ? "#070b12" : "#eef2f6";
+            document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.content = c; });
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

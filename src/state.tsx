@@ -2,7 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { api, ApiError } from "./api";
 import { dropExpired, loadLocal, loadSeen, MAX_KNOWN, rememberSeen, saveLocal, type Local } from "./storage";
 import { nowIso } from "./time";
-import type { AiStatus, Card, Section, StripSetting, SyncStatus, UserState } from "./types";
+import { applyTheme, isTheme } from "./theme";
+import type { AiStatus, Card, Section, StripSetting, SyncStatus, Theme, UserState } from "./types";
 import { changedWatchlist } from "./watch";
 
 export const FALLBACK_SECTIONS: Section[] = [
@@ -37,6 +38,8 @@ interface Ctx {
   /** US-9, US-10: the price watchlist, its pins and the strip setting, kept with topics in the account (AC-9.2, AC-9.11, AC-10.3, AC-10.11). */
   saveWatchlist: (change: { keys?: string[]; pinned?: string[]; strip?: StripSetting }) => Promise<void>;
   toggleSave: (id: string) => Promise<void>;
+  /** AC-11.1, AC-11.3: the reader's theme, applied at once and kept with the account settings (newer choice wins). */
+  setTheme: (theme: Theme) => Promise<void>;
   refresh: () => Promise<void>;
   dismissNotice: () => void;
 }
@@ -174,6 +177,21 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     [commit, pushSync],
   );
 
+  const setTheme = useCallback(
+    async (theme: Theme) => {
+      const settings = { ...latest.current.state.settings, theme, theme_changed_at: nowIso() };
+      const state = { ...latest.current.state, settings };
+      applyTheme(theme);
+      commit({ state, pendingSync: true });
+      await pushSync(state, { quiet: true });
+    },
+    [commit, pushSync],
+  );
+
+  // AC-11.1: whatever the device copy or the account says, the page shows it (also after a sync brings another device's choice).
+  const theme = isTheme(local.state.settings.theme) ? local.state.settings.theme : "system";
+  useEffect(() => applyTheme(theme), [theme]);
+
   const toggleSave = useCallback(
     async (id: string) => {
       const cards = latest.current.state.cards.map((c) =>
@@ -240,9 +258,9 @@ export function DistillProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(
     () => ({
       state: local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready,
-      saveTopics, saveWatchlist, toggleSave, refresh, dismissNotice: () => setNotice(null),
+      saveTopics, saveWatchlist, toggleSave, setTheme, refresh, dismissNotice: () => setNotice(null),
     }),
-    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, saveWatchlist, toggleSave, refresh],
+    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, saveWatchlist, toggleSave, setTheme, refresh],
   );
   return <DistillContext.Provider value={value}>{children}</DistillContext.Provider>;
 }

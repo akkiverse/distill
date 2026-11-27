@@ -65,3 +65,32 @@ export const IconCalendar = (p: SVGProps<SVGSVGElement>) => (
 export const IconAlert = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M12 3l9 16H3z" /><path d="M12 10v4M12 17v.5" /></svg>
 );
+
+/* CR-0008: theme switch and section icons */
+export const IconSun = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+);
+export const IconMonitor = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></svg>
+);
+
+const SECTION_PATHS: Record<string, string> = {
+  world: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z",
+  india: "M5 21V4M5 4h11l-2 4 2 4H5",
+  business: "M4 8h16v11H4zM9 8V5h6v3M4 13h16",
+  finance: "M4 19l5-6 4 3 7-9M15 7h5v5",
+  technology: "M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4",
+  science: "M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3M7.5 15h9",
+  health: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+  sports: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM5.6 5.6c3.5 3.5 3.5 9.3 0 12.8M18.4 5.6c-3.5 3.5-3.5 9.3 0 12.8",
+  entertainment: "M4 6h16v12H4zM10 9.5v5l4-2.5z",
+  politics: "M3 21h18M5 10h14M12 3l8 5H4zM6 10v8M10 10v8M14 10v8M18 10v8",
+  environment: "M5 19c0-8 6-13 14-14-1 8-6 14-14 14zM5 19l7-7",
+  education: "M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5",
+  keyword: "M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12zM14.5 14.5L20 20",
+};
+
+/** A small line icon for a news section (AC-11.4 covers and topic chips); keyword topics get a search glass. */
+export const IconSection = ({ id, ...p }: SVGProps<SVGSVGElement> & { id: string }) => (
+  <svg {...base({ width: 16, height: 16, ...p })}><path d={SECTION_PATHS[id.startsWith("kw:") ? "keyword" : id] ?? SECTION_PATHS.world} /></svg>
+);

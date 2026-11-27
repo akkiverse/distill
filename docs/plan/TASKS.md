@@ -113,3 +113,16 @@ For CR-0001. Each task names the stories and criteria it serves.
 ## Release v0.5.1
 - [x] Released 2026-11-27: merge commit 32ba99f, Vercel deployment dpl_GAbyYnuFwh5rR78DPVs4EaYx3hEX (CR-0007, B6).
 - [ ] Tag pending: add tag v0.5.1 on 32ba99f, a GitHub Release and close milestone v0.5.1 (if one exists) from a local session.
+
+## CR-0008: A smoother look, a theme switch and AI-drawn story diagrams
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue for US-11 and milestone v0.6.0; branch `cr/0008-ui-refresh`; CR, spec, design, plan; the founder's two reference images in `docs/changes/attachments/CR-0008/` | all | Yes |
+| 2 | Theme: `theme.ts`, header switch, inline start-up script, `theme_changed_at` and the newer-wins merge | AC-11.1, AC-11.2, AC-11.3 | Yes |
+| 3 | AI cover and diagram: prompt and schema, `visuals.py` checks, `Card.cover` and `Card.visual` | AC-11.4, AC-11.5 | Yes |
+| 4 | Night desk look: tokens, glass, Sora, header, chips with icons, nav, strip, watchlist, notes, motion | design, AC-11.4 | Yes |
+| 5 | Cover band and `Diagram` (bars, change, trend, steps; compact and full) on cards and the post | AC-11.4, AC-11.6, AC-4.2 | Yes |
+| 6 | Tests (pytest and Vitest per AC, v0.5.1 data), lint, build | AC-11.1 to AC-11.7 | Yes |
+| 7 | Visual check at 375 px and 1280 px, light and dark | design | Yes |
+| 8 | Records, pull request, preview check | all | Yes |

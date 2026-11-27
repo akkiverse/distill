@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
-import { IconX } from "../components/Icons";
+import { topicHue } from "../components/Cover";
+import { IconSection, IconX } from "../components/Icons";
 import { useDistill } from "../state";
 
 export const PICK_ONE = "Pick at least one section"; // AC-1.3
@@ -52,8 +53,9 @@ export function Topics() {
         <legend>Sections <span className="muted small">(choose as many as you like)</span></legend>
         <div className="section-grid">
           {sections.map((s) => (
-            <label key={s.id} className={`section-option${picked.includes(s.id) ? " on" : ""}`}>
+            <label key={s.id} className={`section-option${picked.includes(s.id) ? " on" : ""}`} style={{ "--topic": topicHue(s.id) } as React.CSSProperties}>
               <input type="checkbox" checked={picked.includes(s.id)} onChange={() => toggle(s.id)} />
+              <IconSection id={s.id} />
               <span>{s.name}</span>
             </label>
           ))}

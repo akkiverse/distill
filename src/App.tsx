@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { watchAiStatus } from "./ai-status.js";
 import { IconBookmark, IconFeed, IconPrices, IconTopics, IconX } from "./components/Icons";
 import { Strip } from "./components/Strip";
+import { ThemeSwitch } from "./components/ThemeSwitch";
 import { PricesProvider } from "./prices";
 import { Feed } from "./screens/Feed";
 import { Item } from "./screens/Item";
@@ -71,7 +72,10 @@ function Shell() {
       <div ref={banner} />
       <header className="top">
         <a href="#/" className="wordmark" aria-label="Distill, your feed">
-          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14l-5 8v6l-4 2v-8z" fill="currentColor" /></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <defs><linearGradient id="mark-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="var(--teal)" /><stop offset="1" stopColor="var(--cyan)" /></linearGradient></defs>
+            <path d="M5 4h14l-5 8v6l-4 2v-8z" fill="url(#mark-grad)" />
+          </svg>
           Distill
         </a>
         <nav className="nav-top" aria-label="Main">
@@ -80,6 +84,7 @@ function Shell() {
           ))}
         </nav>
         <div className="who">
+          <ThemeSwitch />
           {sync === "pending" && <span className="sync-dot" title="Changes will sync when the connection is back">Not synced yet</span>}
           {me && <><span className="small muted">{me}</span> <a className="small" href="/auth/logout">Sign out</a></>}
         </div>

@@ -105,3 +105,17 @@ See [../adr/](../adr/). The most important so far:
 - [ADR-0004](../adr/0004-account-database-on-neon.md): the account database is hosted Postgres on Neon.
 - [ADR-0005](../adr/0005-market-data-from-shared-database.md): prices from the founder's shared market database.
 - [ADR-0006](../adr/0006-watchlist-v2-and-calendar-fallback.md): watchlist version 2 and the gateway's optional calendar and categories with Distill's own fallback.
+
+## CR-0008: theme switch and AI story diagrams
+- **Theme:** `src/theme.ts` puts the reader's choice on the page as `data-theme` (System removes it, so the `prefers-color-scheme` rules apply) and sets the `theme-color` bar colour; a 10-line inline script in `index.html` does the same from the device copy before React starts. The choice is `settings.theme` with `settings.theme_changed_at`; `rules.newer_theme` keeps the newer choice when devices sync.
+- **AI cover and diagram:** the curator's single Studio AI call now also asks for `cover` and `visual` (`prompts.SCHEMA`). `backend/distill/visuals.py` checks them like the key figures (numbers must be in the headline or snippet; sizes and counts limited) and drops what fails. Cards carry optional `cover` and `visual`; the React `Cover` band and `Diagram` component (bars, change, trend, steps; compact and full) draw them in SVG with the theme's tokens.
+
+```mermaid
+flowchart LR
+  A[Article: headline and snippet] --> C[curator.curate]
+  C -->|one Studio AI call| AI[(Ollama on the founder's server)]
+  AI -->|summary, points, figures, cover, visual| C
+  C --> V[visuals.checked_cover / checked_visual]
+  V -->|kept or dropped| K[Card.cover, Card.visual]
+  K --> UI[Cover band + Diagram on the card and the post]
+```

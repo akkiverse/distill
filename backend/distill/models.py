@@ -33,6 +33,21 @@ class KeyFigure(BaseModel):
     unit: str = Field(default="", max_length=24)
 
 
+class VisualPoint(BaseModel):
+    label: str = Field(default="", max_length=40)
+    value: float
+
+
+class Visual(BaseModel):
+    """The AI's diagram for a story (AC-11.5, added CR-0008): bars, change (before, after), trend (in time order) or steps."""
+
+    kind: Literal["bars", "change", "trend", "steps"]
+    title: str = Field(default="", max_length=70)
+    unit: str = Field(default="", max_length=24)
+    points: list[VisualPoint] = Field(default_factory=list, max_length=8)
+    steps: list[str] = Field(default_factory=list, max_length=5)
+
+
 class Card(BaseModel):
     id: str
     topic_section: str
@@ -50,6 +65,8 @@ class Card(BaseModel):
     saved_changed_at: str | None = None
     ai_status: AiStatus = "ok"
     replaced_at: str | None = None  # when a newer report on the same story replaced an older card (AC-8.6, added CR-0004)
+    cover: str = Field(default="", max_length=40)  # the AI's short theme for the cover band (AC-11.4, added CR-0008)
+    visual: Visual | None = None  # the AI's diagram (AC-11.5, added CR-0008)
 
 
 class Topics(BaseModel):
@@ -58,9 +75,13 @@ class Topics(BaseModel):
     updated_at: str | None = None
 
 
+Theme = Literal["system", "light", "dark"]
+
+
 class Settings(BaseModel):
     last_refreshed_at: str | None = None
-    theme: Literal["system", "light", "dark"] = "system"
+    theme: Theme = "system"
+    theme_changed_at: str | None = None  # when the reader last chose a theme (AC-11.3, added CR-0008); absent in v0.5.1 copies
 
 
 StripSetting = Literal["every", "feed", "off"]

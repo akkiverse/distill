@@ -1,4 +1,6 @@
 import { SaveButton, WhenPublished } from "../components/CardView";
+import { Cover } from "../components/Cover";
+import { Diagram, drawable } from "../components/Diagram";
 import { Figures } from "../components/FigureChart";
 import { IconBack, IconExternal } from "../components/Icons";
 import { sectionLabel, useDistill } from "../state";
@@ -21,6 +23,7 @@ export function Post({ id }: { id: string }) {
         <a href="#/" className="btn ghost"><IconBack /> Back</a>
         <SaveButton card={card} />
       </div>
+      {card.ai_status === "ok" && !!card.summary && <Cover card={card} large />}
       <p className="card-meta">
         <span className="source">{card.source_name}</span>
         <span className="topic">{sectionLabel(card.topic_section, sections)}</span>
@@ -33,7 +36,14 @@ export function Post({ id }: { id: string }) {
           <p className="summary large">{card.summary}</p>
           <h2 className="sub">Key points</h2>
           <ul className="points">{card.key_points.map((p, i) => <li key={i}>{p}</li>)}</ul>
-          <Figures figures={card.key_figures} />
+          {drawable(card.visual) ? (
+            <section className="post-visual" aria-label="Diagram">
+              <h2 className="sub">{card.visual.kind === "steps" ? "How it unfolds" : "At a glance"}</h2>
+              <Diagram visual={card.visual} />
+            </section>
+          ) : (
+            <Figures figures={card.key_figures} />
+          )}
         </>
       ) : (
         <p className="headline-only">There's no AI summary for this story yet. The full article has everything.</p>

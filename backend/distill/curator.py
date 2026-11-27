@@ -14,7 +14,7 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel, Field, ValidationError
 
-from . import prompts, studio_ai
+from . import prompts, studio_ai, visuals
 from .models import AiStatus, Article, Card, KeyFigure
 from .textutil import numbers_in, shorten, story_key
 
@@ -62,6 +62,8 @@ class _Verdict(BaseModel):
     key_points: list[str] = Field(default_factory=list)
     key_figures: list[_Figure] = Field(default_factory=list)
     story_key: str = ""
+    cover: Any = ""  # AC-11.4 (added CR-0008): checked in visuals.py, never trusted as given
+    visual: Any = None  # AC-11.5
 
 
 def _now() -> str:
@@ -149,6 +151,8 @@ async def curate(
             story_key=story_key(v.story_key) or story_key(article.title),
             relevance=round(v.relevance, 3),
             ai_status="ok",
+            cover=visuals.checked_cover(v.cover),
+            visual=visuals.checked_visual(v.visual, article),
         ),
         "ok",
     )
