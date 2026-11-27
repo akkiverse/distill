@@ -162,6 +162,7 @@ Fixes made after looking: the diagram's outer frame shared a class name with the
 - [x] Motion: cards rise once, bars grow and trend lines draw once, buttons ease; all off with `prefers-reduced-motion`
 
 ## Releases
+- v0.7.0 (2026-11-27): CR-0010 news sources master list in admin and on/off per person in Settings (E9), 257 of 257 tests passing, released through [PR #22](https://github.com/akkiverse/distill/pull/22).
 - v0.6.1 (2026-11-27): CR-0009 gold spot no longer brings up "Prices paused" overnight (B8), 228 of 228 tests passing, released through [PR #20](https://github.com/akkiverse/distill/pull/20).
 - v0.6.0 (2026-11-27): CR-0008 a smoother look, a theme switch and AI-drawn story diagrams (E7), 225 of 225 tests passing, released through [PR #19](https://github.com/akkiverse/distill/pull/19).
 - v0.5.1 (2026-11-27): CR-0007 gold search always shows gold spot and the India gold rate (B6), 202 of 202 tests passing, released through [PR #17](https://github.com/akkiverse/distill/pull/17).

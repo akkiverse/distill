@@ -1,9 +1,9 @@
 # CR-0010: News sources: master list in admin, on/off per person in Settings
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board change E9)
 - **Date:** 2026-11-27
-- **Release:** pending (new feature, minor version: v0.7.0)
+- **Release:** v0.7.0 (2026-11-27, new feature)
 - **Pull request:** https://github.com/akkiverse/distill/pull/22
 - **Board change:** E9 · News sources: master list in admin, on/off per person in Settings (new feature)
 - **Issue:** [#21](https://github.com/akkiverse/distill/issues/21) (US-12)
