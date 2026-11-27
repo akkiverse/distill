@@ -195,3 +195,5 @@ Pushed to `cr/0010-news-sources` after each task.
 | 8 | Interface: admin switch in Settings | AC-14.9 | Yes |
 | 9 | Tests (Python and Vitest), compatibility with v0.8.0, visual check at 375 and 1280 px, light and dark | all | Yes |
 | 10 | Records (spec, CR, ADR-0009, architecture, test report, changelog), pull request, preview | all | Yes |
+
+- [ ] Tag pending: add tag v0.9.0 on 669ccea and a GitHub Release from a local session.
