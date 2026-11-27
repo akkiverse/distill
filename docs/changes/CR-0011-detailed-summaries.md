@@ -4,7 +4,7 @@
 - **Requested by:** Founder (board notes, change E10)
 - **Date:** 2026-11-27
 - **Release:** (once released)
-- **Pull request:** (added when opened)
+- **Pull request:** [#24](https://github.com/akkiverse/distill/pull/24)
 - **Issue:** #23 (US-13), milestone v0.8.0
 
 ## Why
