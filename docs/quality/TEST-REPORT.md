@@ -128,6 +128,7 @@ Not repeated with screenshots: the only visible change is one line of text under
 - [x] Motion: only the sheet's short slide-in, off with `prefers-reduced-motion`
 
 ## Releases
+- v0.5.1 (2026-11-27): CR-0007 gold search always shows gold spot and the India gold rate (B6), 202 of 202 tests passing, released through [PR #17](https://github.com/akkiverse/distill/pull/17).
 - v0.5.0 (2026-11-26): CR-0006 Watchlist page and pinned prices strip (E5), 194 of 194 tests passing, released through [PR #16](https://github.com/akkiverse/distill/pull/16).
 - v0.4.0 (2026-11-26): CR-0005 price watchlist (E4), 132 of 132 tests passing, released through [PR #14](https://github.com/akkiverse/distill/pull/14).
 - v0.3.0 (2026-11-26): CR-0004 publish times and a feed that stays fresh (E3), 81 of 81 tests passing, released through [PR #12](https://github.com/akkiverse/distill/pull/12).
