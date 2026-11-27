@@ -57,3 +57,32 @@ Follows the Designer's round-1 designs (approved for the build by the founder; [
 - **Colour tokens added:** `--gold` (#7a5c0e light, #d9b45a dark) on `--gold-soft` (#f5ecd4 light, #33291a dark) for gold badges only. Other badges are outlined in `--line` with `--muted` text. Amber stays reserved for "Prices paused" while a market is open; closed markets, holidays and "before the first price" are quiet surface notes with a moon, calendar or clock icon; unreachable is the red-outlined error note.
 - **States:** empty Watchlist ("Add gold or a share to follow its price" + Add an item), loading (strip tiles show a grey bar and "Loading"), waiting per item ("First price when NSE opens, Fri 9:15 AM IST" or "Waiting for the first price"), not set up, unreachable, paused, closed, holiday, item gone ("This item isn't in your watchlist").
 - **Motion:** only the sheet's short slide-in; prices change in place.
+
+## Night desk (CR-0008): the new look and the theme switch
+The founder asked for a look that is "smooth and cool", with a light and dark switch and AI diagrams, using two mock-ups as suggestions only ([CR-0008](../changes/CR-0008-ui-refresh.md)). Distill keeps its one job and its end ("You're up to date"); what changes is the surface.
+
+- **Concept:** a reading desk at night. Dark mode is the hero: deep blue-black glass panels over a faint teal-and-indigo glow at the top of the page; light mode is crisp cool white with the same accents. Cards are glass: a translucent surface, a hairline border that turns into a soft teal-to-cyan gradient edge on hover and focus, and a gentle lift.
+- **Palette (replaces the paper tokens; same token names so every screen follows):**
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--paper` | #eef2f6 | #070b12 | Page background (with the glow layer on top) |
+| `--surface` | #ffffff | #0f1622 | Cards, sheets, inputs (used with 86 to 92% opacity and blur where it floats) |
+| `--surface-2` | #f5f8fb | #141d2c | Raised areas inside a card: cover band text box, chart tracks, notes |
+| `--ink` | #0e1726 | #e8eef7 | Text and headlines |
+| `--muted` | #536173 | #93a1b5 | Meta lines, hints, secondary links |
+| `--line` | #dbe3ec | #1f2a3b | Borders and dividers |
+| `--teal` | #0b7a72 | #2dd4bf | The accent: active tab, focus, links, chart lines |
+| `--cyan` | #0e7490 | #38bdf8 | Second stop of the accent gradient (`--accent-grad`: teal to cyan) |
+| `--teal-soft` | #dff3f0 | #10302f | Chips, selected states |
+| `--glow` | rgba(13,148,136,.18) | rgba(45,212,191,.22) | Soft glow behind active and focused things |
+
+  Prices keep `--up`, `--down`, `--amber` and `--gold` (dark values brightened for the new background). Every text pair meets AA in both themes.
+- **Topic colours:** each section has a hue for its card cover (Finance amber, Technology violet, Business blue, Sports green, Science cyan, Health rose, World indigo, India saffron, Politics slate-red, Environment emerald, Entertainment pink, Education sky; keyword topics teal). The cover is a 2-stop gradient of that hue at low strength with a fine grid pattern, so white or ink text sits on it with AA contrast in both themes.
+- **Typography:** headlines and the wordmark in **Sora** (600 and 700, self-hosted from `@fontsource/sora`), a geometric face that reads modern without being a default; body and interface stay the system sans for speed. Card headline 1.18rem, post headline 1.8rem; the AI cover theme in Sora 700 at .78rem, letter-spaced, uppercase, the one place capitals are used.
+- **Header:** frosted glass, sticky at the top, wordmark with the gradient funnel mark, navigation pills on wide screens with a glowing underline on the active one, then the theme switch: a 3-part segmented control (System, Light, Dark; icons with text for screen readers) that shrinks to icons on a phone.
+- **Cards:** cover band first (topic icon and name on the left, AI theme below it in the cover style, the compact diagram on the right on wide cards and under it on phones), then source and time, the headline, the AI summary, key points with teal dots, and the footer. Headline-only cards keep a plain glass card with no cover.
+- **Diagrams (AC-11.5, AC-11.6):** drawn in SVG with the accent gradient: **bars** as rounded horizontal bars with values; **change** as two values joined by an arrow with the difference and percentage (green up, red down, with the sign written); **trend** as a smooth line with dots and an area fade, labels at the ends; **steps** as numbered nodes joined by a line (vertical on phones and in the card, horizontal in the post when it fits). The card shows a compact version (at most 120 px tall); the post shows it full size with its title and unit.
+- **Chips:** topic chips carry a small line icon per section; the selected state has the gradient border and glow.
+- **Motion:** cards rise and fade in once (staggered, 40 ms), the theme switch cross-fades colours over 200 ms, buttons and tabs ease on hover and press; the end-of-feed check still draws itself. All of it is off under `prefers-reduced-motion`.
+- **States:** unchanged in wording; notes and errors take the glass surface. Empty Feed gets the funnel mark large and faint above "Choose your topics to start".
