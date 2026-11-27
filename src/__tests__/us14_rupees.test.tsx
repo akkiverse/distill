@@ -76,7 +76,7 @@ describe("US-14: prices in rupees first, the dollar rate as an item, and trend g
     priceServer(() => ({ json: result([US], { fx: FX }) }), { "GET /api/market/history": () => ({ json: history({}) }) });
     seed({ watchlist: watchlist(["US:EPAM"]) });
     renderApp("#/item/US%3AEPAM");
-    expect(await screen.findByText("At ₹/$ 92.46 at 8:30 PM IST, the European Central Bank's reference rate.")).toBeInTheDocument();
+    expect(await screen.findByText("Rate used: ₹/$ 92.46 at 8:30 PM IST (European Central Bank reference rate).")).toBeInTheDocument();
     const detail = screen.getByRole("article");
     expect(within(detail).getByText("₹15,221.69")).toBeInTheDocument();
     expect(within(detail).getByText("+₹428.09 (+2.89%)").closest(".change")).toHaveClass("up");

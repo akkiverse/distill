@@ -74,7 +74,7 @@ export function Item({ k }: { k: string }) {
           {it.change !== null && (
             <p className="item-change"><ChangeText it={it} /> <span className="muted">since the previous close</span></p>
           )}
-          {shown(it)?.usd && <p className="rate-line small muted">At {rateText(result?.fx)}, the European Central Bank's reference rate.</p>}
+          {shown(it)?.usd && <p className="rate-line small muted">Rate used: {rateText(result?.fx)} (European Central Bank reference rate).</p>}
           {shown(it)?.noRate && <p className="rate-line small muted">{NO_RATE}. The price is in US dollars.</p>}
         </>
       ) : (

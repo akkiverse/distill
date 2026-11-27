@@ -123,12 +123,12 @@ export function TrendChart({ it }: { it: PriceItem }) {
   const prevClose = it.price_inr != null ? it.prev_close_inr ?? null : it.prev_close;
 
   let body: ReactNode;
-  if (range !== "1d" && failed) body = <p className="chart-empty">The graph can't be loaded right now. Try again in a moment.</p>;
-  else if (range !== "1d" && !loaded[range]) body = <p className="chart-empty" aria-busy="true">Loading the graph…</p>;
-  else if (!available) body = <p className="chart-empty">Price graphs start once the price service keeps a history.</p>;
+  if (range !== "1d" && failed) body = <p className="tchart-empty">The graph can't be loaded right now. Try again in a moment.</p>;
+  else if (range !== "1d" && !loaded[range]) body = <p className="tchart-empty" aria-busy="true">Loading the graph…</p>;
+  else if (!available) body = <p className="tchart-empty">Price graphs start once the price service keeps a history.</p>;
   else if (pts.length < 2) {
     body = (
-      <p className="chart-empty">
+      <p className="tchart-empty">
         {range === "1d" ? "No graph yet today. It fills in while the market is open." : "Not enough prices yet for this graph."}
       </p>
     );
@@ -148,19 +148,19 @@ export function TrendChart({ it }: { it: PriceItem }) {
     const cur = s?.usd ? "INR" : it.currency;
     const label = `Price over ${RANGES.find((r) => r.id === range)!.long}: from ${money(first, cur)} to ${money(last, cur)}, low ${money(Math.min(...prices), cur)}, high ${money(Math.max(...prices), cur)}.`;
     body = (
-      <figure className={`chart ${dir}`}>
-        <div className="chart-scale" aria-hidden="true">
+      <figure className={`tchart ${dir}`}>
+        <div className="tchart-scale" aria-hidden="true">
           <span>{money(Math.max(...prices), cur)}</span>
           <span>{money(Math.min(...prices), cur)}</span>
         </div>
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label} data-testid="trend-chart">
-          <path d={`${line}L${W} ${H}L0 ${H}Z`} className="chart-area" />
-          {range === "1d" && prevY !== null && <line x1="0" x2={W} y1={prevY} y2={prevY} className="chart-prev" />}
-          <path d={line} className="chart-line" fill="none" />
+          <path d={`${line}L${W} ${H}L0 ${H}Z`} className="tchart-area" />
+          {range === "1d" && prevY !== null && <line x1="0" x2={W} y1={prevY} y2={prevY} className="tchart-prev" />}
+          <path d={line} className="tchart-line" fill="none" />
         </svg>
-        <figcaption className="chart-axis">
+        <figcaption className="tchart-axis">
           <span>{shortTime(pts[0].at, range)}</span>
-          {range === "1d" && prevY !== null && <span className="chart-key"><span className="dash" aria-hidden="true" /> Yesterday's close</span>}
+          {range === "1d" && prevY !== null && <span className="tchart-key"><span className="dash" aria-hidden="true" /> Yesterday's close</span>}
           <span>{shortTime(pts[pts.length - 1].at, range)}</span>
         </figcaption>
       </figure>

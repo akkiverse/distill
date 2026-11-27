@@ -306,7 +306,7 @@ legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
 .wl-sub > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .wl-price { display: grid; justify-items: end; text-align: right; }
 .wl-price b { font-weight: 600; }
-.wl-pct { font-size: .8rem; }
+.wl-pct { font-size: .8rem; display: inline-flex; align-items: center; justify-content: flex-end; }
 .wl-type, .wl-change, .wl-time, .wl-cols { display: none; }
 .wl-label { font-size: .76rem; }
 .wl-label.delayed { color: var(--amber); }
@@ -338,7 +338,9 @@ legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
 @media (min-width: 1000px) {
   .wide-only { display: inline; }
   .pin-order { display: block; }
-  .wl-cols, .wl-row { grid-template-columns: minmax(0, 1fr) 52px 72px 132px 156px 150px 44px; column-gap: 12px; }
+  .wl-cols, .wl-row { grid-template-columns: minmax(0, 1fr) 48px 60px 112px 150px 142px 44px; column-gap: 12px; }
+  .wl-change { font-size: .84rem; }
+  .wl-spark svg { width: 60px; }
   .wl-cols { display: grid; padding: 0 2px 6px 14px; font-size: .78rem; font-weight: 700; color: var(--muted); }
   .wl-price b, .wl-change { white-space: nowrap; }
   .wl-cols .num { text-align: right; }
@@ -349,7 +351,7 @@ legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
   .wl-time time { color: var(--ink); }
   .wl-pct { display: none; }
   .wl-tools { grid-column: 7; justify-self: end; }
-  .watchlist.editing .wl-row { grid-template-columns: minmax(0, 1fr) 52px 132px auto; }
+  .watchlist.editing .wl-row { grid-template-columns: minmax(0, 1fr) 48px 112px auto; }
   .watchlist.editing .wl-price { display: grid; }
   .watchlist.editing .wl-change, .watchlist.editing .wl-time, .watchlist.editing .wl-cols { display: none; }
   .watchlist.editing .wl-tools { grid-column: 4; }
@@ -686,12 +688,12 @@ a { transition: color .15s var(--ease); }
 p.rate-line { margin-top: 4px; }
 .price-btn { border: 0; background: none; padding: 2px 0; margin: 0; min-height: 32px; color: inherit; font: inherit; text-align: right; cursor: pointer; border-radius: 6px; position: relative; z-index: 1; }
 .price-btn:hover .pt-main { text-decoration: underline dotted; text-underline-offset: 3px; }
-.wl-pct { display: inline-flex; align-items: center; justify-content: flex-end; }
 .spark { display: block; overflow: visible; }
 .spark.up { color: var(--up); }
 .spark.down { color: var(--down); }
 .spark.flat { color: var(--muted); }
 .wl-spark { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.wl-spark svg { width: 44px; height: 20px; }
 .watchlist.editing .wl-spark { display: none; }
 .tc-row { display: flex; align-items: center; gap: 8px; }
 .tc { display: inline-flex; align-items: center; }
@@ -699,20 +701,19 @@ p.rate-line { margin-top: 4px; }
 .trend-head .box-title { margin: 0; }
 .seg-sm { width: 156px; flex: none; }
 .seg-sm button { min-height: 44px; font-size: .84rem; }
-.chart { margin: 0; position: relative; }
-.chart svg { display: block; width: 100%; height: 170px; }
-.chart-line { stroke: currentColor; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
-.chart-area { fill: currentColor; opacity: .10; stroke: none; }
-.chart-prev { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
-.chart.up { color: var(--up); }
-.chart.down { color: var(--down); }
-.chart.flat { color: var(--teal); }
-.chart-scale { position: absolute; right: 0; top: 0; bottom: 26px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
-.chart-scale span { font-size: .72rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 80%, transparent); padding: 0 2px; border-radius: 4px; font-variant-numeric: tabular-nums; }
-.chart-axis { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: .76rem; color: var(--muted); }
-.chart-key { display: inline-flex; align-items: center; gap: 6px; }
-.chart-key .dash { width: 16px; border-top: 1px dashed var(--muted); }
-.chart-empty { margin: 6px 0 2px; color: var(--muted); font-size: .9rem; min-height: 44px; display: flex; align-items: center; }
+.tchart { margin: 0; position: relative; }
+.tchart svg { display: block; width: 100%; height: 170px; }
+.tchart-line { stroke: currentColor; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.tchart-area { fill: currentColor; opacity: .10; stroke: none; }
+.tchart-prev { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+.tchart.up { color: var(--up); }
+.tchart.down { color: var(--down); }
+.tchart.flat { color: var(--teal); }
+.tchart-scale { position: absolute; right: 0; top: 0; bottom: 26px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.tchart-scale span { font-size: .72rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 80%, transparent); padding: 0 2px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+.tchart-axis { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: .76rem; color: var(--muted); }
+.tchart-key { display: inline-flex; align-items: center; gap: 6px; }
+.tchart-key .dash { width: 16px; border-top: 1px dashed var(--muted); }
+.tchart-empty { margin: 6px 0 2px; color: var(--muted); font-size: .9rem; min-height: 44px; display: flex; align-items: center; }
 .share-switch { margin-top: 28px; }
 .share-switch .small { margin: 6px 0 0; }
-@media (prefers-reduced-motion: no-preference) { .chart-line { transition: d .3s ease; } }
