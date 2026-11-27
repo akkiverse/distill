@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0006-watchlist-strip` (CR-0006) · **Result:** 194 of 194 tests passing (122 pytest, 72 Vitest); all 66 acceptance criteria covered · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 65 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-26 · **Commit:** latest on `cr/0007-gold-search-fixed-rows` (CR-0007) · **Result:** 202 of 202 tests passing (129 pytest, 73 Vitest); every acceptance criterion covered (AC-10.13 added) · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 65 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -75,6 +75,7 @@ Previous runs: CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 
 | AC-10.10 | `test_us10_watchlist_strip.py::test_ac_10_10_tidy_names` (11 cases); `us10_watchlist.test.tsx` "AC-10.10" | Pass |
 | AC-10.11 | `test_us10_watchlist_strip.py::test_ac_10_11_strip_setting_kept_in_the_account`; `us10_watchlist.test.tsx` "AC-10.11" (Every screen, Feed only, Off; synced; no reads with Off) | Pass |
 | AC-10.12 | `test_us10_watchlist_strip.py::test_ac_10_12_v040_account_copy_is_upgraded`, `::test_ac_10_12_a_v040_device_cant_wipe_the_new_fields`, `::test_ac_10_12_v050_copy_stays_readable_by_v040`, `::test_ac_10_12_migration_tidies_any_copy`; `us10_watchlist.test.tsx` "AC-10.12" (2: v0.4.0 device copy upgraded and shown on the strip; items 11 to 20 kept apart, bad data tidied) | Pass |
+| AC-10.13 | `test_cr0007_gold_search.py::test_ac_10_13_gold_spot_and_india_rate_survive_a_crowd_of_matches`, `::test_ac_10_13_everyone_else_still_gets_gold_spot_but_not_the_zerodha_rate`, `::test_ac_10_13_fixed_rows_only_when_the_words_fit`, `::test_ac_10_13_an_exact_symbol_match_still_leads`, `::test_ac_10_13_missing_rows_are_simply_not_there`, `::test_ac_10_13_bonds_come_after_the_other_gold_rows`, Postgres: `::test_ac_10_13_postgres_crowded_gateway`; `us10_watchlist.test.tsx` "AC-10.13" (the India rate heading explains itself) | Pass |
 | AC-9.8 with CR-0006 | `test_us10_watchlist_strip.py::test_ac_9_8_india_gold_rate_and_bonds_are_founder_only` (MCX gold rate and Sovereign Gold Bonds come from Zerodha) | Pass |
 | Compatibility (CR-0006) | Account copies and device copies saved by v0.4.0 (`AC-10.12` tests above); a copy saved by v0.5.0 validates against v0.4.0's watchlist model, so a rollback stays safe | Pass |
 | Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
@@ -115,6 +116,9 @@ Fixes made after looking: the Watchlist title row now keeps Edit and Add beside 
 
 Round-1 designs followed, with these small departures: the Watchlist keeps the app header and navigation on a phone (the mockup shows the page alone) and hides the strip there, since the page lists the same prices; the pin star keeps one label ("Pin <name>") with `aria-pressed` for its state instead of switching between "Pin" and "Unpin"; the Add sheet's MCX result is named "Gold rate, India" like everywhere else (the mockup says "Gold Mini, MCX"); the holiday message adds the holiday's name in brackets when the gateway gives one; the table's time column shows the price time with its label underneath.
 
+## Visual check (CR-0007)
+Not repeated with screenshots: the only visible change is one line of text under the "Gold rate, India" heading in the Add sheet, in the same small grey style as the existing "None in the price service yet." note (checked at 375 px and 1280 px, light and dark, in CR-0006). Confirm on the preview by searching "gold".
+
 ## Design checklist (CR-0006)
 - [x] New colours as tokens with designed dark values (`--gold`, `--gold-soft`); amber kept for real problems only
 - [x] 375 px and 1280 px with no sideways scroll; the strip scrolls sideways inside itself on a phone; tap targets 44 px (strip tiles, stars, arrows, chips, Add buttons)
@@ -124,6 +128,7 @@ Round-1 designs followed, with these small departures: the Watchlist keeps the a
 - [x] Motion: only the sheet's short slide-in, off with `prefers-reduced-motion`
 
 ## Releases
+- v0.5.1 (2026-11-27): CR-0007 gold search always shows gold spot and the India gold rate (B6), 202 of 202 tests passing, released through [PR #17](https://github.com/akkiverse/distill/pull/17).
 - v0.5.0 (2026-11-26): CR-0006 Watchlist page and pinned prices strip (E5), 194 of 194 tests passing, released through [PR #16](https://github.com/akkiverse/distill/pull/16).
 - v0.4.0 (2026-11-26): CR-0005 price watchlist (E4), 132 of 132 tests passing, released through [PR #14](https://github.com/akkiverse/distill/pull/14).
 - v0.3.0 (2026-11-26): CR-0004 publish times and a feed that stays fresh (E3), 81 of 81 tests passing, released through [PR #12](https://github.com/akkiverse/distill/pull/12).

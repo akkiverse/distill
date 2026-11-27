@@ -4,6 +4,7 @@ Every change to Distill is recorded here: what changed, why, and how it affected
 
 | CR | Change | Why (short) | Status | Release |
 |---|---|---|---|---|
+| [CR-0007](CR-0007-gold-search-fixed-rows.md) | Gold spot and India gold rate missing from gold search | Bug fix requested by the founder (B6) | Released | v0.5.1 |
 | [CR-0006](CR-0006-watchlist-strip.md) | Watchlist page and pinned prices strip | New feature requested by the founder (E5) | Released | v0.5.0 |
 | [CR-0005](CR-0005-price-watchlist.md) | Price watchlist from the shared market database | New feature requested by the founder (E4) | Released | v0.4.0 |
 | [CR-0004](CR-0004-fresh-feed.md) | Show when each story was published, and keep the feed fresh on its own | New feature requested by the founder (E3) | Released | v0.3.0 |

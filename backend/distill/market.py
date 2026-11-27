@@ -30,6 +30,9 @@ MAX_WATCH = 20  # AC-9.2 (changed CR-0006: was 10)
 SEARCH_FETCH = 100  # rows read before the gold kinds are kept apart (AC-10.5)
 FEATURES_TTL = timedelta(minutes=10)  # how long a check for the gateway's optional parts is trusted (AC-10.9)
 SEARCH_LIMIT = 20  # AC-9.1
+# The gateway's fixed gold rows (AC-10.13, added CR-0007): looked up by key on a gold search, so dozens of bonds,
+# ETFs and funds that also say "gold" can never push them out of the rows read.
+FIXED_GOLD = ("MCX:GOLDM", "GOLD:XAU_USD")
 PAUSED_AFTER = timedelta(minutes=2)  # AC-9.6
 ADMIN_ROLE = "admin"
 KITE = "kite"  # prices from the founder's Zerodha account: shown to the founder only (AC-9.8)
@@ -285,6 +288,29 @@ def spread(found: list[InstrumentOut], limit: int = SEARCH_LIMIT) -> list[Instru
     return [i for i in found if i.key in keep]  # in the database's order (exact symbol first)
 
 
+def fixed_gold_matches(inst: Instrument, q: str) -> bool:
+    """AC-10.13: every word typed appears in the row's names ("gold" and "gold rate" yes; "goldbees" or "sgb" no)."""
+    d = describe(inst)
+    text = " ".join((inst.key, inst.symbol, inst.name, d["display_name"], d["short_name"])).lower()
+    words = re.findall(r"[a-z0-9]+", q.lower())
+    return bool(words) and all(w in text for w in words)
+
+
+async def with_fixed_gold(data: MarketData, q: str, found: list[Instrument]) -> list[Instrument]:
+    """AC-10.13 (added CR-0007): on a gold search, the India gold rate and gold spot come first (after an exact symbol
+    match) when the gateway has them, even if more than SEARCH_FETCH other rows match. The founder-only rule (AC-9.8)
+    still applies afterwards."""
+    if not gold_query(q):
+        return found
+    have = {i.key: i for i in found}
+    missing = [k for k in FIXED_GOLD if k not in have]
+    extra = await data.instruments(missing) if missing else {}
+    first = [inst for k in FIXED_GOLD if (inst := have.get(k) or extra.get(k)) and fixed_gold_matches(inst, q)]
+    rest = [i for i in found if i.key not in {f.key for f in first}]
+    exact = [i for i in rest if i.symbol.lower() == q.lower()]  # AC-9.1: an exact symbol match still leads
+    return exact + first + [i for i in rest if i not in exact]
+
+
 async def search(data: MarketData, q: str, role: str | None, group: str | None = None) -> list[InstrumentOut]:
     q = (q or "").strip()[:40]
     if not q and group == "gold":
@@ -292,6 +318,7 @@ async def search(data: MarketData, q: str, role: str | None, group: str | None =
     if not q:
         return []
     found = await data.search(q, include_kite=is_founder(role), limit=SEARCH_FETCH, gold=gold_query(q))
+    found = await with_fixed_gold(data, q, found)
     out = [instrument_out(inst) for inst in found if visible(inst, role)]
     if group in ("gold", "india", "us"):
         out = [i for i in out if i.group == group]
@@ -351,8 +378,12 @@ class FakeMarket:
             s = i.symbol.upper()
             return gold and (s.startswith("SGB") or s.endswith("-GB") or (i.category or "").startswith("gold"))
 
+        def bond(i: Instrument) -> bool:  # AC-10.13: like the SQL, gold bonds come after the other gold rows
+            s = i.symbol.upper()
+            return s.startswith("SGB") or s.endswith("-GB")
+
         hits = [i for i in self.instruments_.values() if (include_kite or i.source != KITE) and hit(i)]
-        hits.sort(key=lambda i: (i.symbol.lower() != ql, not i.symbol.lower().startswith(ql), i.symbol))
+        hits.sort(key=lambda i: (i.symbol.lower() != ql, not i.symbol.lower().startswith(ql), gold and bond(i), i.symbol))
         return hits[:limit]
 
     async def instruments(self, keys: Sequence[str]) -> dict[str, Instrument]:
@@ -380,7 +411,8 @@ SEARCH_SQL = """
 select key, symbol, exchange, name, type, currency, source{cat} from market.instruments
 where (symbol ilike %(prefix)s or name ilike %(contains)s or (%(gold)s and (symbol ilike 'SGB%%' or symbol ilike '%%-GB'{gold_cat})))
   and (%(include_kite)s or source <> 'kite')
-order by (upper(symbol) = upper(%(q)s)) desc, (symbol ilike %(prefix)s) desc, symbol
+order by (upper(symbol) = upper(%(q)s)) desc, (symbol ilike %(prefix)s) desc,
+  (%(gold)s and (symbol ilike 'SGB%%' or symbol ilike '%%-GB')) asc, symbol
 limit %(limit)s
 """
 INSTRUMENTS_SQL = "select key, symbol, exchange, name, type, currency, source{cat} from market.instruments where key = any(%s)"

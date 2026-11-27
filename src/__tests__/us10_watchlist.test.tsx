@@ -189,6 +189,17 @@ describe("US-10: Watchlist page and pinned prices strip (CR-0006)", () => {
     await waitFor(() => expect(urls.at(-1)).toMatch(/q=tata&group=india$/), { timeout: 2000 });
   });
 
+  it("AC-10.13: when the India gold rate isn't in the price service, its heading says why instead of a bare none", async () => {
+    priceServer(() => ({ json: result([]) }), { "GET /api/market/search": () => ({ json: [GOLD, GOLDBEES] }) });
+    renderApp("#/watchlist/add");
+    fireEvent.change(screen.getByLabelText("Search by name or symbol"), { target: { value: "gold" } });
+    const spot = await screen.findByRole("region", { name: /International gold$/ }, { timeout: 2000 });
+    expect(await within(spot).findByRole("button", { name: /^Add / }, { timeout: 2000 })).toBeInTheDocument();
+    const india = screen.getByRole("region", { name: /Gold rate, India$/ });
+    expect(within(india).getByText(/comes from the studio's Zerodha connection/)).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: /Sovereign Gold Bonds$/ })).getByText("None in the price service yet.")).toBeInTheDocument();
+  });
+
   it("AC-10.6: each kind has its badge", () => {
     expect([GOLDM, GOLD, GOLDBEES, SGB, GOLDMF, TCS, EPAM].map((i) => badgeOf(i).text)).toEqual(["Rs/10 g", "Spot", "ETF", "SGB", "MF", "NSE", "US"]);
     expect(badgeOf(GOLDBEES).gold).toBe(true);

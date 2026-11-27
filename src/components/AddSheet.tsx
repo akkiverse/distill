@@ -105,7 +105,7 @@ export function AddSheet() {
               <section key={c} className="kind" aria-labelledby={`kind-${c}`}>
                 <h2 id={`kind-${c}`} className="kind-title"><span className="badge gold">{KIND[c].badge}</span>{KIND[c].title}</h2>
                 <p className="why">{KIND[c].why}</p>
-                {list.length > 0 ? <ul className="res-list">{list.map(result)}</ul> : <p className="muted small none">None in the price service yet.</p>}
+                {list.length > 0 ? <ul className="res-list">{list.map(result)}</ul> : <p className="muted small none">{KIND[c].none ?? "None in the price service yet."}</p>}
               </section>
             );
           })}

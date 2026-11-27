@@ -81,8 +81,14 @@ export const GROUPS: { id: Group; label: string }[] = [
   { id: "us", label: "US shares" },
 ];
 
-export const KIND: Record<string, { badge: string; title: string; why: string }> = {
-  gold_india: { badge: "Rs/10 g", title: "Gold rate, India", why: "What 10 g of 24K gold costs in India today, from MCX. Before GST." },
+export const KIND: Record<string, { badge: string; title: string; why: string; none?: string }> = {
+  gold_india: {
+    badge: "Rs/10 g",
+    title: "Gold rate, India",
+    why: "What 10 g of 24K gold costs in India today, from MCX. Before GST.",
+    // AC-10.13 (added CR-0007): say why it's missing instead of a bare "none"
+    none: "Not in the price service right now. This rate comes from the studio's Zerodha connection, so it shows on the founder's account once that's signed in for the day.",
+  },
   gold_spot: { badge: "Spot", title: "International gold", why: "The world price of one troy ounce (31.1 g), in US dollars." },
   gold_etf: { badge: "ETF", title: "Gold ETFs", why: "Funds on NSE that hold real gold. Bought and sold like shares." },
   gold_bond: { badge: "SGB", title: "Sovereign Gold Bonds", why: "Government bonds: 1 unit = 1 g of gold, plus 2.5% interest a year. Few trades a day." },

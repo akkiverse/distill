@@ -99,3 +99,13 @@ For CR-0001. Each task names the stories and criteria it serves.
 ## Release v0.5.0
 - [x] Released 2026-11-26: merge commit ceb93de, Vercel deployment dpl_EijM1Q8F3F8GimmjorfkECqxyHGx (CR-0006, E5).
 - [ ] Tag pending: add tag v0.5.0 on ceb93de, a GitHub Release and close milestone v0.5.0 from a local session.
+
+## CR-0007: Gold spot and India gold rate missing from gold search (bug fix B6, patch)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Branch `cr/0007-gold-search-fixed-rows` from `main`; find the cause (100-row read cut off gold spot behind bonds, ETFs and funds) | AC-10.13 | Yes |
+| 2 | Look the fixed gold rows up by key on a gold search; bonds read last (SQL and fake) | AC-10.13, AC-9.1, AC-9.8 | Yes |
+| 3 | Add sheet: the India rate heading explains why it's missing | AC-10.13 | Yes |
+| 4 | Tests (fake and real SQL), lint, build | AC-10.13, all | Yes |
+| 5 | Records (CR-0007, spec, changelog, test report), pull request, CI and preview check | all | Yes |

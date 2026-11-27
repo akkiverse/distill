@@ -56,7 +56,8 @@ def test_ac_9_1_search_by_symbol_or_name(mclient, env):
     got = mclient.get("/api/market/search", params={"q": "tcs"}).json()
     assert [i["key"] for i in got] == ["NSE:TCS", "US:TCSX"]
     assert {"name", "symbol", "exchange"} <= set(got[0])
-    assert [i["key"] for i in mclient.get("/api/market/search", params={"q": "gold"}).json()] == ["NSE:GOLDBEES", "GOLD:XAU_USD"]
+    # changed CR-0007 (AC-10.13): on a gold search gold spot and the India rate lead, so a crowd of matches can't hide them
+    assert [i["key"] for i in mclient.get("/api/market/search", params={"q": "gold"}).json()] == ["GOLD:XAU_USD", "NSE:GOLDBEES"]
     assert mclient.get("/api/market/search", params={"q": "  "}).json() == []
 
 

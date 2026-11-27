@@ -68,3 +68,8 @@ tests/api/                   pytest acceptance tests;  src/__tests__/  Vitest ac
 - **Gateway versions:** works with the gateway as released (v0.1.0: no `category`, no `market_calendar`) and with E1. A calendar row that no longer fits the clock (state open after its close time, or closed after its next opening) is replaced by the clock, so a gateway that stopped before the weekend can't make Distill say "paused".
 - **Safety:** the founder-only rule is unchanged and covers `MCX:GOLDM` and Sovereign Gold Bonds (both `kite`); the market adapter still writes only `watch_symbols`; `market_calendar` is read only.
 - **Risks:** without the gateway's calendar, exchange holidays are unknown (a quiet gateway on an NSE holiday in market hours still shows amber); Sovereign Gold Bond and gold fund names come from Zerodha and AMFI and are only title-cased; dragging is for mouse and pen, phones use the up and down buttons.
+
+## CR-0007: Gold search keeps the fixed gold rows (bug fix B6)
+- **Cause:** the search reads 100 matching rows ordered by symbol; over 100 bond, ETF and fund rows say "gold" and sort before `XAU`, so gold spot was never read.
+- **Fix:** in `market.search`, on a gold search, look up `MCX:GOLDM` and `GOLD:XAU_USD` by key (the existing `instruments()` read) and put them first, after an exact symbol match, when every typed word is in their names; the SQL and the fake list bonds after the other gold rows. The founder-only filter runs afterwards, unchanged.
+- **Existing users' data:** untouched. No stored shape, route or contract changes; a rollback to v0.5.0 stays safe.
