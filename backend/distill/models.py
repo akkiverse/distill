@@ -82,6 +82,10 @@ class Settings(BaseModel):
     last_refreshed_at: str | None = None
     theme: Theme = "system"
     theme_changed_at: str | None = None  # when the reader last chose a theme (AC-11.3, added CR-0008); absent in v0.5.1 copies
+    # AC-12.6, AC-12.7 (added CR-0010): the news sources this person switched off, and when they last changed them.
+    # Absent in copies saved by v0.6.1 and earlier: every source on.
+    sources_off: list[str] | None = Field(default=None, max_length=300)
+    sources_changed_at: str | None = None
 
 
 StripSetting = Literal["every", "feed", "off"]
@@ -127,6 +131,7 @@ class RefreshRequest(BaseModel):
     known_story_keys: list[str] = Field(default_factory=list, max_length=500)
     known_urls: list[str] = Field(default_factory=list, max_length=500)
     curate: bool = False  # True: also curate here (one call); the app curates card by card instead
+    sources_off: list[str] = Field(default_factory=list, max_length=300)  # AC-12.7; used only for a signed-in person
 
 
 class RefreshResponse(BaseModel):

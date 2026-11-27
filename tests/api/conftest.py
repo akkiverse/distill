@@ -10,6 +10,8 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import pytest
 from distill import app as app_mod
+from distill import catalog as catalog_mod
+from distill.catalog import MemoryCatalog
 from distill.models import Article, Card
 from distill.store import MemoryStore
 from fastapi.testclient import TestClient
@@ -120,18 +122,30 @@ def env():
         curator = MockCurator()
         store = MemoryStore()
         user_id: str | None = "u_test"
+        catalog: MemoryCatalog
+        factory_calls: list
 
     e = Env()
     e.sources = []
     app = app_mod.app
-    app.dependency_overrides[app_mod.get_source_factory] = lambda: lambda sections, keywords: e.sources
+    e.catalog = MemoryCatalog()
+    e.factory_calls = []
+
+    def factory(sections, keywords, **kw):
+        e.factory_calls.append({"sections": list(sections), "keywords": list(keywords), **kw})
+        return e.sources
+
+    app.dependency_overrides[app_mod.get_source_factory] = lambda: factory
+    app.dependency_overrides[app_mod.get_catalog] = lambda: e.catalog
     app.dependency_overrides[app_mod.get_curator] = lambda: e.curator
     app.dependency_overrides[app_mod.get_store] = lambda: e.store
     app.dependency_overrides[app_mod.get_user_id] = lambda: e.user_id
     original_now = app_mod.now
     app_mod.now = lambda: NOW
+    catalog_mod.forget_cache()
     yield e
     app.dependency_overrides.clear()
+    catalog_mod.forget_cache()
     app_mod.now = original_now
 
 

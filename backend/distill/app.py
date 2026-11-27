@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from typing import Annotated
@@ -11,9 +12,10 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
+from . import catalog, feeds, market, sources, store, studio_ai, studio_auth
 from . import curator as curator_mod
-from . import feeds, market, sources, store, studio_ai, studio_auth
 from .curator import Curator, curate
 from .models import (
     CurateRequest,
@@ -35,7 +37,7 @@ logging.basicConfig(level=logging.INFO)
 app = FastAPI(title="Distill API", version=VERSION, docs_url="/api/docs", openapi_url="/api/openapi.json")
 studio_ai.install(app)
 
-SourceFactory = Callable[[Sequence[str], Sequence[str]], list[sources.NewsSource]]
+SourceFactory = Callable[..., list[sources.NewsSource]]  # (sections, keywords, *, entries, off)
 
 
 # ---------- dependencies (replaced in tests) ----------
@@ -65,6 +67,46 @@ def get_user_role(request: Request) -> str | None:
     """The person's Studio Accounts role for Distill ("admin" is the founder), or None when signed out."""
     claims = studio_auth.optional_user(request)
     return str(claims.get("role") or "") or None if claims else None
+
+
+def get_catalog() -> catalog.CatalogStore:
+    """The founder's news source list (CR-0010)."""
+    return catalog.live_catalog()
+
+
+def get_feed_checker() -> catalog.Checker:
+    """Checks a feed address from the server before it is saved (AC-12.3)."""
+    return catalog.check_feed
+
+
+def get_service_probe():
+    """Asks GDELT or a keyed service once, for the admin screen's "Check all now"."""
+    return probe_service
+
+
+async def probe_service(entry: catalog.SourceEntry) -> catalog.FeedCheck:
+    env = dict(os.environ)
+    keyed = {"guardian": sources.Guardian, "newsdata": sources.NewsData, "currents": sources.Currents, "marketaux": sources.Marketaux}
+    if entry.kind == "gdelt":
+        src: sources.NewsSource = sources.Gdelt(["India"])
+    elif entry.kind in keyed and env.get(entry.key_env() or ""):
+        src = keyed[entry.kind](env[entry.key_env() or ""], "India", "india")
+    else:
+        return catalog.FeedCheck(False, code="needs_key", message="Needs a key")
+    import httpx
+
+    async with httpx.AsyncClient(timeout=httpx.Timeout(catalog.CHECK_SECONDS), headers={"User-Agent": sources.USER_AGENT}) as client:
+        try:
+            got = await asyncio.wait_for(src.fetch(client), catalog.CHECK_SECONDS)
+        except TimeoutError:
+            return catalog.FeedCheck(False, code="timeout", message=catalog.REASONS["timeout"])
+        except httpx.HTTPStatusError as exc:
+            return catalog.FeedCheck(False, code="blocked", message=catalog.blocked_status(exc.response.status_code))
+        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            return catalog.FeedCheck(False, code="unreachable", message=catalog.REASONS["unreachable"])
+    return catalog.FeedCheck(
+        bool(got), stories=len(got), code="" if got else "no_stories", message="" if got else catalog.REASONS["no_stories"]
+    )
 
 
 def now() -> datetime:
@@ -120,6 +162,8 @@ async def refresh(
     body: RefreshRequest,
     make_sources: Annotated[SourceFactory, Depends(get_source_factory)],
     curator: Annotated[Curator | None, Depends(get_curator)],
+    sources_list: Annotated[catalog.CatalogStore, Depends(get_catalog)],
+    user_id: Annotated[str | None, Depends(get_user_id)],
 ):
     """Gather news for the reader's topics and pick at most 15 new stories for AI (US-2).
 
@@ -127,7 +171,9 @@ async def refresh(
     does both in one call.
     """
     sections, keywords = _clean_topics(body.sections, body.keywords)
-    result = await sources.fetch_all(make_sources(sections, keywords))
+    entries = await catalog.entries_for_refresh(sources_list)  # AC-12.10: the built-in list if it can't be read
+    off = body.sources_off if user_id else []  # AC-12.8: signed-out visitors and the demo use every active source
+    result = await sources.fetch_all(make_sources(sections, keywords, entries=entries, off=off))
     articles = select_for_ai(result.articles, keywords=keywords, known_urls=body.known_urls, now=now())
     fetched_at = iso(now())
     out = RefreshResponse(articles=articles, failed_sources=result.failed, fetched_at=fetched_at)
@@ -269,3 +315,244 @@ async def check_feeds():
     ) as client:
         results = await asyncio.gather(*(one(s, client) for s in seen.values()))
     return {"checked": len(results), "ok": sum(r["ok"] for r in results), "feeds": sorted(results, key=lambda r: (r["ok"], r["name"]))}
+
+
+# ---------- news sources (US-12, added CR-0010) ----------
+CatalogDep = Annotated[catalog.CatalogStore, Depends(get_catalog)]
+CheckerDep = Annotated[catalog.Checker, Depends(get_feed_checker)]
+
+
+class PersonSource(BaseModel):
+    id: str
+    name: str
+    sections: list[str]
+    kind: str
+
+
+class PersonSources(BaseModel):
+    sources: list[PersonSource]
+
+
+@app.get("/api/sources", response_model=PersonSources)
+async def person_sources(sources_list: CatalogDep):
+    """AC-12.6, AC-12.9: the active sources a reader can switch on or off (paused, removed and key-less ones aren't listed)."""
+    entries = await catalog.entries_for_refresh(sources_list)
+    env = dict(os.environ)
+    listed = [e for e in entries if not e.paused and not e.needs_key(env)]
+    return PersonSources(sources=[PersonSource(id=e.id, name=e.name, sections=e.sections, kind=e.kind) for e in listed])
+
+
+class AdminSource(catalog.SourceEntry):
+    can_remove: bool = True
+    missing_key: bool = False
+    key_name: str | None = None  # the Vercel variable that switches a keyed service on
+
+
+class AdminSources(BaseModel):
+    sources: list[AdminSource]
+    checked_at: str | None = None
+    saved_in_database: bool
+
+
+class NewSource(BaseModel):
+    name: str = Field(max_length=200)
+    url: str = Field(max_length=500)
+    sections: list[str] = Field(max_length=12)
+
+
+class SourceChange(BaseModel):
+    name: str | None = Field(default=None, max_length=200)
+    url: str | None = Field(default=None, max_length=500)
+    sections: list[str] | None = Field(default=None, max_length=12)
+    paused: bool | None = None
+
+
+def require_admin(role: RoleDep) -> str:
+    """AC-12.1: the News sources screen and its API are for Distill's admin role only."""
+    if role is None:
+        raise HTTPException(401, detail={"code": "signin_required", "message": "Sign in as the Distill admin to manage news sources."})
+    if role != "admin":
+        raise HTTPException(403, detail={"code": "admin_only", "message": "Only the Distill admin can manage news sources."})
+    return role
+
+
+AdminDep = Annotated[str, Depends(require_admin)]
+
+
+def _admin_view(cat: catalog.Catalog) -> AdminSources:
+    env = dict(os.environ)
+    out = [AdminSource(**e.model_dump(), can_remove=e.removable, missing_key=e.needs_key(env), key_name=e.key_env()) for e in cat.sources]
+    return AdminSources(sources=out, checked_at=cat.checked_at, saved_in_database=store.configured())
+
+
+def _list_offline(exc: Exception) -> HTTPException:
+    return HTTPException(
+        503,
+        detail={
+            "code": "sources_offline",
+            "message": "The source list can't be reached right now. Nothing was changed; try again in a moment.",
+        },
+    )
+
+
+def _rejected(exc: catalog.SourceRejected) -> HTTPException:
+    return HTTPException(exc.status, detail={"code": exc.code, "message": exc.message})
+
+
+def _duplicate(cat: catalog.Catalog, url: str, except_id: str | None = None) -> None:
+    for e in cat.sources:
+        if e.id != except_id and e.url and catalog.same_address(e.url, url):
+            raise catalog.SourceRejected("duplicate", f"{catalog.REASONS['duplicate']} ({e.name}).", 409)
+
+
+async def _checked(checker: catalog.Checker, url: str) -> catalog.FeedCheck:
+    result = await checker(url)
+    if not result.ok:
+        raise catalog.SourceRejected(result.code or "check_failed", result.message or "The feed didn't pass the check.")
+    return result
+
+
+@app.get("/api/admin/sources", response_model=AdminSources)
+async def admin_sources(_: AdminDep, sources_list: CatalogDep):
+    try:
+        return _admin_view(await sources_list.load())
+    except catalog.CatalogUnavailable as exc:
+        raise _list_offline(exc) from exc
+
+
+@app.post("/api/admin/sources", response_model=AdminSources, status_code=201)
+async def add_source(body: NewSource, _: AdminDep, sources_list: CatalogDep, checker: CheckerDep):
+    """AC-12.3: a new feed is checked from the server first; only one that answers with stories is saved."""
+    try:
+        name = catalog.clean_name(body.name)
+        sections = catalog.clean_sections(body.sections)
+        url = body.url.strip()
+        current = await sources_list.load()
+        _duplicate(current, url)
+        if len(current.sources) >= catalog.MAX_SOURCES:
+            raise catalog.SourceRejected("too_many", f"The list holds at most {catalog.MAX_SOURCES} sources. Remove one first.")
+        result = await _checked(checker, url)
+        t = now()
+
+        def change(cat: catalog.Catalog) -> catalog.Catalog:
+            _duplicate(cat, url)
+            entry = catalog.SourceEntry(id=catalog.rss_id(url), name=name, url=url, sections=sections, added_at=iso(t), updated_at=iso(t))
+            entry.check = catalog.recorded(entry, result, t)
+            while cat.get(entry.id):  # the same address in another spelling never collides
+                entry.id += "x"
+            return cat.model_copy(update={"sources": [*cat.sources, entry], "updated_at": iso(t)})
+
+        saved = await sources_list.update(change)
+    except catalog.SourceRejected as exc:
+        raise _rejected(exc) from exc
+    except catalog.CatalogUnavailable as exc:
+        raise _list_offline(exc) from exc
+    catalog.forget_cache()
+    return _admin_view(saved)
+
+
+@app.patch("/api/admin/sources/{source_id}", response_model=AdminSources)
+async def change_source(source_id: str, body: SourceChange, _: AdminDep, sources_list: CatalogDep, checker: CheckerDep):
+    """AC-12.4, AC-12.5: edit a source (a new address is checked first), or pause and resume it."""
+    try:
+        current = await sources_list.load()
+        entry = current.get(source_id)
+        if entry is None:
+            raise catalog.SourceRejected("not_found", "That source isn't in the list any more. Reload the page.", 404)
+        update: dict = {}
+        if body.name is not None:
+            update["name"] = catalog.clean_name(body.name)
+        result: catalog.FeedCheck | None = None
+        if entry.kind == "rss":
+            if body.sections is not None:
+                update["sections"] = catalog.clean_sections(body.sections)
+            if body.url is not None and not catalog.same_address(body.url, entry.url):
+                url = body.url.strip()
+                _duplicate(current, url, except_id=entry.id)
+                result = await _checked(checker, url)
+                update["url"] = url
+            elif body.url is not None:
+                update["url"] = body.url.strip()
+        elif body.sections is not None or (body.url is not None and body.url.strip() != entry.url):
+            raise catalog.SourceRejected("fixed_source", f"{entry.name} is built in: only its name can be changed, and it can be paused.")
+        if body.paused is not None:
+            update["paused"] = body.paused
+        t = now()
+
+        def change(cat: catalog.Catalog) -> catalog.Catalog:
+            target = cat.get(source_id)
+            if target is None:
+                raise catalog.SourceRejected("not_found", "That source isn't in the list any more. Reload the page.", 404)
+            if "url" in update and not catalog.same_address(update["url"], target.url):
+                _duplicate(cat, update["url"], except_id=source_id)
+            new = target.model_copy(update={**update, "updated_at": iso(t)})
+            if result is not None:
+                new.check = catalog.recorded(new, result, t)
+            if "paused" in update and not update["paused"]:
+                new.note = ""
+            return cat.model_copy(update={"sources": [new if s.id == source_id else s for s in cat.sources], "updated_at": iso(t)})
+
+        saved = await sources_list.update(change)
+    except catalog.SourceRejected as exc:
+        raise _rejected(exc) from exc
+    except catalog.CatalogUnavailable as exc:
+        raise _list_offline(exc) from exc
+    catalog.forget_cache()
+    return _admin_view(saved)
+
+
+@app.delete("/api/admin/sources/{source_id}", response_model=AdminSources)
+async def remove_source(source_id: str, _: AdminDep, sources_list: CatalogDep):
+    """AC-12.5: remove a source (the screen asks to confirm first). Google News and GDELT can only be paused."""
+    t = now()
+
+    def change(cat: catalog.Catalog) -> catalog.Catalog:
+        target = cat.get(source_id)
+        if target is None:
+            raise catalog.SourceRejected("not_found", "That source isn't in the list any more. Reload the page.", 404)
+        if not target.removable:
+            raise catalog.SourceRejected("not_removable", f"{target.name} can be paused but not removed.", 409)
+        return cat.model_copy(update={"sources": [s for s in cat.sources if s.id != source_id], "updated_at": iso(t)})
+
+    try:
+        saved = await sources_list.update(change)
+    except catalog.SourceRejected as exc:
+        raise _rejected(exc) from exc
+    except catalog.CatalogUnavailable as exc:
+        raise _list_offline(exc) from exc
+    catalog.forget_cache()
+    return _admin_view(saved)
+
+
+@app.post("/api/admin/sources/check", response_model=AdminSources)
+async def check_sources(_: AdminDep, sources_list: CatalogDep, checker: CheckerDep, probe: Annotated[Callable, Depends(get_service_probe)]):
+    """AC-12.2: ask every source that is on once (8-second limit each, all at once) and keep each one's result."""
+    try:
+        current = await sources_list.load()
+    except catalog.CatalogUnavailable as exc:
+        raise _list_offline(exc) from exc
+    env = dict(os.environ)
+    todo = [e for e in current.sources if not e.paused and not e.needs_key(env)]
+
+    async def one(e: catalog.SourceEntry) -> catalog.FeedCheck:
+        try:
+            if e.kind == "rss":
+                return await checker(e.url)
+            if e.kind == "google-news":
+                return await checker(feeds.google_news_section_url("world"))
+            return await probe(e)
+        except Exception:
+            return catalog.FeedCheck(False, code="unreachable", message=catalog.REASONS["unreachable"])
+
+    results = dict(zip([e.id for e in todo], await asyncio.gather(*(one(e) for e in todo)), strict=True))
+    t = now()
+
+    def change(cat: catalog.Catalog) -> catalog.Catalog:
+        updated = [s.model_copy(update={"check": catalog.recorded(s, results[s.id], t)}) if s.id in results else s for s in cat.sources]
+        return cat.model_copy(update={"sources": updated, "checked_at": iso(t)})
+
+    try:
+        saved = await sources_list.update(change)
+    except catalog.CatalogUnavailable as exc:
+        raise _list_offline(exc) from exc
+    return _admin_view(saved)
