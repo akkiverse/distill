@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-27
+
 ### Added
 - E10: detailed story summaries read from the real article. Feed cards show up to 10 bullet points as slides (arrows, swipe, arrow keys, dots), tapping a card shows every point, and Saved cards get a longer summary. Pages that can't be read keep the short summary. See [CR-0011](docs/changes/CR-0011-detailed-summaries.md).
 
@@ -79,6 +81,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First version (MVP), built from the approved spec. See [CR-0001](docs/changes/CR-0001-mvp.md).
 
+[0.8.0]: https://github.com/akkiverse/distill/pull/24
 [0.7.0]: https://github.com/akkiverse/distill/pull/22
 [0.6.1]: https://github.com/akkiverse/distill/pull/20
 [0.6.0]: https://github.com/akkiverse/distill/pull/19
