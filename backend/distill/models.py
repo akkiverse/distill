@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 AiStatus = Literal["ok", "offline", "not_configured", "error"]
+DetailState = Literal["ready", "unavailable"]  # AC-13.4 (added CR-0011)
 
 
 class Section(BaseModel):
@@ -67,6 +68,11 @@ class Card(BaseModel):
     replaced_at: str | None = None  # when a newer report on the same story replaced an older card (AC-8.6, added CR-0004)
     cover: str = Field(default="", max_length=40)  # the AI's short theme for the cover band (AC-11.4, added CR-0008)
     visual: Visual | None = None  # the AI's diagram (AC-11.5, added CR-0008)
+    # US-13 (added CR-0011): the detailed summary written from the article. All absent on cards made by v0.7.0.
+    detail_status: DetailState | None = None  # None: not asked yet (or the AI was away); asked once, kept for good
+    detail_summary: str = Field(default="", max_length=900)  # the longer summary, about 4 to 5 sentences (AC-13.5)
+    detail_points: list[str] = Field(default_factory=list, max_length=10)  # up to 10 bullet points (AC-13.6)
+    detail_tries: int = 0  # unusable AI answers so far; after 2 the story keeps its short summary (AC-13.4)
 
 
 class Topics(BaseModel):

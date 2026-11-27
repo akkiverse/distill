@@ -202,5 +202,6 @@ def test_ac_11_7_what_v0_6_0_saves_stays_readable_by_v0_5_1():
         mode="json"
     )
     old_fields = set(V051_CARD) | {"replaced_at"}
-    assert set(new) - old_fields == {"cover", "visual"}
+    later = {"detail_status", "detail_summary", "detail_points", "detail_tries"}  # added by CR-0011 (US-13), also optional
+    assert set(new) - old_fields - later == {"cover", "visual"}
     assert Card.model_validate({k: new[k] for k in old_fields}).title == V051_CARD["title"]
