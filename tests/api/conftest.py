@@ -11,8 +11,10 @@ import httpx
 import pytest
 from distill import app as app_mod
 from distill import catalog as catalog_mod
+from distill import sharing as sharing_mod
 from distill.catalog import MemoryCatalog
 from distill.models import Article, Card
+from distill.sharing import MemorySharing
 from distill.store import MemoryStore
 from fastapi.testclient import TestClient
 
@@ -123,12 +125,14 @@ def env():
         store = MemoryStore()
         user_id: str | None = "u_test"
         catalog: MemoryCatalog
+        sharing: MemorySharing
         factory_calls: list
 
     e = Env()
     e.sources = []
     app = app_mod.app
     e.catalog = MemoryCatalog()
+    e.sharing = MemorySharing()  # CR-0012: Zerodha prices shared (the founder's default)
     e.factory_calls = []
 
     def factory(sections, keywords, **kw):
@@ -137,15 +141,18 @@ def env():
 
     app.dependency_overrides[app_mod.get_source_factory] = lambda: factory
     app.dependency_overrides[app_mod.get_catalog] = lambda: e.catalog
+    app.dependency_overrides[app_mod.get_sharing] = lambda: e.sharing
     app.dependency_overrides[app_mod.get_curator] = lambda: e.curator
     app.dependency_overrides[app_mod.get_store] = lambda: e.store
     app.dependency_overrides[app_mod.get_user_id] = lambda: e.user_id
     original_now = app_mod.now
     app_mod.now = lambda: NOW
     catalog_mod.forget_cache()
+    sharing_mod.forget_cache()
     yield e
     app.dependency_overrides.clear()
     catalog_mod.forget_cache()
+    sharing_mod.forget_cache()
     app_mod.now = original_now
 
 

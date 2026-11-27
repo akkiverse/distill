@@ -14,7 +14,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from . import catalog, feeds, market, sources, store, studio_ai, studio_auth
+from . import catalog, feeds, market, sharing, sources, store, studio_ai, studio_auth
 from . import curator as curator_mod
 from . import detail as detail_mod
 from . import reader as reader_mod
@@ -77,6 +77,11 @@ def get_user_role(request: Request) -> str | None:
     """The person's Studio Accounts role for Distill ("admin" is the founder), or None when signed out."""
     claims = studio_auth.optional_user(request)
     return str(claims.get("role") or "") or None if claims else None
+
+
+def get_sharing() -> sharing.SharingStore:
+    """The founder's switch for sharing Zerodha prices (AC-14.9, added CR-0012)."""
+    return sharing.live_sharing()
 
 
 def get_catalog() -> catalog.CatalogStore:
@@ -274,37 +279,56 @@ def _market_offline(exc: Exception) -> HTTPException:
 
 MarketDep = Annotated[market.MarketData | None, Depends(get_market)]
 RoleDep = Annotated[str | None, Depends(get_user_role)]
+SharingDep = Annotated[sharing.SharingStore, Depends(get_sharing)]
+
+
+async def _share(role: str | None, store_: sharing.SharingStore) -> bool:
+    """AC-9.8 (changed CR-0012): only a signed-in person who isn't the founder needs the switch read."""
+    return bool(role) and not market.is_founder(role) and await sharing.share_kite(store_)
 
 
 @app.get("/api/market/search", response_model=list[market.InstrumentOut])
-async def market_search(data: MarketDep, role: RoleDep, q: str = "", group: str = ""):
-    """AC-9.1, AC-9.8, AC-10.5: instruments matching a symbol or name (optionally one group: gold, india, us), each with its
-    kind and tidy name; Zerodha items only for the founder."""
+async def market_search(data: MarketDep, role: RoleDep, shares: SharingDep, q: str = "", group: str = ""):
+    """AC-9.1, AC-9.8, AC-10.5, AC-14.6: instruments matching a symbol or name (optionally one group: gold, india, us,
+    currency), each with its kind and tidy name; Zerodha items for the people AC-9.8 allows."""
     try:
-        return await market.search(_market(data), q, role, group or None)
+        return await market.search(_market(data), q, role, group or None, share=await _share(role, shares))
     except market.MarketUnavailable as exc:
         raise _market_offline(exc) from exc
 
 
 @app.post("/api/market/watch", response_model=market.WatchResponse)
-async def market_watch(body: market.WatchRequest, data: MarketDep, role: RoleDep):
+async def market_watch(body: market.WatchRequest, data: MarketDep, role: RoleDep, shares: SharingDep):
     """AC-9.3: tell the Market Gateway which keys are wanted (the only market write, AC-9.13)."""
     if len(body.keys) > market.MAX_WATCH:
         raise HTTPException(422, detail={"code": "too_many", "message": f"You can watch up to {market.MAX_WATCH} items."})
     try:
-        return await market.watch(_market(data), body.keys, role, now())
+        return await market.watch(_market(data), body.keys, role, now(), share=await _share(role, shares))
     except market.MarketUnavailable as exc:
         raise _market_offline(exc) from exc
 
 
 @app.get("/api/market/prices", response_model=market.PricesResponse)
-async def market_prices(data: MarketDep, role: RoleDep, keys: str = ""):
-    """AC-9.4 to AC-9.8: the latest prices for the watchlist, one request for all items."""
+async def market_prices(data: MarketDep, role: RoleDep, shares: SharingDep, keys: str = ""):
+    """AC-9.4 to AC-9.8, AC-14.1, AC-14.2: the latest prices for the watchlist (with rupee prices), one request for all items."""
     wanted = [k for k in keys.split(",") if k.strip()]
     if len(wanted) > market.MAX_WATCH:
         raise HTTPException(422, detail={"code": "too_many", "message": f"You can watch up to {market.MAX_WATCH} items."})
     try:
-        result = await market.prices(_market(data), wanted, role, now())
+        result = await market.prices(_market(data), wanted, role, now(), share=await _share(role, shares))
+    except market.MarketUnavailable as exc:
+        raise _market_offline(exc) from exc
+    return JSONResponse(result.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/market/history", response_model=market.HistoryResponse)
+async def market_history(data: MarketDep, role: RoleDep, shares: SharingDep, keys: str = "", range: str = "1d"):
+    """AC-14.7, AC-14.8 (added CR-0012): price history for the trend graphs (1d, 1w or 1m), for the items this person may see."""
+    wanted = [k for k in keys.split(",") if k.strip()]
+    if len(wanted) > market.MAX_WATCH:
+        raise HTTPException(422, detail={"code": "too_many", "message": f"You can watch up to {market.MAX_WATCH} items."})
+    try:
+        result = await market.history(_market(data), wanted, range, role, now(), share=await _share(role, shares))
     except market.MarketUnavailable as exc:
         raise _market_offline(exc) from exc
     return JSONResponse(result.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
@@ -582,3 +606,40 @@ async def check_sources(_: AdminDep, sources_list: CatalogDep, checker: CheckerD
     except catalog.CatalogUnavailable as exc:
         raise _list_offline(exc) from exc
     return _admin_view(saved)
+
+
+# ---------- sharing Zerodha prices (AC-14.9, added CR-0012) ----------
+class MarketSharing(BaseModel):
+    share_kite: bool
+    updated_at: str | None = None
+    saved_in_database: bool
+
+
+class SharingChange(BaseModel):
+    share_kite: bool
+
+
+def _sharing_offline(exc: Exception) -> HTTPException:
+    return HTTPException(
+        503, detail={"code": "sharing_offline", "message": "The setting can't be reached right now. Nothing was changed; try again."}
+    )
+
+
+@app.get("/api/admin/market-sharing", response_model=MarketSharing)
+async def read_market_sharing(_: AdminDep, shares: SharingDep):
+    """AC-14.9: the founder's switch "Share Zerodha prices with other users" (On unless switched Off)."""
+    try:
+        v = await shares.load()
+    except sharing.SharingUnavailable as exc:
+        raise _sharing_offline(exc) from exc
+    return MarketSharing(share_kite=v.share_kite, updated_at=v.updated_at, saved_in_database=store.configured())
+
+
+@app.put("/api/admin/market-sharing", response_model=MarketSharing)
+async def change_market_sharing(body: SharingChange, _: AdminDep, shares: SharingDep):
+    """AC-14.9: flip the switch; it applies within 30 seconds on every server, with no release."""
+    try:
+        v = await sharing.change(shares, body.share_kite, now())
+    except sharing.SharingUnavailable as exc:
+        raise _sharing_offline(exc) from exc
+    return MarketSharing(share_kite=v.share_kite, updated_at=v.updated_at, saved_in_database=store.configured())

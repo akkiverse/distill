@@ -159,8 +159,10 @@ def test_ac_10_5_twenty_results_keep_the_kinds_apart(env):
 
 @pytest.mark.parametrize("role", ["user", None])
 def test_ac_9_8_india_gold_rate_and_bonds_are_founder_only(c, env, role):
-    """AC-9.8 (with CR-0006): the India gold rate and Sovereign Gold Bonds come from Zerodha, so only the founder sees them."""
+    """AC-9.8 (with CR-0006; changed CR-0012: while sharing is Off): the India gold rate and Sovereign Gold Bonds come from
+    Zerodha, so only the founder sees them."""
     env.role = role
+    env.sharing.value.share_kite = False
     got = {i["key"] for i in c.get("/api/market/search", params={"q": "gold"}).json()}
     assert got == {"GOLD:XAU_USD", "MF:119132"}
     r = c.post("/api/market/watch", json={"keys": ["MCX:GOLDM", "NSE:SGBJUN31I-GB", "MF:119132"]}).json()

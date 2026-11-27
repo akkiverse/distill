@@ -12,7 +12,8 @@ import re
 STOCK, ETF = "stock", "etf"
 GOLD_SPOT, GOLD_INDIA, GOLD_ETF, GOLD_BOND, GOLD_MF = "gold_spot", "gold_india", "gold_etf", "gold_bond", "gold_mf"
 GOLD = (GOLD_INDIA, GOLD_SPOT, GOLD_ETF, GOLD_BOND, GOLD_MF)  # the order the Add sheet lists them in
-CATEGORIES = (STOCK, ETF, *GOLD)
+FX = "fx"  # a currency rate, e.g. FX:USDINR (added CR-0012, Market Gateway E4)
+CATEGORIES = (STOCK, ETF, *GOLD, FX)
 
 NOT_GOLD = re.compile(r"SILVER|GOLDMAN", re.I)
 SGB_NAME = re.compile(r"SOVEREIGN\s+GOLD|GOLD\s*BOND|\bSGB", re.I)
@@ -34,6 +35,8 @@ def category_of(key: str, symbol: str, name: str, type_: str, given: str | None 
         return given
     prefix = key.split(":", 1)[0].upper()
     t = (type_ or "").lower()
+    if prefix == "FX" or t == FX:
+        return FX  # AC-14.6
     if key.upper() == "GOLD:XAU_USD" or (prefix in ("GOLD", "SPOT") and is_gold_name(symbol, name or "XAU gold")):
         return GOLD_SPOT
     if prefix == "MCX":
@@ -48,9 +51,11 @@ def category_of(key: str, symbol: str, name: str, type_: str, given: str | None 
 
 
 def group_of(category: str, key: str) -> str:
-    """AC-10.2: Gold, Indian shares or US shares."""
+    """AC-10.2: Gold, Indian shares or US shares; Currency for rates (AC-14.6, added CR-0012)."""
     if category in GOLD:
         return "gold"
+    if category == FX:
+        return "currency"
     return "us" if key.split(":", 1)[0].upper() == "US" else "india"
 
 
@@ -65,6 +70,8 @@ def market_of(key: str, category: str = "") -> str:
         return "MCX"
     if prefix == "MF" or category == GOLD_MF:
         return "AMFI"
+    if prefix == "FX" or category == FX:
+        return "FX"  # a daily reference rate: no trading hours (CR-0012)
     return "GOLD"
 
 
@@ -102,6 +109,7 @@ SHORT_NAMES: dict[str, tuple[str, str]] = {
     "NSE:KOTAKGOLD": ("Kotak Gold ETF", "Kotak Gold"),
     "MCX:GOLDM": ("Gold rate, India", "Gold India"),
     "GOLD:XAU_USD": ("Gold spot", "Gold spot"),
+    "FX:USDINR": ("US dollar in rupees", "USD/INR"),
 }
 # Kept in capitals however a name is written (AC-10.10).
 UPPER = {
