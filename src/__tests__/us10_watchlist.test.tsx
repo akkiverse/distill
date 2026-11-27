@@ -267,6 +267,53 @@ describe("US-10: Watchlist page and pinned prices strip (CR-0006)", () => {
     expect(whenLabel(FRI_NSE_OPEN, now)).toBe("Fri 9:15 AM IST");
   });
 
+  it("AC-10.14: an open gold spot alone never shows Prices paused while the gateway rests overnight", () => {
+    const now = Date.parse("2026-11-27T00:30:00Z"); // Fri 6:00 AM IST: NSE, MCX and US shut, gold spot open by its hours
+    const quiet = { heartbeat_at: "2026-11-26T21:05:00Z", paused: true }; // last check-in 2:35 AM IST
+    const gold = { ...GOLD, market_state: "open", label: "Live", as_of: "2026-11-26T19:40:00Z" }; // 1:10 AM IST
+    const shut = { NSE: market("NSE", "closed", FRI_NSE_OPEN), US: market("US", "closed", FRI_US_OPEN), GOLD: market("GOLD", "open") };
+    const mixed = result([TCS, EPAM, gold], { gateway: quiet, markets: shut });
+    const notes = priceNotices("ok", mixed, now);
+    expect(notes.map((n) => [n.tone, n.text])).toEqual([
+      ["calm", "Markets closed, prices from the last close. NSE opens 9:15 AM IST, US at 8:00 PM IST. Gold spot price from 1:10 AM IST."],
+    ]);
+    expect(notes.some((n) => /Prices paused/.test(n.text))).toBe(false);
+    // Only gold spot watched: a calm note with gold's own price time, no amber.
+    const alone = result([gold], { gateway: quiet, markets: { GOLD: market("GOLD", "open") } });
+    expect(priceNotices("ok", alone, now).map((n) => [n.tone, n.text, n.short])).toEqual([
+      ["calm", "Gold spot updates a few times a day. Price from 1:10 AM IST.", "Gold spot · price from 1:10 AM IST"],
+    ]);
+    // Same by the device clock (no market states from the server).
+    expect(priceNotices("ok", result([gold], { gateway: quiet }), now).map((n) => n.tone)).toEqual(["calm"]);
+    // Gateway checking in: nothing to say about gold alone.
+    expect(priceNotices("ok", result([gold], { markets: { GOLD: market("GOLD", "open") } }), now)).toEqual([]);
+  });
+
+  it("AC-10.14: Prices paused still shows when NSE, MCX or the US market is open and the gateway is quiet", () => {
+    const quiet = { heartbeat_at: "2026-11-26T09:00:00Z", paused: true };
+    const gold = { ...GOLD, market_state: "open" };
+    const now = THU_8PM_IST;
+    for (const m of ["NSE", "MCX", "US"]) {
+      const watched = { NSE: TCS, MCX: GOLDM, US: EPAM }[m]!;
+      const r = result([watched, gold], { gateway: quiet, markets: { [m]: market(m, "open"), GOLD: market("GOLD", "open") } });
+      expect(priceNotices("ok", r, now).map((n) => [n.tone, n.text])).toEqual([["amber", `Prices paused since 2:30 PM IST while ${m} is open. The last prices are shown.`]]);
+    }
+    // By the device clock too: Thursday 11 AM IST, NSE open, no market states from the server.
+    const morning = Date.parse("2026-11-26T05:30:00Z");
+    const r = result([TCS, gold], { gateway: { heartbeat_at: "2026-11-26T05:20:00Z", paused: true } });
+    expect(priceNotices("ok", r, morning).map((n) => n.text)).toEqual(["Prices paused since 10:50 AM IST while NSE is open. The last prices are shown."]);
+  });
+
+  it("AC-10.14: the Watchlist with only gold spot shows a calm note, not Prices paused, overnight", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: Date.parse("2026-11-27T00:30:00Z") });
+    const gold = { ...GOLD, market_state: "open", label: "Live", as_of: "2026-11-26T19:40:00Z" };
+    priceServer(() => ({ json: result([gold], { gateway: { heartbeat_at: "2026-11-26T21:05:00Z", paused: true }, markets: { GOLD: market("GOLD", "open") } }) }));
+    seed({ ...feedState, watchlist: watchlist(["GOLD:XAU_USD"]) });
+    renderApp("#/watchlist");
+    expect(await screen.findByText("Gold spot updates a few times a day. Price from 1:10 AM IST.")).toBeInTheDocument();
+    expect(screen.queryByText(/Prices paused/)).toBeNull();
+  });
+
   it("AC-10.8: the strip carries the calm note in one line, with a link to the Watchlist on the Feed", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, now: THU_8PM_IST });
     priceServer(() => ({ json: result([TCS], { gateway: { heartbeat_at: "2026-11-26T09:00:00Z", paused: true }, markets: { NSE: market("NSE", "closed", FRI_NSE_OPEN) } }) }));
