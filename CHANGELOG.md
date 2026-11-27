@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-27
+
 ### Added
 - E7: a theme switch in the header (System, Light, Dark), applied at once on every screen, remembered on the device with no flash when the app opens, and kept with your account so it follows you to other devices. See [CR-0008](docs/changes/CR-0008-ui-refresh.md).
 - E7: every AI-summarised card gets a cover band in its topic's colour with a short theme the AI picked for the story ("The AI chip rush"), and, when the story suits one, a small diagram the AI chose: bars, a before-and-after change, a trend or a flow of steps; the post shows it full size. Every number in a diagram must be in the story's text. See [CR-0008](docs/changes/CR-0008-ui-refresh.md).
@@ -61,6 +63,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First version (MVP), built from the approved spec. See [CR-0001](docs/changes/CR-0001-mvp.md).
 
+[0.6.0]: https://github.com/akkiverse/distill/pull/19
 [0.5.1]: https://github.com/akkiverse/distill/pull/17
 [0.5.0]: https://github.com/akkiverse/distill/pull/16
 [0.4.0]: https://github.com/akkiverse/distill/pull/14
