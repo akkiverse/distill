@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-27
+
+### Fixed
+- B8: overnight, gold spot no longer brings up the amber "Prices paused" note; the calm note gives gold's own price time instead, and "Prices paused" still shows while NSE, MCX or the US market is open and the price service is silent. See [CR-0009](docs/changes/CR-0009-gold-not-paused.md).
+
 ## [0.6.0] - 2026-11-27
 
 ### Added
@@ -63,6 +68,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First version (MVP), built from the approved spec. See [CR-0001](docs/changes/CR-0001-mvp.md).
 
+[0.6.1]: https://github.com/akkiverse/distill/pull/20
 [0.6.0]: https://github.com/akkiverse/distill/pull/19
 [0.5.1]: https://github.com/akkiverse/distill/pull/17
 [0.5.0]: https://github.com/akkiverse/distill/pull/16

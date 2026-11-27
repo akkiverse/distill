@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-27 · **Commit:** latest on `cr/0008-ui-refresh` (CR-0008) · **Result:** 225 of 225 tests passing (144 pytest, 81 Vitest); every acceptance criterion covered (AC-11.1 to AC-11.7 added, AC-4.2 changed) · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 68 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-27 · **Commit:** latest on `cr/0009-gold-not-paused` (CR-0009) · **Result:** 228 of 228 tests passing (144 pytest, 84 Vitest); every acceptance criterion covered (AC-10.14 added; AC-9.6 and AC-10.8 changed) · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 69 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -53,7 +53,7 @@ Previous runs: CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194
 | AC-9.3 | `test_us9_watchlist.py::test_ac_9_3_adding_or_opening_upserts_watch_symbols`, `test_ac_9_3_unknown_keys_are_not_watched`, Postgres test (first_wanted_at kept); `us9_prices.test.tsx` "AC-9.3" | Pass |
 | AC-9.4 | `test_us9_watchlist.py::test_ac_9_4_price_change_and_time`; `us9_prices.test.tsx` "AC-9.4" (Rs and $ formats, green and red, "26 Nov, 2:41 PM IST") | Pass |
 | AC-9.5 | `test_us9_watchlist.py::test_ac_9_5_labels` (7 cases), `test_ac_9_5_labels_reach_the_app`; `us9_prices.test.tsx` "AC-9.5" | Pass |
-| AC-9.6 (changed CR-0006) | `test_us9_watchlist.py::test_ac_9_6_paused_after_two_minutes`; `us9_prices.test.tsx` "AC-9.6" (paused only while NSE is open); `us10_watchlist.test.tsx` "AC-10.8" | Pass |
+| AC-9.6 (changed CR-0006, CR-0009) | `test_us9_watchlist.py::test_ac_9_6_paused_after_two_minutes`; `us9_prices.test.tsx` "AC-9.6" (paused only while NSE is open); `us10_watchlist.test.tsx` "AC-10.8" ; `us10_watchlist.test.tsx` "AC-10.14" (paused kept for NSE, MCX and US) | Pass |
 | AC-9.7 (changed CR-0006) | `test_us9_watchlist.py::test_ac_9_7_waiting_and_error`; `us9_prices.test.tsx` "AC-9.7" ("First price when NSE opens, Fri 9:15 AM IST" while closed, "Waiting for the first price" while open, error keeps the last price) | Pass |
 | AC-9.8 | `test_us9_watchlist.py::test_ac_9_8_zerodha_prices_for_the_founder_only` (user, signed out, empty role), `test_ac_9_8_founder_sees_zerodha`, `test_ac_9_8_role_comes_from_studio_accounts`; `us9_prices.test.tsx` "AC-9.8" | Pass |
 | AC-9.9 (changed CR-0006) | `us9_prices.test.tsx` "AC-9.9" (3 tests: market hours incl. US daylight saving and weekends; one read for all items, again after 30 s, none in the background; none on the Feed with the strip Off); `us10_watchlist.test.tsx` "AC-10.9", "AC-10.11" | Pass |
@@ -70,12 +70,13 @@ Previous runs: CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194
 | AC-10.5 | `test_us10_watchlist_strip.py::test_ac_10_5_searching_gold_lists_every_gold_type`, `::test_ac_10_5_filter_chips_and_gold_with_nothing_typed`, `::test_ac_10_5_twenty_results_keep_the_kinds_apart`; `us10_watchlist.test.tsx` "AC-10.5" (2: five headings with explanations, Added, chips send `group`) | Pass |
 | AC-10.6 | `test_us10_watchlist_strip.py::test_ac_10_6_category_is_worked_out_when_the_gateway_has_none` (12 cases), `::test_ac_10_6_the_gateways_category_wins`, Postgres E1 test (category column alone marks a gold ETF); `us10_watchlist.test.tsx` "AC-10.6" (badges) | Pass |
 | AC-10.7 | `us10_watchlist.test.tsx` "AC-10.7" (2: SGB detail with price, change, closed line with next opening, "What this is", source, news, note, pin and remove; item no longer in the list) | Pass |
-| AC-10.8 | `us10_watchlist.test.tsx` "AC-10.8" (2: every message and when amber shows; the strip's one-line note and Watchlist link) | Pass |
+| AC-10.8 (changed CR-0009) | `us10_watchlist.test.tsx` "AC-10.8" (2: every message and when amber shows; the strip's one-line note and Watchlist link) ; `us10_watchlist.test.tsx` "AC-10.14" (gold spot wording) | Pass |
 | AC-10.9 | `test_us10_watchlist_strip.py::test_ac_10_9_clock_fallback_knows_the_next_opening`, `::test_ac_10_9_gateway_calendar_is_used_when_it_fits`, `::test_ac_10_9_a_stale_row_is_replaced_by_the_clock`, `::test_ac_10_9_works_with_the_gateway_as_released`, Postgres: `::test_ac_10_9_postgres_against_the_gateway_as_released`, `::test_ac_10_9_postgres_against_the_gateway_with_e1`; `us10_watchlist.test.tsx` "AC-10.9" | Pass |
 | AC-10.10 | `test_us10_watchlist_strip.py::test_ac_10_10_tidy_names` (11 cases); `us10_watchlist.test.tsx` "AC-10.10" | Pass |
 | AC-10.11 | `test_us10_watchlist_strip.py::test_ac_10_11_strip_setting_kept_in_the_account`; `us10_watchlist.test.tsx` "AC-10.11" (Every screen, Feed only, Off; synced; no reads with Off) | Pass |
 | AC-10.12 | `test_us10_watchlist_strip.py::test_ac_10_12_v040_account_copy_is_upgraded`, `::test_ac_10_12_a_v040_device_cant_wipe_the_new_fields`, `::test_ac_10_12_v050_copy_stays_readable_by_v040`, `::test_ac_10_12_migration_tidies_any_copy`; `us10_watchlist.test.tsx` "AC-10.12" (2: v0.4.0 device copy upgraded and shown on the strip; items 11 to 20 kept apart, bad data tidied) | Pass |
 | AC-10.13 | `test_cr0007_gold_search.py::test_ac_10_13_gold_spot_and_india_rate_survive_a_crowd_of_matches`, `::test_ac_10_13_everyone_else_still_gets_gold_spot_but_not_the_zerodha_rate`, `::test_ac_10_13_fixed_rows_only_when_the_words_fit`, `::test_ac_10_13_an_exact_symbol_match_still_leads`, `::test_ac_10_13_missing_rows_are_simply_not_there`, `::test_ac_10_13_bonds_come_after_the_other_gold_rows`, Postgres: `::test_ac_10_13_postgres_crowded_gateway`; `us10_watchlist.test.tsx` "AC-10.13" (the India rate heading explains itself) | Pass |
+| AC-10.14 (added CR-0009) | `us10_watchlist.test.tsx` "AC-10.14" (3 tests: overnight with shares and gold, and gold alone, by server states and the device clock; Prices paused kept for NSE, MCX and US; the Watchlist with only gold spot) | Pass |
 | AC-11.1 | `test_us11_look_and_diagrams.py::test_ac_11_1_the_choice_is_kept_in_the_account`; `us11_look.test.tsx` "AC-11.1" (switch, every screen, kept on the device and sent to the account) and "AC-11.1: a theme kept in the account is applied when the app opens" | Pass |
 | AC-11.2 | `us11_look.test.tsx` "AC-11.2" (runs the start-up script from `index.html`: theme set, bar colour matches, a damaged copy ignored) | Pass |
 | AC-11.3 | `test_us11_look_and_diagrams.py::test_ac_11_3_the_theme_chosen_last_wins`, `::test_ac_11_3_a_v0_5_1_device_cannot_overwrite_a_newer_choice`, `::test_ac_11_1_the_choice_is_kept_in_the_account` | Pass |
@@ -101,6 +102,9 @@ Supporting tests (not tied to one criterion): RSS parsing, the RSS adapter over 
 
 ## Visual check
 Built UI served locally with the API, sample cards (marked "Sample:") seeded on the device, screenshots in headless Chromium of Feed, Post and Topics at 375px and 1280px in light and dark, plus the empty Feed. No sideways scroll at either width. Fixes made: none needed after review; bottom navigation on phones and top tabs on desktop behave as designed, the chart and figure chips render in both themes, and the end-of-feed moment sits below the last card.
+
+## Visual check (CR-0009)
+No layout or style change: the new wording uses the existing calm note (moon or clock icon) on the Watchlist and the one-line strip note, checked by the Vitest screen test "AC-10.14" (the Watchlist with only gold spot). No new screenshots were needed.
 
 ## Feed check
 Checked from the Vercel preview (Singapore) with `/api/feeds/check` on 2026-11-25: **74 of 76** feeds answered with stories (all 12 Google News section feeds among them). Business Standard (latest) and Yahoo Finance answered with HTTP errors and are listed in `feeds.DROPPED`, so they are not asked; every section still has working feeds.
@@ -148,6 +152,7 @@ Fixes made after looking: the diagram's outer frame shared a class name with the
 - [x] Motion: cards rise once, bars grow and trend lines draw once, buttons ease; all off with `prefers-reduced-motion`
 
 ## Releases
+- v0.6.1 (2026-11-27): CR-0009 gold spot no longer brings up "Prices paused" overnight (B8), 228 of 228 tests passing, released through [PR #20](https://github.com/akkiverse/distill/pull/20).
 - v0.6.0 (2026-11-27): CR-0008 a smoother look, a theme switch and AI-drawn story diagrams (E7), 225 of 225 tests passing, released through [PR #19](https://github.com/akkiverse/distill/pull/19).
 - v0.5.1 (2026-11-27): CR-0007 gold search always shows gold spot and the India gold rate (B6), 202 of 202 tests passing, released through [PR #17](https://github.com/akkiverse/distill/pull/17).
 - v0.5.0 (2026-11-26): CR-0006 Watchlist page and pinned prices strip (E5), 194 of 194 tests passing, released through [PR #16](https://github.com/akkiverse/distill/pull/16).

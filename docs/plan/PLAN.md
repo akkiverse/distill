@@ -79,3 +79,8 @@ tests/api/                   pytest acceptance tests;  src/__tests__/  Vitest ac
 - **Existing users' data:** only optional fields are added. Cards without `cover` and `visual` show the topic's cover colour and the key-figure chart as before; settings without `theme_changed_at` count as older than any choice made on v0.6.0, so a device still on v0.5.1 can't flip a newer theme back; v0.5.1 ignores the new fields (Pydantic and the device copy keep unknown fields harmlessly), so a rollback stays safe. Tests seed v0.5.1-shaped cards and settings.
 - **AI load:** no extra AI calls: the cover and diagram come in the same answer as the summary. The answer is a little longer (about 60 to 150 more tokens).
 - **Risks:** the 9B model may pick a weak diagram or none; the checks drop bad numbers, and a story without a diagram looks as it does today with the new cover. Older cards (made before the release) have no AI theme until they are replaced.
+
+## CR-0009: Don't show "Prices paused" because of Gold spot (bug fix B8)
+- **Cause:** `priceNotices` counted gold spot (open by the clock on weekdays) as an open market, so the gateway's planned overnight quiet showed as "Prices paused".
+- **Fix:** leave gold spot out of the open markets for the paused note; add gold's own price time to the calm note, or a gold-only calm note while the gateway rests.
+- **Existing users' data:** untouched. Interface-only; no stored shape, route or contract changes; a rollback to v0.6.0 stays safe.

@@ -199,6 +199,9 @@ export function whenLabel(iso: string, now = Date.now()): string {
 
 const marketName = (m: string) => (m === "GOLD" ? "Gold spot" : m);
 
+/** "1:10 AM IST" earlier today, otherwise the full price time ("26 Nov, 2:41 PM IST"). */
+const istTime = (iso: string, now: number) => (istDay(Date.parse(iso)) === istDay(now) ? `${clock(Date.parse(iso))} IST` : priceTime(iso));
+
 /** The markets the shown items follow, from the server (calendar or its clock), or else this device's clock. */
 export function watchedMarkets(result: PricesResult | null, now = Date.now()): MarketInfo[] {
   if (!result) return [];
@@ -244,13 +247,16 @@ export function priceNotices(status: string, result: PricesResult | null, now = 
   }
   if (!result || result.items.length === 0) return [];
   const markets = watchedMarkets(result, now);
-  const open = markets.filter(isOpenNow);
+  // AC-10.14 (CR-0009): the gateway reads gold spot only every few hours and is quiet on purpose when NSE, MCX and the
+  // US market are all shut, so an "open" gold spot never makes a quiet gateway look paused.
+  const open = markets.filter((m) => isOpenNow(m) && m.market !== "GOLD");
+  const goldOpen = markets.some((m) => m.market === "GOLD" && isOpenNow(m));
   const out: Notice[] = [];
   if (result.gateway.paused && open.length > 0) {
     const names = open.map((m) => marketName(m.market)).join(" and ");
     const verb = open.length > 1 ? "are" : "is";
     const hb = result.gateway.heartbeat_at;
-    const since = hb ? (istDay(Date.parse(hb)) === istDay(now) ? `${clock(Date.parse(hb))} IST` : priceTime(hb)) : null;
+    const since = hb ? istTime(hb, now) : null;
     out.push(since
       ? { tone: "amber", icon: "pause", text: `Prices paused since ${since} while ${names} ${verb} open. The last prices are shown.`, short: `Prices paused since ${since}` }
       : { tone: "amber", icon: "pause", text: `Prices paused while ${names} ${verb} open: the price service hasn't checked in yet.`, short: "Prices paused" });
@@ -263,12 +269,23 @@ export function priceNotices(status: string, result: PricesResult | null, now = 
     const opens = h.next_open_at ? ` Opens ${whenLabel(h.next_open_at, now)}.` : "";
     out.push({ tone: "calm", icon: "calendar", text: `${what} closed today for a holiday${note}.${opens}`, short: `${what} closed today for a holiday` });
   }
+  const goldAt = goldOpen ? result.items.find((i) => marketKey(i) === "GOLD" && i.price !== null && i.as_of)?.as_of ?? null : null;
+  const goldOnly = markets.every((m) => m.market === "GOLD");
+  if (goldOnly && goldOpen) {
+    // AC-10.14: only gold spot is watched; while the gateway rests, say when gold's own price is from.
+    if (result.gateway.paused && goldAt) {
+      const at = istTime(goldAt, now);
+      out.push({ tone: "calm", icon: "clock", text: `Gold spot updates a few times a day. Price from ${at}.`, short: `Gold spot · price from ${at}` });
+    }
+    return out;
+  }
   if (open.length === 0 && markets.length > 0) {
-    const rest = markets.filter((m) => !holidays.includes(m));
+    const rest = markets.filter((m) => !holidays.includes(m) && !(goldOpen && m.market === "GOLD"));
     const list = opensList(rest.length ? rest : markets, now);
     const anyPrice = result.items.some((i) => i.price !== null);
     if (anyPrice) {
-      out.push({ tone: "calm", icon: "moon", text: `Markets closed, prices from the last close.${list ? ` ${list}.` : ""}`, short: list ? `Markets closed · ${list}` : "Markets closed" });
+      const gold = goldAt ? ` Gold spot price from ${istTime(goldAt, now)}.` : "";
+      out.push({ tone: "calm", icon: "moon", text: `Markets closed, prices from the last close.${list ? ` ${list}.` : ""}${gold}`, short: list ? `Markets closed · ${list}` : "Markets closed" });
     } else {
       const first = opensList(markets, now).split(", ")[0]?.replace(" opens ", " ") ?? "";
       out.push({ tone: "calm", icon: "clock", text: `Prices start when the market opens${first ? ` (${first})` : ""}.`, short: "Prices start when the market opens" });
