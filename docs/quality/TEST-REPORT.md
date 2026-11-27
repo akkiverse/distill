@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-27 · **Commit:** latest on `cr/0011-detailed-summaries` (CR-0011) · **Result:** 308 of 308 tests passing (199 pytest, 109 Vitest); every acceptance criterion covered (AC-13.1 to AC-13.10 added) · **Database tests:** against throwaway local Postgres databases started by the test run · **Build:** `npm run build` passes (JS 73 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-27 · **Commit:** latest on `cr/0012-rupees-trend` (CR-0012) · **Result:** 355 of 355 tests passing (229 pytest, 126 Vitest); every acceptance criterion covered (AC-14.1 to AC-14.12 added; AC-9.4, AC-9.8, AC-9.13 changed) · **Database tests:** against throwaway local Postgres databases started by the test run · **Build:** `npm run build` passes (JS 77 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0010 (2026-11-27) 257 of 257 passing; CR-0009 (2026-11-27) 228 of 228 passing; CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0011 (2026-11-27) 308 of 308 passing; CR-0010 (2026-11-27) 257 of 257 passing; CR-0009 (2026-11-27) 228 of 228 passing; CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -104,6 +104,21 @@ Previous runs: CR-0010 (2026-11-27) 257 of 257 passing; CR-0009 (2026-11-27) 228
 | AC-13.8 | `test_us13_detailed_summaries.py::test_ac_13_8_merge_keeps_a_detailed_summary_from_either_copy`, `::test_ac_13_8_ready_beats_unavailable_on_merge`, `::test_ac_13_8_account_sync_keeps_detailed_summaries`, `::test_ac_13_8_state_round_trip_through_the_api`; `us13_detail.test.tsx` "AC-13.8" (4 tests) | Pass |
 | AC-13.9 | `test_us13_detailed_summaries.py::test_ac_13_9_ai_offline_answers_offline`, `::test_ac_13_9_ai_not_set_up_reads_no_page`, `::test_ac_13_9_ai_error_answers_error`; `us13_detail.test.tsx` "AC-13.9" (2 tests) | Pass |
 | AC-13.10 | `test_us13_detailed_summaries.py::test_ac_13_10_v070_cards_load_without_detail`, `::test_ac_13_10_v070_state_syncs_and_keeps_saved_cards`; `test_us11_look_and_diagrams.py::test_ac_11_7_what_v0_6_0_saves_stays_readable_by_v0_5_1` (only optional fields added); `us13_detail.test.tsx` "AC-13.10"; all earlier suites unchanged and passing | Pass |
+| AC-9.4 (changed CR-0012) | `us9_prices.test.tsx` "AC-9.4"; `us10_watchlist.test.tsx` "AC-10.1", "AC-10.7"; `us14_rupees.test.tsx` "AC-14.1" | Pass |
+| AC-9.8 (changed CR-0012) | `test_us14_rupees_trend.py::test_ac_9_8_signed_in_users_see_zerodha_while_shared`, `::test_ac_14_9_founder_switch`; sharing Off: `test_us9_watchlist.py::test_ac_9_8_zerodha_prices_for_the_founder_only`, `test_us10_watchlist_strip.py::test_ac_9_8_india_gold_rate_and_bonds_are_founder_only`, `test_cr0007_gold_search.py::test_ac_10_13_everyone_else_still_gets_gold_spot_but_not_the_zerodha_rate`; `us14_rupees.test.tsx` "AC-9.8 (changed CR-0012)" | Pass |
+| AC-9.13 (changed CR-0012) | `test_us9_watchlist.py::test_ac_9_13_only_watch_symbols_is_written`; `test_us14_rupees_trend.py::test_ac_14_8_postgres_history_and_fx_as_the_app_role` | Pass |
+| AC-14.1 | `test_us14_rupees_trend.py::test_ac_14_1_dollar_prices_come_with_rupee_prices`; `us14_rupees.test.tsx` "AC-14.1" (2 tests) | Pass |
+| AC-14.2 | `test_us14_rupees_trend.py::test_ac_14_2_the_rate_and_its_time_come_with_the_prices`; `us14_rupees.test.tsx` "AC-14.2" (2 tests) | Pass |
+| AC-14.3 | `test_us14_rupees_trend.py::test_ac_14_3_gold_spot_in_rupees_too`; `us14_rupees.test.tsx` "AC-14.1, AC-14.3" | Pass |
+| AC-14.4 | `test_us14_rupees_trend.py::test_ac_14_4_without_a_rate_prices_show_as_before` (3 cases), `::test_ac_14_4_a_last_rate_with_an_error_is_still_used`; `us14_rupees.test.tsx` "AC-14.4" | Pass |
+| AC-14.5 | `test_us14_rupees_trend.py::test_ac_14_5_the_rate_is_an_item_like_any_other`, `::test_ac_14_5_category_without_the_gateway_column`; `us14_rupees.test.tsx` "AC-14.5" | Pass |
+| AC-14.6 | `test_us14_rupees_trend.py::test_ac_14_6_currency_search` (5 cases), `::test_ac_14_6_currency_filter`; `us14_rupees.test.tsx` "AC-14.6" | Pass |
+| AC-14.7 | `test_us14_rupees_trend.py::test_ac_14_7_today_points_for_the_small_graph`, `::test_ac_14_7_no_history_yet_is_an_empty_line`; `us14_rupees.test.tsx` "AC-14.7" (3 tests) | Pass |
+| AC-14.8 | `test_us14_rupees_trend.py::test_ac_14_8_week_and_month`, `::test_ac_14_8_gateway_without_history`, `::test_ac_14_8_history_follows_who_may_see`, `::test_ac_14_8_postgres_history_and_fx_as_the_app_role`; `us14_rupees.test.tsx` "AC-14.8" (3 tests) | Pass |
+| AC-14.9 | `test_us14_rupees_trend.py::test_ac_14_9_founder_switch`, `::test_ac_14_9_only_the_founder_changes_it` (2 cases), `::test_ac_14_9_postgres_switch`; `us14_rupees.test.tsx` "AC-14.9" (2 tests) | Pass |
+| AC-14.10 | `test_us14_rupees_trend.py::test_ac_14_10_unreadable_switch_means_founder_only`, `::test_ac_14_10_switch_is_read_at_most_every_30_seconds`, `::test_ac_14_9_postgres_switch` (unreachable database) | Pass |
+| AC-14.11 | `test_us14_rupees_trend.py::test_ac_14_11_each_watchlist_stays_private` | Pass |
+| AC-14.12 | `test_us14_rupees_trend.py::test_compat_v080_watchlist_and_prices_unchanged`; `us14_rupees.test.tsx` "AC-14.12"; every earlier suite unchanged and passing; visual check below | Pass |
 | AC-9.8 with CR-0006 | `test_us10_watchlist_strip.py::test_ac_9_8_india_gold_rate_and_bonds_are_founder_only` (MCX gold rate and Sovereign Gold Bonds come from Zerodha) | Pass |
 | Compatibility (CR-0006) | Account copies and device copies saved by v0.4.0 (`AC-10.12` tests above); a copy saved by v0.5.0 validates against v0.4.0's watchlist model, so a rollback stays safe | Pass |
 | Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
@@ -170,6 +185,16 @@ Fixes made after looking: the diagram's outer frame shared a class name with the
 - [x] Labelled controls: the switch is a `radiogroup` named "Theme" with `aria-checked`; every diagram has a text version
 - [x] Inline SVG icons (sun, moon, monitor and one per section); no emoji; the references' photos, "Bullish" tag and strip trend lines left out on purpose (see CR-0008)
 - [x] Motion: cards rise once, bars grow and trend lines draw once, buttons ease; all off with `prefers-reduced-motion`
+
+## Visual check (CR-0012)
+The production build served locally with the API answered by sample data (prices, the USD to INR rate, 1D/1W/1M history, the admin switch), screenshots in headless Chromium of the Watchlist, a US share's detail, an Indian share's detail (1D on phones, 1W on desktop) and Settings, at 375 px and 1280 px, light and dark. No sideways scroll at either width. Fixes made: the detail graph first drew at half width because its class clashed with the story-chart style (renamed to `tchart`); the Watchlist's % under the price showed twice on desktop and the Change column ran into the time (columns resized, change text slightly smaller); the small graph is narrower on phones so names keep more room; the rate line on the detail was reworded ("Rate used: ₹/$ 92.46 at …").
+
+## Design checklist (CR-0012)
+- [x] Colours from the existing tokens (`--up`, `--down`, `--muted`, `--teal`) in light and dark; no new palette
+- [x] Arrows and graphs are inline SVG; graphs have a text alternative (`aria-label` with first, last, low and high) and the small graph says up or down
+- [x] Tap targets: the 1D/1W/1M buttons and the rate button are at least 44 px or sit inside a 60 px row; the admin switch reuses the Settings switch row
+- [x] Empty and error states for the graph ("No graph yet today", "Not enough prices yet", "Price graphs start once the price service keeps a history", "can't be loaded right now")
+- [x] No motion added
 
 ## Releases
 - v0.8.0 (2026-11-27): CR-0011 detailed story summaries in bullet points (E10), 308 of 308 tests passing, released through [PR #24](https://github.com/akkiverse/distill/pull/24).

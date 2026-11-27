@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+- E11: every price in rupees first (dollars in brackets for US shares and international gold, with the rate on hover or tap), "US dollar in rupees" as an item under a new Currency filter, a small graph of today's price with an arrow on every item, and a bigger graph with 1D, 1W and 1M on an item's detail. See [CR-0012](docs/changes/CR-0012-rupees-and-trends.md).
+
+### Changed
+- Zerodha prices (Indian shares, ETFs, gold bonds, the India gold rate) are shown to everyone signed in, with an admin switch "Share Zerodha prices with other users" to turn that off. See [CR-0012](docs/changes/CR-0012-rupees-and-trends.md).
+
 ## [0.8.0] - 2026-11-27
 
 ### Added

@@ -15,7 +15,7 @@ Distill is a purposeful alternative to scrolling social media for news. You pick
 |---|---|
 | Stage | Live: v0.8.0, released 27 Nov 2026 ([live app](https://distill-akkiverse.vercel.app)) |
 | Acceptance tests | 308 of 308 passing on `main` (v0.8.0) ([report](docs/quality/TEST-REPORT.md)) |
-| Latest change | [CR-0011](docs/changes/CR-0011-detailed-summaries.md): Detailed story summaries in bullet points (E10, released in v0.8.0) |
+| Latest change | [CR-0012](docs/changes/CR-0012-rupees-and-trends.md): Prices in rupees first, dollars in brackets, with a trend graph (E11, in review; 355 of 355 tests passing on its branch) |
 
 ## Stack
 

@@ -167,3 +167,25 @@ sequenceDiagram
 | Background queue | One story at a time after open and refresh; stops while the AI is away | `src/state.tsx` (`prepareDetails`) |
 | Slides and full view | Bullet-point slides, arrows, swipe, keys, dots; every point in the full view | `src/components/PointSlides.tsx`, `src/components/CardView.tsx`, `src/screens/Post.tsx` |
 | Merge | A detailed summary from either copy of a card is kept (server and device) | `backend/distill/rules.py`, `src/state.tsx` (`localMerge`) |
+
+## CR-0012: Prices in rupees first, with a trend graph (feature E11)
+
+```mermaid
+flowchart LR
+  App[Watchlist, strip, item detail] -->|GET /api/market/prices| API
+  App -->|GET /api/market/history 1d with the prices; 1w, 1m on demand| API
+  Admin[Settings: admin switch] -->|GET, PUT /api/admin/market-sharing| API
+  API -->|sees_kite: founder, or signed in while shared| SH[sharing.py]
+  SH -->|distill_settings, key market_sharing| DB[(Distill's Neon database)]
+  API -->|prices + FX:USDINR in one read; price_points| MDB[(Shared market database)]
+```
+
+| Part | Job | Where |
+|---|---|---|
+| Rupee prices | Read the `FX:USDINR` row with the prices; add rupee fields and `fx`; nothing when there is no usable rate | `backend/distill/market.py` (`in_rupees`, `usable_rate`) |
+| Currency item | Category `fx`, group `currency`, market `FX`; listed on currency searches | `backend/distill/names.py`, `market.py` (`with_currency`) |
+| Price history | `GET /api/market/history`; `price_points` read only when the gateway has the table; per-market "today"; thinning | `market.py` (`history`, `PostgresMarket.history`) |
+| Sharing switch | Stored switch, 30-second cache, founder-only when unreadable; the one visibility rule | `backend/distill/sharing.py`, `market.py` (`sees_kite`), `app.py` |
+| Interface | Rupees-first text, arrows, small and big graphs, admin switch; today's points read with the prices | `src/rupees.ts`, `src/components/Trend.tsx`, `src/components/ShareSwitch.tsx`, `src/prices.tsx` |
+
+Integrations: the market database now also gives the `FX:USDINR` row and `price_points` (Market Gateway E4), both optional; without them Distill behaves as v0.8.0 apart from the rupee symbol and arrows. See [ADR-0009](../adr/0009-rupee-prices-history-and-zerodha-sharing.md).
