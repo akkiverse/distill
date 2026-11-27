@@ -4,7 +4,7 @@
 - **Requested by:** Founder (board, new feature E7 "UI")
 - **Date:** 2026-11-27
 - **Release:** not yet (feature, v0.6.0 when released)
-- **Pull request:** (added when opened)
+- **Pull request:** https://github.com/akkiverse/distill/pull/19
 - **Issue:** Closes #18 (US-11)
 
 ## Why
