@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-27 · **Commit:** latest on `cr/0009-gold-not-paused` (CR-0009) · **Result:** 228 of 228 tests passing (144 pytest, 84 Vitest); every acceptance criterion covered (AC-10.14 added; AC-9.6 and AC-10.8 changed) · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 69 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-27 · **Commit:** latest on `cr/0010-news-sources` (CR-0010) · **Result:** 257 of 257 tests passing (164 pytest, 93 Vitest); every acceptance criterion covered (AC-12.1 to AC-12.10 added) · **Database tests:** against throwaway local Postgres databases started by the test run (now also the news source list) · **Build:** `npm run build` passes (JS 72 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0009 (2026-11-27) 228 of 228 passing; CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -84,6 +84,16 @@ Previous runs: CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202
 | AC-11.5 | `test_us11_look_and_diagrams.py::test_ac_11_5_change_with_numbers_from_the_text`, `::test_ac_11_5_trend_and_bars_from_the_text`, `::test_ac_11_5_an_invented_number_drops_the_diagram`, `::test_ac_11_5_too_few_or_too_many_points_are_dropped`, `::test_ac_11_5_steps_rules`, `::test_ac_11_5_none_and_malformed_answers_give_no_diagram`, `::test_ac_11_5_the_prompt_asks_for_a_cover_and_a_diagram`; `us11_look.test.tsx` "AC-11.5, AC-4.2" | Pass |
 | AC-11.6 | `us11_look.test.tsx` "AC-11.6: each kind draws on the card and the post" and "AC-11.6: the text version says which way a change went" | Pass |
 | AC-11.7 | `test_us11_look_and_diagrams.py::test_ac_11_7_cards_and_settings_saved_by_v0_5_1_read_unchanged`, `::test_ac_11_7_what_v0_6_0_saves_stays_readable_by_v0_5_1`; `us11_look.test.tsx` "AC-11.7" | Pass |
+| AC-12.1 | `test_us12_news_sources.py::test_ac_12_1_admin_only_and_starts_with_todays_sources`; `us12_sources.test.tsx` "AC-12.1: the News sources screen is for the Distill admin only" and "AC-12.1, AC-12.2" | Pass |
+| AC-12.2 | `test_us12_news_sources.py::test_ac_12_2_check_all_records_ok_counts_and_failing_since`; `us12_sources.test.tsx` "AC-12.1, AC-12.2" and "AC-12.2: the screen checks every source by itself" | Pass |
+| AC-12.3 | `test_us12_news_sources.py::test_ac_12_3_a_new_feed_is_checked_and_saved_only_when_it_has_stories`, `::test_ac_12_3_a_bad_feed_is_refused_with_a_plain_reason_and_not_stored` (6 cases), `::test_ac_12_3_duplicates_bad_addresses_and_missing_fields_are_refused`; `us12_sources.test.tsx` "AC-12.3" | Pass |
+| AC-12.4 | `test_us12_news_sources.py::test_ac_12_4_edit_name_sections_and_a_checked_new_address` | Pass |
+| AC-12.5 | `test_us12_news_sources.py::test_ac_12_5_pause_resume_and_remove`; `us12_sources.test.tsx` "AC-12.5" | Pass |
+| AC-12.6 | `test_us12_news_sources.py::test_ac_12_6_each_persons_switches_are_saved_to_their_account_and_newest_wins`, `::test_ac_12_6_person_list_shows_active_sources_only`; `us12_sources.test.tsx` "AC-12.6" | Pass |
+| AC-12.7 | `test_us12_news_sources.py::test_ac_12_7_a_refresh_leaves_out_the_persons_switched_off_sources`, `::test_ac_12_6_person_list_shows_active_sources_only`; `us12_sources.test.tsx` "AC-12.7" | Pass |
+| AC-12.8 | `test_us12_news_sources.py::test_ac_12_8_signed_out_visitors_use_every_active_source`; `us12_sources.test.tsx` "AC-12.8" | Pass |
+| AC-12.9 | `us12_sources.test.tsx` "AC-12.9" | Pass |
+| AC-12.10 | `test_us12_news_sources.py::test_ac_12_10_built_in_list_asks_exactly_what_v0_6_1_asked`, `::test_ac_12_10_an_unreadable_list_falls_back_to_the_built_in_one`, `::test_ac_12_10_state_saved_by_v0_6_1_loads_unchanged`, `::test_ac_12_10_the_list_is_kept_in_the_account_database` | Pass |
 | AC-9.8 with CR-0006 | `test_us10_watchlist_strip.py::test_ac_9_8_india_gold_rate_and_bonds_are_founder_only` (MCX gold rate and Sovereign Gold Bonds come from Zerodha) | Pass |
 | Compatibility (CR-0006) | Account copies and device copies saved by v0.4.0 (`AC-10.12` tests above); a copy saved by v0.5.0 validates against v0.4.0's watchlist model, so a rollback stays safe | Pass |
 | Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
@@ -152,6 +162,7 @@ Fixes made after looking: the diagram's outer frame shared a class name with the
 - [x] Motion: cards rise once, bars grow and trend lines draw once, buttons ease; all off with `prefers-reduced-motion`
 
 ## Releases
+- v0.7.0 (2026-11-27): CR-0010 news sources master list in admin and on/off per person in Settings (E9), 257 of 257 tests passing, released through [PR #22](https://github.com/akkiverse/distill/pull/22).
 - v0.6.1 (2026-11-27): CR-0009 gold spot no longer brings up "Prices paused" overnight (B8), 228 of 228 tests passing, released through [PR #20](https://github.com/akkiverse/distill/pull/20).
 - v0.6.0 (2026-11-27): CR-0008 a smoother look, a theme switch and AI-drawn story diagrams (E7), 225 of 225 tests passing, released through [PR #19](https://github.com/akkiverse/distill/pull/19).
 - v0.5.1 (2026-11-27): CR-0007 gold search always shows gold spot and the India gold rate (B6), 202 of 202 tests passing, released through [PR #17](https://github.com/akkiverse/distill/pull/17).
@@ -161,3 +172,7 @@ Fixes made after looking: the diagram's outer frame shared a class name with the
 - v0.2.1 (2026-11-26): CR-0003 "AI is offline" note fix, 63 of 63 tests passing, released through [PR #10](https://github.com/akkiverse/distill/pull/10).
 - v0.2.0 (2026-11-26): CR-0002 topics and saved cards kept in each person's account (Neon), 58 of 58 tests passing, released through [PR #9](https://github.com/akkiverse/distill/pull/9).
 - v0.1.0 (2026-11-25): CR-0001 first version (MVP), 51 of 51 tests passing, released through [PR #7](https://github.com/akkiverse/distill/pull/7).
+
+## Visual check (CR-0010)
+
+Built UI served locally (`vite preview`) with the API answered by Playwright, at 375 px and 1280 px, light and dark: Settings → Sources (some sources off, two section warnings) and News sources (OK, failing, paused, needs-a-key rows). Fixes made after looking: the off switch was hard to see in dark mode (track now a muted grey); wide screens could scroll sideways into empty space because the header's background band reaches past the edge (pre-existing since CR-0008), fixed with `html { overflow-x: clip }`, checked with a sideways scroll attempt (stays at 0). No sideways scroll at either width.

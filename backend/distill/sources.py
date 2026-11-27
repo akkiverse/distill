@@ -1,7 +1,7 @@
 """News sources behind one adapter interface (`NewsSource`), fetched in parallel with an 8-second limit.
 
-Always on: publisher RSS feeds, Google News (topic and keyword feeds) and the GDELT DOC API.
-Switched on only when their key is set: The Guardian, NewsData.io, Currents and Marketaux.
+Which sources exist is the founder's news source list (catalog.py, CR-0010): publisher RSS feeds, Google News (topic and
+keyword feeds) and the GDELT DOC API, plus The Guardian, NewsData.io, Currents and Marketaux when their key is set.
 Only headlines and snippets are read; full articles are never fetched.
 """
 
@@ -20,7 +20,7 @@ from typing import Protocol
 import feedparser
 import httpx
 
-from . import feeds
+from . import catalog, feeds
 from .models import Article
 from .textutil import article_id, clean_text
 
@@ -270,28 +270,48 @@ class Marketaux:
         return out
 
 
-def default_sources(sections: Sequence[str], keywords: Sequence[str], env: dict[str, str] | None = None) -> list[NewsSource]:
-    """The sources one refresh asks, given the reader's sections and keywords."""
+def default_sources(
+    sections: Sequence[str],
+    keywords: Sequence[str],
+    env: dict[str, str] | None = None,
+    *,
+    entries: Sequence[catalog.SourceEntry] | None = None,
+    off: Sequence[str] = (),
+) -> list[NewsSource]:
+    """The sources one refresh asks, given the reader's sections and keywords.
+
+    `entries` is the founder's news source list (the built-in list when it is None); paused sources and the reader's
+    own switched-off sources (`off`) are left out (AC-12.4, AC-12.7). With every source on, this is exactly the list
+    v0.6.1 asked (AC-12.10).
+    """
     env = dict(os.environ) if env is None else env
+    entries = catalog.builtin_catalog().sources if entries is None else entries
+    skip = set(off)
+    active = [e for e in entries if not e.paused and e.id not in skip]
+    kinds = {e.kind: e for e in active if e.kind != "rss"}
+    rss = [e for e in active if e.kind == "rss" and e.url]
     out: list[NewsSource] = []
     for section in sections:
         name = feeds.SECTION_NAMES.get(section, section)
-        for feed_name, url in feeds.rss_feeds_for(section):
-            out.append(RssFeed(feed_name, url, section))
-        out.append(RssFeed(f"Google News {name}", feeds.google_news_section_url(section), section, via="google-news"))
-    for kw in keywords:
-        out.append(RssFeed(f'Google News "{kw}"', feeds.google_news_search_url(kw), "keyword", via="google-news"))
-    if keywords:
+        for e in rss:
+            if section in e.sections:
+                out.append(RssFeed(e.name, e.url, section))
+        if "google-news" in kinds:
+            out.append(RssFeed(f"Google News {name}", feeds.google_news_section_url(section), section, via="google-news"))
+    if "google-news" in kinds:
+        for kw in keywords:
+            out.append(RssFeed(f'Google News "{kw}"', feeds.google_news_search_url(kw), "keyword", via="google-news"))
+    if keywords and "gdelt" in kinds:
         out.append(Gdelt(list(keywords)))
     query = " OR ".join(keywords) if keywords else " OR ".join(feeds.SECTION_NAMES.get(s, s) for s in sections)
     first = sections[0] if not keywords else "keyword"
-    if env.get("GUARDIAN_API_KEY"):
+    if "guardian" in kinds and env.get("GUARDIAN_API_KEY"):
         out.append(Guardian(env["GUARDIAN_API_KEY"], query, first))
-    if env.get("NEWSDATA_API_KEY"):
+    if "newsdata" in kinds and env.get("NEWSDATA_API_KEY"):
         out.append(NewsData(env["NEWSDATA_API_KEY"], query, first))
-    if env.get("CURRENTS_API_KEY"):
+    if "currents" in kinds and env.get("CURRENTS_API_KEY"):
         out.append(Currents(env["CURRENTS_API_KEY"], query, first))
-    if env.get("MARKETAUX_API_KEY") and ("finance" in sections or "business" in sections or keywords):
+    if "marketaux" in kinds and env.get("MARKETAUX_API_KEY") and ("finance" in sections or "business" in sections or keywords):
         out.append(Marketaux(env["MARKETAUX_API_KEY"], query, first))
     # The same feed can serve two sections (Business and Finance share one list): ask it once.
     seen: set[str] = set()

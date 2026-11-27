@@ -85,6 +85,7 @@ export function Topics() {
       <div className="form-foot">
         <button type="submit" className="btn primary">Save</button>
       </div>
+      <p className="small muted settings-link"><a href="#/settings">Choose which news sources feed your Distill</a></p>
     </form>
   );
 }

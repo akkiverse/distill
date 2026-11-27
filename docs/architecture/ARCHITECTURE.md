@@ -119,3 +119,22 @@ flowchart LR
   V -->|kept or dropped| K[Card.cover, Card.visual]
   K --> UI[Cover band + Diagram on the card and the post]
 ```
+
+## CR-0010: news source list and per-person sources
+
+```mermaid
+flowchart LR
+  Admin[Admin: News sources screen] -->|/api/admin/sources| API[FastAPI]
+  Reader[Settings → Sources] -->|/api/sources, settings.sources_off| API
+  API --> Cat[catalog.py<br/>list, feed check, 1-min cache]
+  Cat --> DB[(Neon: distill_settings<br/>key news_sources)]
+  Cat -.->|unreadable| Built[built-in list from feeds.py]
+  API -->|refresh: entries + off| Src[sources.default_sources]
+  Src --> Feeds[RSS, Google News, GDELT, keyed APIs]
+```
+
+| Part | Job | Where |
+|---|---|---|
+| News source list | Built-in seed, storage (memory or Postgres, one locked document), one-minute cache, fallback, feed check (8 s, RSS/Atom with a story, no private addresses) | `backend/distill/catalog.py` |
+| Admin routes | List, add, edit, pause/resume, remove, check all; admin role only | `backend/distill/app.py` |
+| Settings → Sources, News sources | The two new screens | `src/screens/Settings.tsx`, `src/screens/AdminSources.tsx` |

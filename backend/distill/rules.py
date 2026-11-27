@@ -121,13 +121,29 @@ def newer_theme(stored: Settings, incoming: Settings) -> Settings:
     return incoming
 
 
+def newer_sources(stored: Settings, incoming: Settings) -> Settings:
+    """AC-12.6: the source switches changed last win. A copy from v0.6.1 or earlier has none, so it never undoes a choice."""
+    if stored.sources_changed_at and parse_time(incoming.sources_changed_at) < parse_time(stored.sources_changed_at):
+        return stored
+    if incoming.sources_changed_at is None and stored.sources_changed_at is None:
+        return incoming if incoming.sources_off is not None else stored
+    return incoming
+
+
 def merge_states(stored: UserState, incoming: UserState, now: datetime | None = None) -> UserState:
     """Combine what the data server has with what a device sends."""
     now = now or datetime.now(UTC)
     last = max(parse_time(stored.settings.last_refreshed_at), parse_time(incoming.settings.last_refreshed_at))
     theme = newer_theme(stored.settings, incoming.settings)
+    src = newer_sources(stored.settings, incoming.settings)
     settings = incoming.settings.model_copy(
-        update={"last_refreshed_at": iso(last) if last.year > 1 else None, "theme": theme.theme, "theme_changed_at": theme.theme_changed_at}
+        update={
+            "last_refreshed_at": iso(last) if last.year > 1 else None,
+            "theme": theme.theme,
+            "theme_changed_at": theme.theme_changed_at,
+            "sources_off": src.sources_off,
+            "sources_changed_at": src.sources_changed_at,
+        }
     )
     return UserState(
         topics=newer_topics(stored.topics, incoming.topics),

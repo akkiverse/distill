@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-27
+
+### Added
+- E9: a News sources admin screen (add with an immediate feed check, edit, pause, remove, last check per source, Check all now) and Settings → Sources, where each signed-in person switches sources on or off for their own feed. See [CR-0010](docs/changes/CR-0010-news-sources.md).
+
+### Fixed
+- Wide screens no longer scroll sideways into empty space. See [CR-0010](docs/changes/CR-0010-news-sources.md).
+
 ## [0.6.1] - 2026-11-27
 
 ### Fixed
@@ -68,6 +76,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 - First version (MVP), built from the approved spec. See [CR-0001](docs/changes/CR-0001-mvp.md).
 
+[0.7.0]: https://github.com/akkiverse/distill/pull/22
 [0.6.1]: https://github.com/akkiverse/distill/pull/20
 [0.6.0]: https://github.com/akkiverse/distill/pull/19
 [0.5.1]: https://github.com/akkiverse/distill/pull/17

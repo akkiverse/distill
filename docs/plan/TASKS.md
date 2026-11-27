@@ -144,3 +144,18 @@ For CR-0001. Each task names the stories and criteria it serves.
 ## Release v0.6.1
 - [x] Released 2026-11-27: merge commit 3d54361, Vercel deployment dpl_DdTfaKv6xTD9ahC7bNec13cv3Dih (CR-0009, B8).
 - [ ] Tag pending: add tag v0.6.1 on 3d54361 and a GitHub Release from a local session.
+
+## CR-0010: News sources (E9)
+
+Pushed to `cr/0010-news-sources` after each task.
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue #21 (US-12); read sources, feeds, store and the settings merge | All | Yes |
+| 2 | `catalog.py`: built-in list, memory and Postgres storage, cache and fallback | AC-12.1, AC-12.10 | Yes |
+| 3 | Sources built from the list; refresh leaves out paused and switched-off sources (signed in only) | AC-12.5, AC-12.7, AC-12.8 | Yes |
+| 4 | Admin API with the feed check; person API; settings fields and newest-wins merge; 20 Python tests | AC-12.1 to AC-12.10 | Yes |
+| 5 | Settings → Sources screen, header gear, Topics link | AC-12.6, AC-12.8, AC-12.9 | Yes |
+| 6 | News sources admin screen | AC-12.1 to AC-12.5 | Yes |
+| 7 | 9 UI tests; full suite, build, lint; visual check (and the sideways-scroll fix) | All | Yes |
+| 8 | Records (spec, CR-0010, ADR-0007, architecture, design, test report, changelog, README, studio.json) and pull request | All | Yes |
