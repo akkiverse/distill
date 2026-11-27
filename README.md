@@ -15,7 +15,7 @@ Distill is a purposeful alternative to scrolling social media for news. You pick
 |---|---|
 | Stage | Live: v0.5.1, released 27 Nov 2026 ([live app](https://distill-akkiverse.vercel.app)) |
 | Acceptance tests | 202 of 202 passing on v0.5.1 ([report](docs/quality/TEST-REPORT.md)) |
-| Latest change | [CR-0007](docs/changes/CR-0007-gold-search-fixed-rows.md): Gold spot and India gold rate missing from gold search (B6, released in v0.5.1) |
+| Latest change | [CR-0008](docs/changes/CR-0008-ui-refresh.md): A smoother look, a theme switch and AI-drawn story diagrams (E7, in review: 225 of 225 tests passing) |
 
 ## Stack
 

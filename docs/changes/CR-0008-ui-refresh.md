@@ -1,6 +1,6 @@
 # CR-0008: A smoother look, a theme switch and AI-drawn story diagrams
 
-- **Status:** In progress
+- **Status:** In review
 - **Requested by:** Founder (board, new feature E7 "UI")
 - **Date:** 2026-11-27
 - **Release:** not yet (feature, v0.6.0 when released)
@@ -53,4 +53,8 @@ No new routes, services or keys. The curator's prompt and JSON schema grow by tw
 - Photos on cards: Distill never shows the full article or its images; the AI cover and diagram take their place.
 
 ## Verification
-(Filled in when the build is tested.)
+- New `tests/api/test_us11_look_and_diagrams.py` (15 tests): the newer theme choice wins and a v0.5.1 device can't undo it; the AI's cover is kept only at 2 to 5 words and 40 characters; diagrams are kept only with numbers written in the story and the right number of points or steps; malformed answers give no diagram but still a card; the prompt asks for both; v0.5.1 cards and settings read unchanged and what v0.6.0 saves stays readable by v0.5.1.
+- New `src/__tests__/us11_look.test.tsx` (8 tests): the switch applies at once on every screen and is saved on the device and sent to the account; a theme from the account is applied on open; the start-up script in `index.html` sets the theme and bar colour before the app draws; cover bands with the AI theme or the topic's name; a diagram replaces the key-figure chart, which stays when there is none; all four kinds draw compactly on cards and full size on the post with text versions; v0.5.1 cards look as before.
+- Found and fixed by the tests: a cover that wasn't text (a list) was turned into text instead of being dropped; the theme code read `meta.media`, which some browsers' test environments lack (now reads the attribute).
+- Result: 144 of 144 back-end tests and 81 of 81 interface tests passing (225 of 225); Ruff lint and format clean; production build passes (JS 68 kB gzipped, Sora adds two 19 kB font files).
+- Visual check at 375 px and 1280 px, light and dark, recorded in the [test report](../quality/TEST-REPORT.md#visual-check-cr-0008) with screenshots.

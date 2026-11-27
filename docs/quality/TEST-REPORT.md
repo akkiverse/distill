@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-26 · **Commit:** latest on `cr/0007-gold-search-fixed-rows` (CR-0007) · **Result:** 202 of 202 tests passing (129 pytest, 73 Vitest); every acceptance criterion covered (AC-10.13 added) · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 65 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-27 · **Commit:** latest on `cr/0008-ui-refresh` (CR-0008) · **Result:** 225 of 225 tests passing (144 pytest, 81 Vitest); every acceptance criterion covered (AC-11.1 to AC-11.7 added, AC-4.2 changed) · **Database tests:** against throwaway local Postgres databases started by the test run, shaped like the market gateway as released (v0.1.0) and with its change E1 · **Build:** `npm run build` passes (JS 68 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -22,7 +22,7 @@ Previous runs: CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132
 | AC-3.5 | `cr0003_ai_back.test.tsx` "AC-3.5" (online check hides the note over old headline-only cards; offline check shows it) | Pass |
 | AC-3.6 | `test_us3_curation.py::test_ac_3_6_ai_summary_replaces_headline_only_copy`; `cr0003_ai_back.test.tsx` "AC-3.6" (refresh re-sends headline-only stories; device fallback merge) | Pass |
 | AC-4.1 | `us4_feed.test.tsx` "AC-4.1" | Pass |
-| AC-4.2 | `us4_feed.test.tsx` "AC-4.2" | Pass |
+| AC-4.2 | `us4_feed.test.tsx` "AC-4.2"; `us11_look.test.tsx` "AC-11.5, AC-4.2 (changed CR-0008)"; `test_us11_look_and_diagrams.py::test_ac_11_5_an_invented_number_drops_the_diagram` | Pass |
 | AC-4.3 | `us4_feed.test.tsx` "AC-4.3" | Pass |
 | AC-4.4 | `us4_feed.test.tsx` "AC-4.4" | Pass |
 | AC-4.5 | `us4_feed.test.tsx` "AC-4.5" (both directions, 15 minutes; changed CR-0004) | Pass |
@@ -76,6 +76,13 @@ Previous runs: CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132
 | AC-10.11 | `test_us10_watchlist_strip.py::test_ac_10_11_strip_setting_kept_in_the_account`; `us10_watchlist.test.tsx` "AC-10.11" (Every screen, Feed only, Off; synced; no reads with Off) | Pass |
 | AC-10.12 | `test_us10_watchlist_strip.py::test_ac_10_12_v040_account_copy_is_upgraded`, `::test_ac_10_12_a_v040_device_cant_wipe_the_new_fields`, `::test_ac_10_12_v050_copy_stays_readable_by_v040`, `::test_ac_10_12_migration_tidies_any_copy`; `us10_watchlist.test.tsx` "AC-10.12" (2: v0.4.0 device copy upgraded and shown on the strip; items 11 to 20 kept apart, bad data tidied) | Pass |
 | AC-10.13 | `test_cr0007_gold_search.py::test_ac_10_13_gold_spot_and_india_rate_survive_a_crowd_of_matches`, `::test_ac_10_13_everyone_else_still_gets_gold_spot_but_not_the_zerodha_rate`, `::test_ac_10_13_fixed_rows_only_when_the_words_fit`, `::test_ac_10_13_an_exact_symbol_match_still_leads`, `::test_ac_10_13_missing_rows_are_simply_not_there`, `::test_ac_10_13_bonds_come_after_the_other_gold_rows`, Postgres: `::test_ac_10_13_postgres_crowded_gateway`; `us10_watchlist.test.tsx` "AC-10.13" (the India rate heading explains itself) | Pass |
+| AC-11.1 | `test_us11_look_and_diagrams.py::test_ac_11_1_the_choice_is_kept_in_the_account`; `us11_look.test.tsx` "AC-11.1" (switch, every screen, kept on the device and sent to the account) and "AC-11.1: a theme kept in the account is applied when the app opens" | Pass |
+| AC-11.2 | `us11_look.test.tsx` "AC-11.2" (runs the start-up script from `index.html`: theme set, bar colour matches, a damaged copy ignored) | Pass |
+| AC-11.3 | `test_us11_look_and_diagrams.py::test_ac_11_3_the_theme_chosen_last_wins`, `::test_ac_11_3_a_v0_5_1_device_cannot_overwrite_a_newer_choice`, `::test_ac_11_1_the_choice_is_kept_in_the_account` | Pass |
+| AC-11.4 | `test_us11_look_and_diagrams.py::test_ac_11_4_cover_theme_from_the_ai`, `::test_ac_11_4_cover_theme_rules`, `::test_ac_11_4_no_cover_means_an_empty_theme`; `us11_look.test.tsx` "AC-11.4" | Pass |
+| AC-11.5 | `test_us11_look_and_diagrams.py::test_ac_11_5_change_with_numbers_from_the_text`, `::test_ac_11_5_trend_and_bars_from_the_text`, `::test_ac_11_5_an_invented_number_drops_the_diagram`, `::test_ac_11_5_too_few_or_too_many_points_are_dropped`, `::test_ac_11_5_steps_rules`, `::test_ac_11_5_none_and_malformed_answers_give_no_diagram`, `::test_ac_11_5_the_prompt_asks_for_a_cover_and_a_diagram`; `us11_look.test.tsx` "AC-11.5, AC-4.2" | Pass |
+| AC-11.6 | `us11_look.test.tsx` "AC-11.6: each kind draws on the card and the post" and "AC-11.6: the text version says which way a change went" | Pass |
+| AC-11.7 | `test_us11_look_and_diagrams.py::test_ac_11_7_cards_and_settings_saved_by_v0_5_1_read_unchanged`, `::test_ac_11_7_what_v0_6_0_saves_stays_readable_by_v0_5_1`; `us11_look.test.tsx` "AC-11.7" | Pass |
 | AC-9.8 with CR-0006 | `test_us10_watchlist_strip.py::test_ac_9_8_india_gold_rate_and_bonds_are_founder_only` (MCX gold rate and Sovereign Gold Bonds come from Zerodha) | Pass |
 | Compatibility (CR-0006) | Account copies and device copies saved by v0.4.0 (`AC-10.12` tests above); a copy saved by v0.5.0 validates against v0.4.0's watchlist model, so a rollback stays safe | Pass |
 | Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
@@ -126,6 +133,19 @@ Not repeated with screenshots: the only visible change is one line of text under
 - [x] Plain-English states: closed with the next opening, before the first price, holiday, paused, unreachable, not set up, item gone
 - [x] Inline SVG icons (star, grip, calendar, clock, moon, pause, warning); no emoji
 - [x] Motion: only the sheet's short slide-in, off with `prefers-reduced-motion`
+
+## Visual check (CR-0008)
+The built interface was served locally (`vite preview`) with the API answered in the browser (sync off, AI online) and six sample cards seeded on the device, one per case: bars, change, trend and steps diagrams, a card saved by v0.5.1 (no AI theme, key-figure chart) and a headline-only card. Screenshotted with Chromium at 375 px and 1280 px, in light and dark: the Feed (top and scrolled), a post with the steps diagram, Topics, and the Watchlist after choosing Light on a device set to dark (the choice wins and survives a reload). No sideways scroll on any screen. Screenshots: [docs/quality/screenshots/](screenshots/) (`cr0008-*.png`).
+
+Fixes made after looking: the diagram's outer frame shared a class name with the change and steps layouts, which pushed the caption beside the numbers (renamed to `kind-*`); the post's horizontal steps had a large gap between the numbers and the text (rows now pack to the top); the frosted header now runs the full width of the window on a computer.
+
+## Design checklist (CR-0008)
+- [x] Both themes designed with the same token names (not inverted); an explicit choice overrides the device setting; the browser bar colour follows
+- [x] Text pairs meet AA in both themes (ink and muted on paper, surface and the cover tints; white on the accent gradient only on large text and icons)
+- [x] 375 px and 1280 px with no sideways scroll; the theme switch is 44 px per option on touch screens and shows its labels from 1000 px
+- [x] Labelled controls: the switch is a `radiogroup` named "Theme" with `aria-checked`; every diagram has a text version
+- [x] Inline SVG icons (sun, moon, monitor and one per section); no emoji; the references' photos, "Bullish" tag and strip trend lines left out on purpose (see CR-0008)
+- [x] Motion: cards rise once, bars grow and trend lines draw once, buttons ease; all off with `prefers-reduced-motion`
 
 ## Releases
 - v0.5.1 (2026-11-27): CR-0007 gold search always shows gold spot and the India gold rate (B6), 202 of 202 tests passing, released through [PR #17](https://github.com/akkiverse/distill/pull/17).
