@@ -1,9 +1,9 @@
 # CR-0009: Don't show "Prices paused" because of Gold spot
 
-- **Status:** In review
+- **Status:** Released
 - **Requested by:** Founder (board, bug fix B8)
 - **Date:** 2026-11-27
-- **Release:** not yet (bug fix, v0.6.1 when released)
+- **Release:** v0.6.1 (2026-11-27)
 - **Pull request:** https://github.com/akkiverse/distill/pull/20
 - **Issue:** refs #15 (US-10: Watchlist page and pinned prices strip)
 
