@@ -141,3 +141,6 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 4 | Records (CR-0009, spec, changelog, test report), pull request | all | Yes |
 | 5 | CI and preview check | all | Yes |
 
+## Release v0.6.1
+- [x] Released 2026-11-27: merge commit 3d54361, Vercel deployment dpl_DdTfaKv6xTD9ahC7bNec13cv3Dih (CR-0009, B8).
+- [ ] Tag pending: add tag v0.6.1 on 3d54361 and a GitHub Release from a local session.
