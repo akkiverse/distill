@@ -14,8 +14,8 @@ Distill is a purposeful alternative to scrolling social media for news. You pick
 | | |
 |---|---|
 | Stage | Live: v0.7.0, released 27 Nov 2026 ([live app](https://distill-akkiverse.vercel.app)) |
-| Acceptance tests | 257 of 257 passing on `main` (v0.7.0) ([report](docs/quality/TEST-REPORT.md)) |
-| Latest change | [CR-0010](docs/changes/CR-0010-news-sources.md): News sources: master list in admin, on/off per person in Settings (E9, released in v0.7.0) |
+| Acceptance tests | 308 of 308 passing on `cr/0011-detailed-summaries` (257 of 257 on `main`, v0.7.0) ([report](docs/quality/TEST-REPORT.md)) |
+| Latest change | [CR-0011](docs/changes/CR-0011-detailed-summaries.md): Detailed story summaries in bullet points (E10, in review) |
 
 ## Stack
 

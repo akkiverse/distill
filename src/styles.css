@@ -669,3 +669,4 @@ a { transition: color .15s var(--ease); }
   .slides .slide, .detail-note.preparing::before { animation: none; }
   .dot { transition: none; }
 }
+.slide-btn:disabled:hover { background: transparent; color: var(--ink); }

@@ -5,6 +5,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+- E10: detailed story summaries read from the real article. Feed cards show up to 10 bullet points as slides (arrows, swipe, arrow keys, dots), tapping a card shows every point, and Saved cards get a longer summary. Pages that can't be read keep the short summary. See [CR-0011](docs/changes/CR-0011-detailed-summaries.md).
+
 ## [0.7.0] - 2026-11-27
 
 ### Added
