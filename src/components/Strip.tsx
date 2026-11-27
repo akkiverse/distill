@@ -1,9 +1,11 @@
-import { MAX_PINNED, changeText, direction, money, pctText } from "../markets";
+import { MAX_PINNED, direction, pctText } from "../markets";
 import { usePrices } from "../prices";
 import { useDistill } from "../state";
 import type { PriceItem } from "../types";
 import { pinnedKeys, priceNotices, shortOf } from "../watch";
+import { shown } from "../rupees";
 import { Badge } from "./PriceBits";
+import { Arrow, PriceText, Spark } from "./Trend";
 import { IconAlert, IconCalendar, IconClock, IconMoon, IconPause } from "./Icons";
 
 const ICONS = { moon: IconMoon, clock: IconClock, pause: IconPause, calendar: IconCalendar, alert: IconAlert };
@@ -41,11 +43,15 @@ export function Strip({ showLink }: { showLink: boolean }) {
                 {it ? (
                   <>
                     <span className="tn">{shortOf(it)} <Badge item={it} /></span>
-                    <span className="tp">{it.price !== null ? money(it.price, it.currency) : "—"}</span>
+                    <span className="tp">{it.price !== null ? <PriceText it={it} usdClass="tu" showNoRate={false} /> : "—"}</span>
                     {it.price !== null && it.change !== null && it.change_pct !== null ? (
-                      <span className={`tc ${direction(it.change)}`}>
-                        <span className="tc-pct">{pctText(it.change_pct)}</span>
-                        <span className="tc-full">{changeText(it.change, it.change_pct)}</span>
+                      <span className="tc-row">
+                        <span className={`tc ${direction(shown(it)?.delta ?? it.change)}`}>
+                          <Arrow dir={direction(shown(it)?.delta ?? it.change)} size={10} />
+                          <span className="tc-pct">{pctText(it.change_pct)}</span>
+                          <span className="tc-full">{shown(it)?.change}</span>
+                        </span>
+                        <Spark it={it} width={44} height={14} />
                       </span>
                     ) : (
                       <span className="tc flat">{quietText(it)}</span>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { IconAlert, IconSection } from "../components/Icons";
+import { ShareSwitch } from "../components/ShareSwitch";
 import { useMe } from "../me";
 import { useDistill } from "../state";
 import type { PersonSource } from "../types";
@@ -98,6 +99,7 @@ export function Settings() {
           })}
         </>
       )}
+      {me && me.role === "admin" && <ShareSwitch />}
     </section>
   );
 }

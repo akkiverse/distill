@@ -33,7 +33,7 @@ export function AddSheet() {
   useEffect(() => {
     const term = q.trim();
     const group = chip === "all" ? "" : chip;
-    if (!term && group !== "gold") {
+    if (!term && group !== "gold" && group !== "currency") { // AC-14.6: Currency with nothing typed lists the rates
       setHits([]);
       setSearched(false);
       return;
@@ -119,7 +119,9 @@ export function AddSheet() {
               </section>
             );
           })}
-          {searched && !error && hits.length === 0 && !showGold && <p className="muted small">No matches yet.</p>}
+          {searched && !error && hits.length === 0 && !showGold && (
+            <p className="muted small">{chip === "currency" ? "The US dollar to rupee rate isn't in the price service yet." : "No matches yet."}</p>
+          )}
           {!searched && !q.trim() && <p className="muted small">Type a name or symbol, or choose Gold to see the five kinds of gold.</p>}
         </div>
         <p className="muted small">You can watch up to {MAX_WATCH} items; {MAX_PINNED} fit on the strip.</p>

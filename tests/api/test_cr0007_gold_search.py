@@ -48,7 +48,9 @@ def test_ac_10_13_gold_spot_and_india_rate_survive_a_crowd_of_matches(env):
 
 
 def test_ac_10_13_everyone_else_still_gets_gold_spot_but_not_the_zerodha_rate(env):
-    """AC-10.13 with AC-9.8: for a signed-in user (or sign-in off) gold spot survives the crowd; the India rate stays founder-only."""
+    """AC-10.13 with AC-9.8: with sharing Off (changed CR-0012), for a signed-in user (or sign-in off) gold spot survives the
+    crowd; the India rate stays founder-only."""
+    env.sharing.value.share_kite = False
     for role in ("user", None):
         got = keys(client(env, (*CROWD, GOLD, GOLDM), role), q="gold")
         assert "GOLD:XAU_USD" in got

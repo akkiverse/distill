@@ -79,15 +79,17 @@ export const GROUPS: { id: Group; label: string }[] = [
   { id: "gold", label: "Gold" },
   { id: "india", label: "Indian shares" },
   { id: "us", label: "US shares" },
+  { id: "currency", label: "Currency" }, // AC-14.6 (added CR-0012)
 ];
 
 export const KIND: Record<string, { badge: string; title: string; why: string; none?: string }> = {
   gold_india: {
-    badge: "Rs/10 g",
+    badge: "₹/10 g",
     title: "Gold rate, India",
     why: "What 10 g of 24K gold costs in India today, from MCX. Before GST.",
     // AC-10.13 (added CR-0007): say why it's missing instead of a bare "none"
-    none: "Not in the price service right now. This rate comes from the studio's Zerodha connection, so it shows on the founder's account once that's signed in for the day.",
+    // changed CR-0012: everyone signed in can see it now, so it no longer points at the founder's account
+    none: "Not in the price service right now. This rate comes from the studio's Zerodha connection, so it shows once that's signed in for the day.",
   },
   gold_spot: { badge: "Spot", title: "International gold", why: "The world price of one troy ounce (31.1 g), in US dollars." },
   gold_etf: { badge: "ETF", title: "Gold ETFs", why: "Funds on NSE that hold real gold. Bought and sold like shares." },
@@ -98,22 +100,24 @@ export const KIND: Record<string, { badge: string; title: string; why: string; n
 type Item = Instrument & Partial<Pick<PriceItem, "as_of" | "label" | "market_state">>;
 
 export const categoryOf = (i: Instrument): Category => i.category ?? "stock";
-export const groupOf = (i: Instrument): Group => i.group ?? (i.key.startsWith("US:") ? "us" : "india");
+export const groupOf = (i: Instrument): Group => i.group ?? (i.key.startsWith("US:") ? "us" : i.key.startsWith("FX:") ? "currency" : "india");
 export const isGold = (i: Instrument) => categoryOf(i).startsWith("gold");
 export const nameOf = (i: Instrument) => i.display_name || i.name || i.key;
 export const shortOf = (i: Instrument) => i.short_name || i.symbol || i.key;
-export const marketKey = (i: Instrument) => i.market || ({ india: "NSE", us: "US", spot: "GOLD" } as const)[marketOf(i.key)];
+export const marketKey = (i: Instrument) => i.market || ({ india: "NSE", us: "US", spot: "GOLD", fx: "FX" } as const)[marketOf(i.key)];
 
-/** AC-10.1: the small type badge: ETF, SGB, MF, Spot, Rs/10 g, NSE, US. */
+/** AC-10.1: the small type badge: ETF, SGB, MF, Spot, ₹/10 g, NSE, US, FX. */
 export function badgeOf(i: Instrument): { text: string; gold: boolean } {
   const c = categoryOf(i);
   if (KIND[c]) return { text: KIND[c].badge, gold: true };
+  if (c === "fx") return { text: "FX", gold: false }; // AC-14.5
   if (c === "etf") return { text: "ETF", gold: false };
   return { text: groupOf(i) === "us" ? "US" : i.exchange === "BSE" ? "BSE" : "NSE", gold: false };
 }
 
 /** The Type column on a wide screen: the gold badges, "ETF" or "Share". */
-export const typeLabel = (i: Instrument) => (isGold(i) ? badgeOf(i).text : categoryOf(i) === "etf" ? "ETF" : "Share");
+export const typeLabel = (i: Instrument) =>
+  isGold(i) ? badgeOf(i).text : categoryOf(i) === "etf" ? "ETF" : categoryOf(i) === "fx" ? "Rate" : "Share";
 
 const shortDate = (iso: string | null | undefined) => priceTime(iso).replace(/, .*$/, "");
 
@@ -126,6 +130,8 @@ export function subLine(i: Item): string {
       return "XAU · $ per oz";
     case "gold_mf":
       return i.as_of ? `NAV on ${shortDate(i.as_of)}` : "NAV daily";
+    case "fx":
+      return "₹ per $ · ECB daily rate";
     case "gold_etf":
     case "gold_bond":
     case "etf":
@@ -140,7 +146,9 @@ export function subLine(i: Item): string {
 export function searchLine(i: Instrument): string {
   switch (categoryOf(i)) {
     case "gold_india":
-      return "Rs per 10 g · MCX";
+      return "₹ per 10 g · MCX";
+    case "fx":
+      return "₹ per US dollar · daily reference rate";
     case "gold_spot":
       return "XAU · $ per oz · weekdays";
     case "gold_mf":
@@ -164,6 +172,8 @@ export function whatItIs(i: Instrument): string {
       return "Sovereign Gold Bond: 1 unit = 1 g of gold, 2.5% yearly interest. Issued by the Government of India and traded on NSE, often only a few times a day, so check the price time.";
     case "gold_mf":
       return "A mutual fund that invests in gold ETFs. Its price (NAV) is set once a day, after about 9 PM IST, and it isn't traded on an exchange.";
+    case "fx":
+      return "How many rupees one US dollar buys, from the European Central Bank's reference rate. It is set once each working day (about 8:30 PM IST) and Distill uses it to show dollar prices in rupees.";
     case "etf":
       return `${name} is a fund traded on ${i.exchange} like a share, during market hours (9:15 AM to 3:30 PM IST on weekdays).`;
     default:
@@ -174,12 +184,17 @@ export function whatItIs(i: Instrument): string {
 }
 
 export function sourceLabel(source: string): string {
-  return ({ kite: "Zerodha (your account)", finnhub: "Finnhub", metalcharts: "MetalCharts", amfi: "AMFI daily NAV file" } as Record<string, string>)[source] ?? source;
+  const names: Record<string, string> = {
+    kite: "Zerodha (the studio's connection)", // changed CR-0012: shown to everyone signed in, so not "your account"
+    finnhub: "Finnhub", metalcharts: "MetalCharts", amfi: "AMFI daily NAV file", frankfurter: "European Central Bank, via Frankfurter",
+  };
+  return names[source] ?? source;
 }
 
 export function updatesLabel(i: Instrument): string {
   const m = marketKey(i);
   if (m === "AMFI") return "Once a day, after about 9 PM IST";
+  if (m === "FX") return "Once each working day";
   if (m === "MCX") return "About every 5 min in MCX hours";
   if (m === "GOLD") return "A few times a day on weekdays";
   return m === "US" ? "Every 30 s in US market hours" : "Every 30 s in NSE hours";
@@ -205,7 +220,7 @@ const istTime = (iso: string, now: number) => (istDay(Date.parse(iso)) === istDa
 /** The markets the shown items follow, from the server (calendar or its clock), or else this device's clock. */
 export function watchedMarkets(result: PricesResult | null, now = Date.now()): MarketInfo[] {
   if (!result) return [];
-  const wanted = [...new Set(result.items.map(marketKey))].filter((m) => m !== "AMFI");
+  const wanted = [...new Set(result.items.map(marketKey))].filter((m) => m !== "AMFI" && m !== "FX"); // a rate has no hours (CR-0012)
   return wanted.map((m) => result.markets?.[m] ?? {
     market: m, state: isOpen(m === "US" ? "us" : m === "GOLD" ? "spot" : "india", now) ? "open" : "closed",
     next_open_at: null, next_close_at: null, note: null, holiday: false, source: "clock",
@@ -298,6 +313,7 @@ export function priceNotices(status: string, result: PricesResult | null, now = 
 export function waitingText(item: Instrument, result: PricesResult | null, now = Date.now()): string {
   const m = marketKey(item);
   if (m === "AMFI") return "First NAV after about 9 PM IST";
+  if (m === "FX") return "First rate after about 8:30 PM IST on a working day";
   const info = watchedMarkets(result, now).find((x) => x.market === m);
   if (!info || isOpenNow(info) || !info.next_open_at) return WAITING;
   return `First price when ${marketName(m)} opens, ${whenLabel(info.next_open_at, now)}`;

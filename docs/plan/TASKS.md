@@ -180,3 +180,18 @@ Pushed to `cr/0010-news-sources` after each task.
 ## Release v0.8.0
 - [x] Released 2026-11-27: merge commit 1f40620, Vercel deployment dpl_4rcLgff2Frywz4m3zkeLtHJFqtug (CR-0011, E10).
 - [ ] Tag pending: add tag v0.8.0 on 1f40620 and a GitHub Release from a local session.
+
+## CR-0012: Prices in rupees first, with a trend graph (E11)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue #25 (US-14), milestone v0.9.0; branch `cr/0012-rupees-trend` from `main` | all | Yes |
+| 2 | Sharing switch: `sharing.py`, admin API, `sees_kite` in search, watch and prices | AC-9.8, AC-14.9 to AC-14.11 | Yes |
+| 3 | Rupee prices from `FX:USDINR`, `fx` in the answer; the rate as a Currency item and its search | AC-14.1 to AC-14.6 | Yes |
+| 4 | Price history route and `price_points` reader with the gateway check | AC-14.7, AC-14.8, AC-9.13 | Yes |
+| 5 | Interface: rupees first, Indian grouping, the rate on hover or tap, "₹ rate not available" | AC-9.4, AC-14.1 to AC-14.4 | Yes |
+| 6 | Interface: Currency group and chip, FX copy | AC-14.5, AC-14.6 | Yes |
+| 7 | Interface: arrows, small graphs in rows and strip, detail graph with 1D, 1W, 1M | AC-14.7, AC-14.8 | Yes |
+| 8 | Interface: admin switch in Settings | AC-14.9 | Yes |
+| 9 | Tests (Python and Vitest), compatibility with v0.8.0, visual check at 375 and 1280 px, light and dark | all | Yes |
+| 10 | Records (spec, CR, ADR-0009, architecture, test report, changelog), pull request, preview | all | Yes |

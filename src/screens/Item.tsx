@@ -1,6 +1,8 @@
 import { IconBack, IconMoon, IconStar } from "../components/Icons";
 import { Badge, Disclaimer, NoticeView } from "../components/PriceBits";
-import { MAX_PINNED, STRIP_FULL, cardsMentioning, changeText, direction, money } from "../markets";
+import { MAX_PINNED, STRIP_FULL, cardsMentioning } from "../markets";
+import { ChangeText, PriceText, TrendChart } from "../components/Trend";
+import { NO_RATE, rateText, shown } from "../rupees";
 import { usePrices } from "../prices";
 import { useDistill } from "../state";
 import { priceTime, publishedLabel } from "../time";
@@ -68,10 +70,12 @@ export function Item({ k }: { k: string }) {
       <h1 id="item-title" className="item-title">{nameOf(it)}</h1>
       {has ? (
         <>
-          <p className="item-price">{money(it.price!, it.currency)}</p>
+          <p className="item-price"><PriceText it={it} usdClass="item-usd" showNoRate={false} /></p>
           {it.change !== null && (
-            <p className="item-change"><span className={direction(it.change)}>{changeText(it.change, it.change_pct)}</span> <span className="muted">since the previous close</span></p>
+            <p className="item-change"><ChangeText it={it} /> <span className="muted">since the previous close</span></p>
           )}
+          {shown(it)?.usd && <p className="rate-line small muted">Rate used: {rateText(result?.fx)} (European Central Bank reference rate).</p>}
+          {shown(it)?.noRate && <p className="rate-line small muted">{NO_RATE}. The price is in US dollars.</p>}
         </>
       ) : (
         <p className="item-price muted">—</p>
@@ -86,6 +90,7 @@ export function Item({ k }: { k: string }) {
         <button type="button" className="btn" onClick={() => void remove()}>Remove</button>
       </div>
       {message && <p className="note error" role="alert">{message}.</p>}
+      {has && <TrendChart it={it} />}
       <section className="box" aria-labelledby="what-title">
         <h2 id="what-title" className="box-title">What this is</h2>
         <p>{whatItIs(it)}</p>

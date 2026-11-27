@@ -1,4 +1,7 @@
-import type { AdminSources, AiStatus, Article, Card, DetailAnswer, Instrument, PersonSource, PricesResult, Section, UserState } from "./types";
+import type {
+  AdminSources, AiStatus, Article, Card, DetailAnswer, HistoryRange, HistoryResult, Instrument, MarketSharing, PersonSource, PricesResult, Section,
+  UserState,
+} from "./types";
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) {
@@ -57,4 +60,10 @@ export const api = {
   marketSearch: (q: string, group = "") => call<Instrument[]>(`/api/market/search?q=${encodeURIComponent(q)}${group ? `&group=${group}` : ""}`),
   marketWatch: (keys: string[]) => post<{ watched: string[]; refused: string[] }>("/api/market/watch", { keys }),
   marketPrices: (keys: string[]) => call<PricesResult>(`/api/market/prices?keys=${keys.map(encodeURIComponent).join(",")}`),
+  // CR-0012: price history for the trend graphs, and the founder's switch for sharing Zerodha prices
+  marketHistory: (keys: string[], range: HistoryRange) =>
+    call<HistoryResult>(`/api/market/history?keys=${keys.map(encodeURIComponent).join(",")}&range=${range}`),
+  marketSharing: () => call<MarketSharing>("/api/admin/market-sharing"),
+  setMarketSharing: (share_kite: boolean) =>
+    call<MarketSharing>("/api/admin/market-sharing", { method: "PUT", body: JSON.stringify({ share_kite }) }),
 };

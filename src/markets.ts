@@ -13,13 +13,14 @@ export const MARKETS_CLOSED = "Markets closed, prices from the last close"; // A
 export const DISCLAIMER = "For information only. Not investment advice. Prices may be delayed."; // AC-9.14, AC-10.7
 export const STRIP_FULL = "The strip holds up to 6 items. Unpin one first"; // AC-10.3
 
-export type Market = "india" | "us" | "spot";
+export type Market = "india" | "us" | "spot" | "fx";
 
 /** Which market a key trades on, from its prefix (the contract's keys: NSE:TCS, US:EPAM, GOLD:XAU_USD). */
 export function marketOf(key: string): Market {
   const p = key.split(":")[0].toUpperCase();
   if (p === "NSE" || p === "BSE") return "india";
   if (p === "US") return "us";
+  if (p === "FX") return "fx"; // a daily reference rate, no trading hours (CR-0012)
   return "spot"; // gold spot and other commodities
 }
 
@@ -37,6 +38,7 @@ const weekday = (d: string) => d !== "Sat" && d !== "Sun";
  * list just reads every 30 seconds and shows "Market closed, last close" from the gateway.
  */
 export function isOpen(market: Market, now = Date.now()): boolean {
+  if (market === "fx") return false;
   if (market === "india") {
     const { weekday: d, minutes } = partsIn("Asia/Kolkata", now);
     return weekday(d) && minutes >= 9 * 60 + 15 && minutes < 15 * 60 + 30;
@@ -67,22 +69,22 @@ export function refreshEvery(keys: string[], now = Date.now(), markets?: Record<
   return keys.some((k) => isOpen(marketOf(k), now)) ? OPEN_EVERY_MS : CLOSED_EVERY_MS;
 }
 
+export const MINUS = "\u2212";
+
 const fixed2 = (n: number, locale: string) => n.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-/** AC-9.4: "Rs 4,182.50", "$185.20". */
+/** AC-9.4 (changed CR-0012): "₹4,182.50" with Indian digit grouping ("₹1,52,217.50"), "$185.20". */
 export function money(value: number, currency: string): string {
   const c = currency.toUpperCase();
-  if (c === "INR") return `Rs ${fixed2(value, "en-IN")}`;
+  if (c === "INR") return `${value < 0 ? MINUS : ""}₹${fixed2(Math.abs(value), "en-IN")}`;
   if (c === "USD") return `$${fixed2(value, "en-US")}`;
   return `${c} ${fixed2(value, "en-US")}`;
 }
 
-export const MINUS = "\u2212";
-
-/** AC-9.4: "+10.00 (+0.24%)" or "−4.80 (−2.53%)" (a true minus sign, CR-0006). */
-export function changeText(change: number, pct: number | null): string {
+/** AC-9.4: "+10.00 (+0.24%)" or "−4.80 (−2.53%)" (a true minus sign, CR-0006); rupee changes in Indian grouping (CR-0012). */
+export function changeText(change: number, pct: number | null, locale = "en-US"): string {
   const sign = change > 0 ? "+" : change < 0 ? MINUS : "";
-  const abs = fixed2(Math.abs(change), "en-US");
+  const abs = fixed2(Math.abs(change), locale);
   if (pct === null) return `${sign}${abs}`;
   return `${sign}${abs} (${sign}${fixed2(Math.abs(pct), "en-US")}%)`;
 }

@@ -64,13 +64,13 @@ describe("US-9: Price watchlist (CR-0005, changed CR-0006)", () => {
     renderApp("#/watchlist");
     await screen.findAllByTestId("price-row");
     const tcs = row("Tata Consultancy Services");
-    expect(within(tcs).getByText("Rs 4,182.50")).toBeInTheDocument();
-    expect(within(tcs).getByText("+10.00 (+0.24%)")).toHaveClass("up");
+    expect(within(tcs).getByText("₹4,182.50")).toBeInTheDocument();
+    expect(within(tcs).getByText("+₹10.00 (+0.24%)").closest(".change")).toHaveClass("up"); // changed CR-0012: ₹ and an arrow
     expect(within(tcs).getByText("26 Nov, 2:41 PM IST").tagName).toBe("TIME");
     const epam = row("EPAM Systems");
     expect(within(epam).getByText("$185.20")).toBeInTheDocument();
-    expect(within(epam).getByText("−4.80 (−2.53%)")).toHaveClass("down");
-    expect(money(123456.5, "INR")).toBe("Rs 1,23,456.50");
+    expect(within(epam).getByText("−4.80 (−2.53%)").closest(".change")).toHaveClass("down");
+    expect(money(123456.5, "INR")).toBe("₹1,23,456.50");
     expect(changeText(0, 0)).toBe("0.00 (0.00%)");
     expect(priceTime("2026-11-26T09:11:00Z")).toBe("26 Nov, 2:41 PM IST");
   });
@@ -91,7 +91,7 @@ describe("US-9: Price watchlist (CR-0005, changed CR-0006)", () => {
     seed({ watchlist: watchlist(["NSE:TCS"]) });
     renderApp("#/watchlist");
     expect(await screen.findByText("Prices paused since 2:35 PM IST while NSE is open. The last prices are shown.")).toBeInTheDocument();
-    expect(screen.getAllByText("Rs 4,182.50").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("₹4,182.50").length).toBeGreaterThan(0);
   });
 
   it("AC-9.15: a quiet gateway while every watched market is closed says Markets closed, prices from the last close", async () => {
@@ -103,7 +103,7 @@ describe("US-9: Price watchlist (CR-0005, changed CR-0006)", () => {
     renderApp("#/watchlist");
     expect(await screen.findByText("Markets closed, prices from the last close. NSE opens Mon 9:15 AM IST.")).toBeInTheDocument();
     expect(screen.queryByText(/Prices paused/)).not.toBeInTheDocument();
-    expect(within(row("Tata Consultancy Services")).getByText("Rs 4,182.50")).toBeInTheDocument();
+    expect(within(row("Tata Consultancy Services")).getByText("₹4,182.50")).toBeInTheDocument();
   });
 
   it("AC-9.15: a quiet gateway while a watched market is open still says Prices paused", async () => {
@@ -137,7 +137,7 @@ describe("US-9: Price watchlist (CR-0005, changed CR-0006)", () => {
     await screen.findAllByTestId("price-row");
     expect(within(row("Gold BeES")).getByText("First price when NSE opens, Fri 9:15 AM IST")).toBeInTheDocument();
     expect(within(row("New Co")).getByText("Waiting for the first price")).toBeInTheDocument();
-    expect(within(row("Tata Consultancy Services")).getByText("Rs 4,182.50")).toBeInTheDocument();
+    expect(within(row("Tata Consultancy Services")).getByText("₹4,182.50")).toBeInTheDocument();
     expect(within(row("Tata Consultancy Services")).getByText("Not logged in today")).toBeInTheDocument();
   });
 

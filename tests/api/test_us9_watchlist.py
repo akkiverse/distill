@@ -193,8 +193,9 @@ def test_ac_9_7_waiting_and_error(mclient, mk):
 
 @pytest.mark.parametrize("role", ["user", None, ""])
 def test_ac_9_8_zerodha_prices_for_the_founder_only(mclient, mk, env, role):
-    """AC-9.8: anyone but the founder never gets Zerodha items in search, watch or prices."""
+    """AC-9.8 (changed CR-0012: while sharing is Off): anyone but the founder never gets Zerodha items in search, watch or prices."""
     env.role = role
+    env.sharing.value.share_kite = False
     assert [i["key"] for i in mclient.get("/api/market/search", params={"q": "tcs"}).json()] == ["US:TCSX"]
     r = mclient.post("/api/market/watch", json={"keys": ["NSE:TCS", "US:EPAM"]}).json()
     assert r == {"watched": ["US:EPAM"], "refused": ["NSE:TCS"]} and "NSE:TCS" not in mk.watch_symbols
