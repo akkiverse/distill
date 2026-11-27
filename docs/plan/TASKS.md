@@ -126,3 +126,7 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 6 | Tests (pytest and Vitest per AC, v0.5.1 data), lint, build | AC-11.1 to AC-11.7 | Yes |
 | 7 | Visual check at 375 px and 1280 px, light and dark | design | Yes |
 | 8 | Records, pull request, preview check | all | Yes |
+
+## Release v0.6.0
+- [x] Released 2026-11-27: merge commit 9d96ecd, Vercel deployment dpl_9WGR4q95YAtLhpR1fqpExZVsSiCa (CR-0008, E7).
+- [ ] Tag pending: add tag v0.6.0 on 9d96ecd, a GitHub Release and close milestone v0.6.0 (if one exists) from a local session.
