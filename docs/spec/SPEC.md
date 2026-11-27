@@ -136,6 +136,19 @@ As the founder I want Distill's news sources in a list I manage, and as a reader
 - **AC-12.9** Given someone turns off every source for a section, then that section shows the warning "Every source for <Section> is off: your <Section> section will be empty." *(added CR-0010)*
 - **AC-12.10** Given nobody changed a setting, then each feed is built from exactly the sources v0.6.1 used; existing topics, saved cards and watchlists read unchanged; and if the source list can't be read, the built-in list is used instead of an empty feed. *(added CR-0010)*
 
+### US-13: Detailed story summaries in bullet points *(added CR-0011, #23)*
+As a reader I want each story summarised in detail, as bullet points from the real article, so that I can understand it without leaving Distill.
+- **AC-13.1** Given a summarised story in the feed, when its detailed summary is made, then the server reads the article page (8-second limit) and gives the article's main text (its paragraphs, without menus, scripts, captions, related links or footers) to Studio AI, which answers a longer summary and bullet points. *(added CR-0011)*
+- **AC-13.2** Given the AI's detailed summary, then only facts stated in the article are used: any bullet point or summary sentence with a number not written in the article or headline is dropped. *(added CR-0011)*
+- **AC-13.3** Given a detailed summary, then only the AI's summary and points are kept (in the card, synced to the account), never the article text, and the "Read the full article" link to the publisher stays. *(added CR-0011)*
+- **AC-13.4** Given the page can't be read (a paywall or teaser under 400 characters, the site blocks or errors, it takes longer than 8 seconds, it isn't a web page, it redirects into a private network, or it is a Google News link), then the card keeps its short summary with "Detailed summary not available for this source", and it isn't tried again. An unusable AI answer is tried twice at most (once per visit), then treated the same way. *(added CR-0011)*
+- **AC-13.5** Given a story with a detailed summary, then cards outside the feed (Saved) look as they do now, with the longer summary (4 to 5 sentences, at most 900 characters) from the article in place of the short one. *(added CR-0011)*
+- **AC-13.6** Given a feed card with a detailed summary, then it shows its summary as bullet points only (up to 10), the first 3 to 4 on the card, with slides spread evenly (10 points: 4, 3, 3); a right arrow (and a swipe on phones) moves to the next points, a left arrow back, and dots show how many slides there are. The arrows and swipes don't open the story. *(added CR-0011)*
+- **AC-13.7** Given a feed card, when it is tapped, then the full view shows the headline, source, time and every bullet point, with "Read the full article at <source>" at the bottom; keyboard users move between a card's slides with the left and right arrow keys. Works on phone and desktop, light and dark. *(added CR-0011)*
+- **AC-13.8** Given summarised stories without a detailed summary, when the app opens or a refresh ends, then their detailed summaries are made in the background, one story at a time, newest first, and kept in the card, so each story is summarised once and opens instantly afterwards (syncing keeps a detailed summary made on any device). Until it is ready, the card shows its short summary with "Detailed points are being prepared". *(added CR-0011)*
+- **AC-13.9** Given the AI server is offline or not set up, then no article page is read, nothing more is asked while it is away, and every card works as today with its short summary (and no "being prepared" note); detailed summaries resume once the AI is back. *(added CR-0011)*
+- **AC-13.10** Given cards and saved cards made by v0.7.0 (no detailed summary), then they load and show their short summary as before, and v0.7.0 can still read cards saved by this version. *(added CR-0011)*
+
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
 |---|---|---|---|
@@ -175,6 +188,7 @@ News sources sit behind a `NewsSource` adapter, built from the founder's news so
 | GET | /api/ai/status | Whether Studio AI answers (for the offline banner) |
 | POST | /api/feed/refresh | Takes topics (sections, keywords) and existing story keys; returns candidate articles (or curated cards), `ai_status` and failed sources |
 | POST | /api/feed/curate | Curates one article (used to show progress card by card within the function time limit) |
+| POST | /api/feed/detail | Reads one story's article page and answers its detailed summary and points, or `unavailable`, `offline`, `not_configured`, `error`; the article text is never kept *(added CR-0011)* |
 | POST | /api/feed/merge | Applies the expiry and replacement rules to a set of cards (works without the account database) |
 | GET | /api/market/search | Search the shared market database's instruments (Zerodha items for the founder only); optional `group` (gold, india, us); each result carries its category, group, tidy name and short name *(added CR-0005, changed CR-0006)* |
 | POST | /api/market/watch | Upsert keys into `market.watch_symbols` (AC-9.3) *(added CR-0005)* |
@@ -191,7 +205,7 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 | Entity | Fields |
 |---|---|
 | Topics | sections (list), keywords (list), updated_at |
-| Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status, replaced_at (optional, added CR-0004), cover (optional, added CR-0008), visual (optional {kind, title, unit, points: [{label, value}], steps: [text]}, added CR-0008) |
+| Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status, replaced_at (optional, added CR-0004), cover (optional, added CR-0008), visual (optional {kind, title, unit, points: [{label, value}], steps: [text]}, added CR-0008), detail_status (optional `ready` or `unavailable`), detail_summary, detail_points (up to 10), detail_tries (all optional, added CR-0011) |
 | Settings | last_refreshed_at, theme (`system`, `light` or `dark`), theme_changed_at (optional, added CR-0008), sources_off (optional list of source ids, added CR-0010), sources_changed_at (optional, added CR-0010) |
 | News source list *(added CR-0010)* | One JSON document in the table `distill_settings` (key `news_sources`): version, sources [{id, name, url, sections, kind (rss, google-news, gdelt, guardian, newsdata, currents, marketaux), paused, builtin, note, check {at, ok, stories, error, failing_since}, added_at, updated_at}], checked_at, updated_at. Missing: the built-in list. See [ADR-0007](../adr/0007-news-source-list-in-the-account-database.md) |
 | Watchlist *(added CR-0005, changed CR-0006)* | keys (the first 10 market keys such as `NSE:TCS`, `US:EPAM`, `GOLD:XAU_USD`, in display order), more (items 11 to 20), pinned (up to 6 keys, in strip order), strip (`every`, `feed` or `off`), version (2; absent in v0.4.0 copies, which the migration upgrades), updated_at |

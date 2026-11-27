@@ -46,7 +46,19 @@ export interface Card {
   cover?: string;
   /** The AI's diagram (AC-11.5, added CR-0008). */
   visual?: Visual | null;
+  /** US-13 (added CR-0011): the detailed summary from the article. All absent on cards made by v0.7.0.
+   * "ready": detail_summary and detail_points are set; "unavailable": the page couldn't be read (never asked again). */
+  detail_status?: DetailState | null;
+  /** The longer summary, about 4 to 5 sentences (AC-13.5). */
+  detail_summary?: string;
+  /** Up to 10 bullet points (AC-13.6). */
+  detail_points?: string[];
+  /** Unusable AI answers so far; after 2 the story keeps its short summary (AC-13.4). */
+  detail_tries?: number;
 }
+
+export type DetailState = "ready" | "unavailable";
+export type DetailAnswer = { status: "ready" | "unavailable" | "offline" | "not_configured" | "error"; summary: string; points: string[] };
 
 export interface Article {
   id: string;

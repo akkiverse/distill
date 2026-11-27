@@ -153,7 +153,7 @@ export function Feed() {
       {feed.length === 0 && !busy && (
         <p className="muted quiet-empty">{last ? "No new stories matched your topics since the last refresh." : "Press Refresh to gather today's stories."}</p>
       )}
-      <div className="cards">{feed.map((c, i) => <CardView key={c.id} card={c} index={i} />)}</div>
+      <div className="cards">{feed.map((c, i) => <CardView key={c.id} card={c} index={i} feed />)}</div>
       {feed.length > 0 && !busy && (
         <div className="the-end" data-testid="up-to-date">
           <IconCheck width={36} height={36} className="end-check" />

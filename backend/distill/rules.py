@@ -44,6 +44,14 @@ def _newest_first(cards: Iterable[Card]) -> list[Card]:
     return sorted(cards, key=lambda c: (parse_time(c.fetched_at), parse_time(c.published_at)), reverse=True)
 
 
+DETAIL_FIELDS = ("detail_status", "detail_summary", "detail_points", "detail_tries")
+
+
+def detail_rank(card: Card) -> tuple[int, int]:
+    """Ready beats unavailable beats not asked yet; among those not asked, more tries counts more (AC-13.8)."""
+    return ({"ready": 2, "unavailable": 1}.get(card.detail_status or "", 0), card.detail_tries)
+
+
 def merge_cards(existing: Iterable[Card], new_cards: Iterable[Card], now: datetime | None = None) -> list[Card]:
     """Add new cards, let a newer card replace an older unsaved card on the same story, drop expired ones.
 
@@ -67,7 +75,11 @@ def merge_cards(existing: Iterable[Card], new_cards: Iterable[Card], now: dateti
             base = c if parse_time(c.fetched_at) >= parse_time(old.fetched_at) else old
         flag = c if parse_time(c.saved_changed_at) > parse_time(old.saved_changed_at) else old
         replaced = max((x for x in (old.replaced_at, c.replaced_at) if x), key=parse_time, default=None)
-        by_id[c.id] = base.model_copy(update={"saved": flag.saved, "saved_changed_at": flag.saved_changed_at, "replaced_at": replaced})
+        update = {"saved": flag.saved, "saved_changed_at": flag.saved_changed_at, "replaced_at": replaced}
+        other = old if base is c else c
+        if detail_rank(other) > detail_rank(base):  # a detailed summary made on one device is kept on every device (AC-13.8)
+            update |= {k: getattr(other, k) for k in DETAIL_FIELDS}
+        by_id[c.id] = base.model_copy(update=update)
     kept: list[Card] = []
     for c in _newest_first(by_id.values()):  # newest first, so each card is compared with newer ones already kept
         if is_expired(c, now):

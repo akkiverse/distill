@@ -1,4 +1,4 @@
-import { SaveButton, WhenPublished } from "../components/CardView";
+import { DetailNote, SaveButton, WhenPublished, hasDetail } from "../components/CardView";
 import { Cover } from "../components/Cover";
 import { Diagram, drawable } from "../components/Diagram";
 import { Figures } from "../components/FigureChart";
@@ -30,10 +30,25 @@ export function Post({ id }: { id: string }) {
         <WhenPublished card={card} />
       </p>
       <h1 id="post-title" className="post-title">{card.title}</h1>
-      {card.summary ? (
+      {card.summary && card.ai_status === "ok" && hasDetail(card) ? (
+        <>
+          {/* AC-13.7: the full view shows every bullet point, so the whole story is clear */}
+          <p className="ai-label">AI summary</p>
+          <ul className="points all-points" aria-label="Every point">{card.detail_points!.map((p, i) => <li key={i}>{p}</li>)}</ul>
+          {drawable(card.visual) ? (
+            <section className="post-visual" aria-label="Diagram">
+              <h2 className="sub">{card.visual.kind === "steps" ? "How it unfolds" : "At a glance"}</h2>
+              <Diagram visual={card.visual} />
+            </section>
+          ) : (
+            <Figures figures={card.key_figures} />
+          )}
+        </>
+      ) : card.summary ? (
         <>
           <p className="ai-label">AI summary</p>
           <p className="summary large">{card.summary}</p>
+          <DetailNote card={card} />
           <h2 className="sub">Key points</h2>
           <ul className="points">{card.key_points.map((p, i) => <li key={i}>{p}</li>)}</ul>
           {drawable(card.visual) ? (

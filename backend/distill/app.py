@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field
 
 from . import catalog, feeds, market, sources, store, studio_ai, studio_auth
 from . import curator as curator_mod
+from . import detail as detail_mod
+from . import reader as reader_mod
 from .curator import Curator, curate
 from .models import (
     CurateRequest,
@@ -47,6 +49,14 @@ def get_source_factory() -> SourceFactory:
 
 def get_curator() -> Curator | None:
     return curator_mod.live_curator()
+
+
+def get_detailer() -> detail_mod.Detailer | None:
+    return detail_mod.live_detailer()
+
+
+def get_reader() -> reader_mod.ArticleReader:
+    return reader_mod.live_reader()
 
 
 def get_store() -> store.Store | None:
@@ -190,6 +200,19 @@ async def curate_one(body: CurateRequest, curator: Annotated[Curator | None, Dep
     """Curate one article into a card (US-3). Never fails because AI is offline: it answers a headline-only card."""
     card, status = await curate(body.article, body.sections, body.keywords, curator, fetched_at=iso(now()))
     return CurateResponse(card=card, ai_status=status)
+
+
+@app.post("/api/feed/detail", response_model=detail_mod.DetailResponse)
+async def detail_one(
+    body: detail_mod.DetailRequest,
+    reader: Annotated[reader_mod.ArticleReader, Depends(get_reader)],
+    detailer: Annotated[detail_mod.Detailer | None, Depends(get_detailer)],
+):
+    """The detailed summary of one story in the feed (US-13): read its article page, summarise it, keep only the summary.
+
+    Never fails because a page can't be read or the AI is away: it answers a status the app shows calmly instead.
+    """
+    return await detail_mod.detail(body, reader, detailer)
 
 
 @app.post("/api/feed/merge", response_model=MergeResponse)

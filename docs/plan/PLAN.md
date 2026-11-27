@@ -92,3 +92,12 @@ tests/api/                   pytest acceptance tests;  src/__tests__/  Vitest ac
 - **Admin API (AC-12.1 to AC-12.5):** `/api/admin/sources` list, add, edit, pause, remove, check-all; admin role only; `check_feed()` refuses private addresses, then needs an RSS/Atom answer with at least one story within 8 seconds.
 - **Person (AC-12.6, AC-12.9):** `/api/sources`; `settings.sources_off` and `sources_changed_at`, newest wins (`newer_sources`); Settings screen with switches grouped by section and the empty-section warning.
 - **Keeping existing data working:** two optional settings fields; the built-in list reproduces v0.6.1's sources exactly (tested); v0.6.1 ignores the new fields and table, so a rollback is safe.
+
+## CR-0011: Detailed story summaries in bullet points (feature E10)
+
+- **Reading the article (AC-13.1, AC-13.4):** `reader.py`: `HttpArticleReader` fetches the page on the server (8 s, 2 MB, 4 redirects checked against private addresses, Google News links refused) and keeps the article paragraphs; under 400 characters is unreadable. See ADR-0008.
+- **Writing the summary (AC-13.1, AC-13.2, AC-13.5, AC-13.6):** `detail.py` with `StudioAIDetailer` and the detail prompt and schema in `prompts.py`; points and sentences with numbers the article doesn't state are dropped; at most 10 points and 5 sentences.
+- **Route (AC-13.3, AC-13.9):** `POST /api/feed/detail` answers `ready`, `unavailable`, `offline`, `not_configured` or `error`, never the article text, and reads nothing when the AI isn't set up.
+- **Background (AC-13.8, AC-13.9):** `state.tsx` `prepareDetails`: after open and after each refresh, one card at a time, newest first; stops while the AI is offline or the server can't be reached; keeps the answer in the card and syncs it.
+- **Screens (AC-13.5 to AC-13.7):** `PointSlides` (slides of 3 to 4, arrows, swipe, arrow keys, dots) on feed cards; every point in the full view; the longer summary on Saved cards; the two notes.
+- **Keeping existing data working (AC-13.10):** four optional card fields with defaults; v0.7.0 cards show their short summary; server and device merges keep a detailed summary from either copy; v0.7.0 ignores the new fields, so a rollback is safe.

@@ -35,8 +35,9 @@ export const IconX = (p: SVGProps<SVGSVGElement>) => (
 export const IconArrowUp = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M12 19V5" /><path d="m5 12 7-7 7 7" /></svg>
 );
-export const IconChevron = ({ dir = "down", ...p }: SVGProps<SVGSVGElement> & { dir?: "up" | "down" }) => (
-  <svg {...base(p)}><path d={dir === "up" ? "m6 15 6-6 6 6" : "m6 9 6 6 6-6"} /></svg>
+const CHEVRON = { up: "m6 15 6-6 6 6", down: "m6 9 6 6 6-6", left: "m15 6-6 6 6 6", right: "m9 6 6 6-6 6" };
+export const IconChevron = ({ dir = "down", ...p }: SVGProps<SVGSVGElement> & { dir?: "up" | "down" | "left" | "right" }) => (
+  <svg {...base(p)}><path d={CHEVRON[dir]} /></svg>
 );
 export const IconPlus = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M12 5v14M5 12h14" /></svg>

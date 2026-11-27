@@ -3,7 +3,7 @@ import { api, ApiError } from "./api";
 import { dropExpired, loadLocal, loadSeen, MAX_KNOWN, rememberSeen, saveLocal, type Local } from "./storage";
 import { nowIso } from "./time";
 import { applyTheme, isTheme } from "./theme";
-import type { AiStatus, Card, Section, StripSetting, SyncStatus, Theme, UserState } from "./types";
+import type { AiStatus, Card, DetailAnswer, Section, StripSetting, SyncStatus, Theme, UserState } from "./types";
 import { changedWatchlist } from "./watch";
 
 export const FALLBACK_SECTIONS: Section[] = [
@@ -34,6 +34,8 @@ interface Ctx {
   /** The newest word on the AI server: from the live status check or the latest refresh (null: not known). */
   aiOnline: boolean | null;
   ready: boolean;
+  /** US-13: the server says AI isn't set up, so no detailed summaries are being prepared (AC-13.9). */
+  detailOff: boolean;
   saveTopics: (sections: string[], keywords: string[]) => Promise<boolean>;
   /** US-9, US-10: the price watchlist, its pins and the strip setting, kept with topics in the account (AC-9.2, AC-9.11, AC-10.3, AC-10.11). */
   saveWatchlist: (change: { keys?: string[]; pinned?: string[]; strip?: StripSetting }) => Promise<void>;
@@ -67,6 +69,31 @@ export function withFirstFetch(fresh: Card[], existing: Card[]): Card[] {
 }
 
 export const AI_STATUS_EVERY_MS = 60_000;
+
+/** AC-13.4: an unusable AI answer is tried twice at most; then the story keeps its short summary. */
+export const MAX_DETAIL_TRIES = 2;
+
+/** A summarised story whose detailed summary hasn't been made yet (AC-13.8). Headline-only cards wait for their AI summary first. */
+export function needsDetail(c: Card): boolean {
+  return c.ai_status === "ok" && !!c.summary && !c.detail_status;
+}
+
+/** Newest first, like the feed, so the stories on top are prepared first. */
+function feedFirst(cards: Card[]): Card[] {
+  const when = (c: Card) => Date.parse(c.published_at ?? "") || Date.parse(c.fetched_at) || 0;
+  return [...cards].sort((a, b) => when(b) - when(a));
+}
+
+/** The card with the server's answer kept: only the AI's summary and points, never the article (AC-13.3). */
+export function withDetail(c: Card, r: DetailAnswer): Card {
+  if (r.status === "ready") return { ...c, detail_status: "ready", detail_summary: r.summary, detail_points: r.points.slice(0, 10) };
+  if (r.status === "unavailable") return { ...c, detail_status: "unavailable" };
+  const tries = (c.detail_tries ?? 0) + 1;
+  return tries >= MAX_DETAIL_TRIES ? { ...c, detail_status: "unavailable", detail_tries: tries } : { ...c, detail_tries: tries };
+}
+
+const DETAIL_RANK = (c: Card) => (c.detail_status === "ready" ? 2 : c.detail_status === "unavailable" ? 1 : 0) * 10 + (c.detail_tries ?? 0);
+const DETAIL_FIELDS = ["detail_status", "detail_summary", "detail_points", "detail_tries"] as const;
 
 export const SYNC_LATER = "Saved on this device, will sync later"; // AC-6.6
 
@@ -268,12 +295,56 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     }
   }, [commit, pushSync]);
 
+  // US-13 (CR-0011): detailed summaries are made in the background, one story at a time, and kept in the card,
+  // so each story is summarised once and opens instantly afterwards (AC-13.8).
+  const detailBusy = useRef(false);
+  const detailAsked = useRef(new Set<string>()); // asked in this visit: an unusable answer waits for the next visit
+  const [detailOff, setDetailOff] = useState(false); // the AI isn't set up for this app: nothing is being prepared
+  const prepareDetails = useCallback(async () => {
+    if (detailBusy.current) return;
+    detailBusy.current = true;
+    try {
+      for (;;) {
+        const next = feedFirst(latest.current.state.cards).find((c) => needsDetail(c) && !detailAsked.current.has(c.id));
+        if (!next) return;
+        detailAsked.current.add(next.id);
+        let r: DetailAnswer;
+        try {
+          r = await api.detail({ url: next.source_url, title: next.title, source_name: next.source_name });
+        } catch {
+          detailAsked.current.delete(next.id); // the server couldn't be reached: try again after the next refresh or visit
+          return;
+        }
+        if (r.status === "offline" || r.status === "not_configured") {
+          detailAsked.current.delete(next.id); // AC-13.9: the short summary stays; asked again once the AI is back
+          if (r.status === "offline") setAiOnline(false);
+          else setDetailOff(true);
+          return;
+        }
+        setDetailOff(false);
+        const now = latest.current.state.cards.find((c) => c.id === next.id);
+        if (!now) continue; // expired or replaced meanwhile
+        const cards = latest.current.state.cards.map((c) => (c.id === next.id ? withDetail(c, r) : c));
+        const state = { ...latest.current.state, cards };
+        commit({ state, pendingSync: true });
+        await pushSync(state, { quiet: true });
+      }
+    } finally {
+      detailBusy.current = false;
+    }
+  }, [commit, pushSync]);
+
+  useEffect(() => {
+    if (!ready || phase.kind !== "idle" || aiOnline === false) return;
+    void prepareDetails();
+  }, [ready, phase.kind, aiOnline, local.state.cards, prepareDetails]);
+
   const value = useMemo<Ctx>(
     () => ({
-      state: local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready,
+      state: local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, detailOff,
       saveTopics, saveWatchlist, toggleSave, setTheme, setSourcesOff, refresh, dismissNotice: () => setNotice(null),
     }),
-    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, saveWatchlist, toggleSave, setTheme, setSourcesOff, refresh],
+    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, detailOff, saveTopics, saveWatchlist, toggleSave, setTheme, setSourcesOff, refresh],
   );
   return <DistillContext.Provider value={value}>{children}</DistillContext.Provider>;
 }
@@ -291,7 +362,9 @@ export function localMerge(existing: Card[], fresh: Card[]): Card[] {
     const when = (x: Card) => (x.saved_changed_at ? Date.parse(x.saved_changed_at) : -Infinity);
     const flag = when(c) > when(old) ? c : old;
     const replaced = [old.replaced_at, c.replaced_at].filter(Boolean).sort().at(-1) ?? null;
-    byId.set(c.id, { ...base, saved: flag.saved, saved_changed_at: flag.saved_changed_at, ...(replaced ? { replaced_at: replaced } : {}) });
+    const other = base === c ? old : c;
+    const detail = DETAIL_RANK(other) > DETAIL_RANK(base) ? Object.fromEntries(DETAIL_FIELDS.map((k) => [k, other[k]])) : {}; // AC-13.8
+    byId.set(c.id, { ...base, ...detail, saved: flag.saved, saved_changed_at: flag.saved_changed_at, ...(replaced ? { replaced_at: replaced } : {}) });
   }
   return [...byId.values()];
 }

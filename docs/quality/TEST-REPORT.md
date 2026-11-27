@@ -1,8 +1,8 @@
 # Distill: Test report
 
-**Run:** 2026-11-27 · **Commit:** latest on `cr/0010-news-sources` (CR-0010) · **Result:** 257 of 257 tests passing (164 pytest, 93 Vitest); every acceptance criterion covered (AC-12.1 to AC-12.10 added) · **Database tests:** against throwaway local Postgres databases started by the test run (now also the news source list) · **Build:** `npm run build` passes (JS 72 kB gzipped); Ruff lint and format clean
+**Run:** 2026-11-27 · **Commit:** latest on `cr/0011-detailed-summaries` (CR-0011) · **Result:** 308 of 308 tests passing (199 pytest, 109 Vitest); every acceptance criterion covered (AC-13.1 to AC-13.10 added) · **Database tests:** against throwaway local Postgres databases started by the test run · **Build:** `npm run build` passes (JS 73 kB gzipped); Ruff lint and format clean
 
-Previous runs: CR-0009 (2026-11-27) 228 of 228 passing; CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
+Previous runs: CR-0010 (2026-11-27) 257 of 257 passing; CR-0009 (2026-11-27) 228 of 228 passing; CR-0008 (2026-11-27) 225 of 225 passing; CR-0007 (2026-11-26) 202 of 202 passing; CR-0006 (2026-11-26) 194 of 194 passing; CR-0005 (2026-11-26) 132 of 132 passing; CR-0004 (2026-11-26) 81 of 81 passing; CR-0003 (2026-11-26) 63 of 63 passing; CR-0002 (2026-11-26) 58 of 58 passing; CR-0001 (2026-11-25) 51 of 51 passing.
 
 ## Traceability: acceptance criteria to tests
 
@@ -94,6 +94,16 @@ Previous runs: CR-0009 (2026-11-27) 228 of 228 passing; CR-0008 (2026-11-27) 225
 | AC-12.8 | `test_us12_news_sources.py::test_ac_12_8_signed_out_visitors_use_every_active_source`; `us12_sources.test.tsx` "AC-12.8" | Pass |
 | AC-12.9 | `us12_sources.test.tsx` "AC-12.9" | Pass |
 | AC-12.10 | `test_us12_news_sources.py::test_ac_12_10_built_in_list_asks_exactly_what_v0_6_1_asked`, `::test_ac_12_10_an_unreadable_list_falls_back_to_the_built_in_one`, `::test_ac_12_10_state_saved_by_v0_6_1_loads_unchanged`, `::test_ac_12_10_the_list_is_kept_in_the_account_database` | Pass |
+| AC-13.1 | `test_us13_detailed_summaries.py::test_ac_13_1_main_text_keeps_article_paragraphs_only`, `::test_ac_13_1_main_text_without_article_tag_uses_all_paragraphs`, `::test_ac_13_1_live_reader_fetches_the_page`, `::test_ac_13_1_detail_route_reads_article_and_answers_points`, `::test_ac_13_1_live_detailer_uses_studio_ai_with_schema` | Pass |
+| AC-13.2 | `test_us13_detailed_summaries.py::test_ac_13_2_points_with_numbers_not_in_the_article_are_dropped`, `::test_ac_13_2_summary_sentences_with_unknown_numbers_are_dropped`, `::test_ac_13_2_detail_route_applies_the_number_rule` | Pass |
+| AC-13.3 | `test_us13_detailed_summaries.py::test_ac_13_3_answer_carries_no_article_text`, `::test_ac_13_3_stored_card_has_no_article_text_and_keeps_the_link`; `us13_detail.test.tsx` "AC-13.8: detailed summaries are made in the background" (stored card has no article text) | Pass |
+| AC-13.4 | `test_us13_detailed_summaries.py::test_ac_13_4_unreadable_pages` (4 cases), `::test_ac_13_4_slow_site_is_unreadable`, `::test_ac_13_4_redirect_to_private_address_is_refused`, `::test_ac_13_4_redirects_are_followed_to_the_article`, `::test_ac_13_4_google_news_links_are_unreadable_without_a_request`, `::test_ac_13_4_route_answers_unavailable_and_does_not_call_ai`, `::test_ac_13_4_unusable_ai_answer_is_error` (3 cases), `::test_ac_13_4_short_text_minimum_is_meaningful`; `us13_detail.test.tsx` "AC-13.4" (2 tests) | Pass |
+| AC-13.5 | `test_us13_detailed_summaries.py::test_ac_13_5_summary_is_at_most_five_sentences`; `us13_detail.test.tsx` "AC-13.5: on the Saved screen" | Pass |
+| AC-13.6 | `test_us13_detailed_summaries.py::test_ac_13_6_at_most_ten_clean_points`, `::test_ac_13_6_card_holds_up_to_ten_points`; `us13_detail.test.tsx` "AC-13.6" (4 tests: slide sizes, bullets only with dots, arrows, swipe) | Pass |
+| AC-13.7 | `us13_detail.test.tsx` "AC-13.7: keyboard users move between slides" and "AC-13.7: tapping the card opens the full view"; visual check below | Pass |
+| AC-13.8 | `test_us13_detailed_summaries.py::test_ac_13_8_merge_keeps_a_detailed_summary_from_either_copy`, `::test_ac_13_8_ready_beats_unavailable_on_merge`, `::test_ac_13_8_account_sync_keeps_detailed_summaries`, `::test_ac_13_8_state_round_trip_through_the_api`; `us13_detail.test.tsx` "AC-13.8" (4 tests) | Pass |
+| AC-13.9 | `test_us13_detailed_summaries.py::test_ac_13_9_ai_offline_answers_offline`, `::test_ac_13_9_ai_not_set_up_reads_no_page`, `::test_ac_13_9_ai_error_answers_error`; `us13_detail.test.tsx` "AC-13.9" (2 tests) | Pass |
+| AC-13.10 | `test_us13_detailed_summaries.py::test_ac_13_10_v070_cards_load_without_detail`, `::test_ac_13_10_v070_state_syncs_and_keeps_saved_cards`; `test_us11_look_and_diagrams.py::test_ac_11_7_what_v0_6_0_saves_stays_readable_by_v0_5_1` (only optional fields added); `us13_detail.test.tsx` "AC-13.10"; all earlier suites unchanged and passing | Pass |
 | AC-9.8 with CR-0006 | `test_us10_watchlist_strip.py::test_ac_9_8_india_gold_rate_and_bonds_are_founder_only` (MCX gold rate and Sovereign Gold Bonds come from Zerodha) | Pass |
 | Compatibility (CR-0006) | Account copies and device copies saved by v0.4.0 (`AC-10.12` tests above); a copy saved by v0.5.0 validates against v0.4.0's watchlist model, so a rollback stays safe | Pass |
 | Compatibility (CR-0005) | `test_us9_watchlist.py::test_compat_v030_copy_loads_with_empty_watchlist` (account copy from v0.3.0; a v0.3.0 device can't wipe the list); `us9_prices.test.tsx` "CR-0005: a device copy saved by v0.3.0" | Pass |
@@ -162,6 +172,7 @@ Fixes made after looking: the diagram's outer frame shared a class name with the
 - [x] Motion: cards rise once, bars grow and trend lines draw once, buttons ease; all off with `prefers-reduced-motion`
 
 ## Releases
+- v0.8.0 (2026-11-27): CR-0011 detailed story summaries in bullet points (E10), 308 of 308 tests passing, released through [PR #24](https://github.com/akkiverse/distill/pull/24).
 - v0.7.0 (2026-11-27): CR-0010 news sources master list in admin and on/off per person in Settings (E9), 257 of 257 tests passing, released through [PR #22](https://github.com/akkiverse/distill/pull/22).
 - v0.6.1 (2026-11-27): CR-0009 gold spot no longer brings up "Prices paused" overnight (B8), 228 of 228 tests passing, released through [PR #20](https://github.com/akkiverse/distill/pull/20).
 - v0.6.0 (2026-11-27): CR-0008 a smoother look, a theme switch and AI-drawn story diagrams (E7), 225 of 225 tests passing, released through [PR #19](https://github.com/akkiverse/distill/pull/19).
@@ -176,3 +187,7 @@ Fixes made after looking: the diagram's outer frame shared a class name with the
 ## Visual check (CR-0010)
 
 Built UI served locally (`vite preview`) with the API answered by Playwright, at 375 px and 1280 px, light and dark: Settings → Sources (some sources off, two section warnings) and News sources (OK, failing, paused, needs-a-key rows). Fixes made after looking: the off switch was hard to see in dark mode (track now a muted grey); wide screens could scroll sideways into empty space because the header's background band reaches past the edge (pre-existing since CR-0008), fixed with `html { overflow-x: clip }`, checked with a sideways scroll attempt (stays at 0). No sideways scroll at either width.
+
+## Visual check (CR-0011)
+
+Built UI served locally (`vite preview`) with the API answered by Playwright, at 375 px and 1280 px, light and dark: the Feed with a detailed card (first slide of 4 points, then the second slide after Next), a card still being prepared and a card whose source can't be read, and the full view with all 8 points. Fix made after looking: a disabled arrow kept the hover tint after a click (now plain). No sideways scroll at either width.

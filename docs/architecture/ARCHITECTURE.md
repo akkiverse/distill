@@ -77,6 +77,8 @@ External services sit behind adapters so they can be mocked in tests and demos a
 |---|---|---|---|
 | Publisher RSS, Google News, GDELT | `NewsSource` (`RssFeed`, `Gdelt`) | Live, no key | Nothing |
 | The Guardian, NewsData.io, Currents, Marketaux | `NewsSource` (`Guardian`, `NewsData`, `Currents`, `Marketaux`) | Off until a key is set | Founder adds `GUARDIAN_API_KEY`, `NEWSDATA_API_KEY`, `CURRENTS_API_KEY`, `MARKETAUX_API_KEY` in Vercel |
+| Publisher article pages | `ArticleReader` (`HttpArticleReader`; `MockReader` in tests) | Live, no key; unreadable pages keep the short summary *(added CR-0011)* | Nothing |
+| Studio AI, detailed summaries | `Detailer` (`StudioAIDetailer`; `MockDetailer` in tests) | Live with the same shared AI variables as the curator *(added CR-0011)* | Nothing more |
 | Studio AI | `Curator` (`StudioAICurator`) | Live when `AI_ENDPOINTS` and `AI_GATEWAY_KEY` are linked; otherwise headline-only cards | Link the shared AI variables to the project |
 | Account database (Neon) | `Store` (`PostgresStore`; `MemoryStore` in tests) | Live in Production when `DATABASE_URL` is set; previews and local runs stay device-only | Done: the founder connected Neon to the project (Production) |
 | Market prices (Market Gateway via a shared Neon database) | `MarketData` (`PostgresMarket`; `FakeMarket` in tests) | Off until `MARKET_DATABASE_URL` is set: the Watchlist says "Price source not set up yet" and the strip stays hidden. Reads the gateway's `category` and `market_calendar` (Market Gateway E1) when they exist | Founder runs the Market Gateway and adds `MARKET_DATABASE_URL` (the contract's `app` role) in Vercel, Production |
@@ -138,3 +140,30 @@ flowchart LR
 | News source list | Built-in seed, storage (memory or Postgres, one locked document), one-minute cache, fallback, feed check (8 s, RSS/Atom with a story, no private addresses) | `backend/distill/catalog.py` |
 | Admin routes | List, add, edit, pause/resume, remove, check all; admin role only | `backend/distill/app.py` |
 | Settings → Sources, News sources | The two new screens | `src/screens/Settings.tsx`, `src/screens/AdminSources.tsx` |
+
+## CR-0011: detailed story summaries
+
+```mermaid
+sequenceDiagram
+  participant App as React app (state.tsx)
+  participant API as FastAPI /api/feed/detail
+  participant Page as Publisher page
+  participant AI as Studio AI
+  App->>API: one summarised card at a time (url, title, source)
+  API->>Page: GET (8 s, 4 redirects, no private addresses)
+  Page-->>API: HTML
+  API->>API: reader.py keeps the article paragraphs only
+  API->>AI: detail prompt + JSON schema
+  AI-->>API: summary, points
+  API->>API: detail.py drops unknown numbers, max 10 points
+  API-->>App: status + summary + points (never the article)
+  App->>App: kept in the card, synced with the account
+```
+
+| Part | Job | Where |
+|---|---|---|
+| Article reader | Fetch the page safely and keep its main text, or say it's unreadable | `backend/distill/reader.py` |
+| Detailed summary | Prompt, schema, checks (number rule, 10 points, 5 sentences) | `backend/distill/detail.py`, `backend/distill/prompts.py` |
+| Background queue | One story at a time after open and refresh; stops while the AI is away | `src/state.tsx` (`prepareDetails`) |
+| Slides and full view | Bullet-point slides, arrows, swipe, keys, dots; every point in the full view | `src/components/PointSlides.tsx`, `src/components/CardView.tsx`, `src/screens/Post.tsx` |
+| Merge | A detailed summary from either copy of a card is kept (server and device) | `backend/distill/rules.py`, `src/state.tsx` (`localMerge`) |

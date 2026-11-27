@@ -163,3 +163,16 @@ Pushed to `cr/0010-news-sources` after each task.
 ## Release v0.7.0
 - [x] Released 2026-11-27: merge commit 3a0c679, Vercel deployment dpl_A7TcfmFdTXpqjf2F4EHQE7Pcvxwg (CR-0010, E9).
 - [ ] Tag pending: add tag v0.7.0 on 3a0c679 and a GitHub Release from a local session.
+
+## CR-0011: Detailed story summaries in bullet points (E10)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Issue #23 (US-13), milestone v0.8.0; branch `cr/0011-detailed-summaries` from `main` (no manual commits to reconcile) | All | Yes |
+| 2 | `reader.py`: safe page fetch and main-text extraction | AC-13.1, AC-13.4 | Yes |
+| 3 | `detail.py`, detail prompt and schema, `/api/feed/detail`, card fields and merge rule; 35 Python tests | AC-13.1 to AC-13.5, AC-13.8 to AC-13.10 | Yes |
+| 4 | Background queue in `state.tsx` (one at a time, stops while the AI is away) | AC-13.8, AC-13.9 | Yes |
+| 5 | `PointSlides` on feed cards, full view with every point, longer summary on Saved, notes | AC-13.4 to AC-13.7 | Yes |
+| 6 | 16 UI tests; full suites, build, lint | All | Yes |
+| 7 | Visual check at 375 px and 1280 px, light and dark | AC-13.7 | Yes |
+| 8 | Records (spec, CR-0011, ADR-0008, architecture, plan, design, test report, changelog, README, studio.json) and pull request | All | Yes |
