@@ -34,7 +34,7 @@ export function applyTheme(theme: Theme): void {
   else root.dataset.theme = theme;
   root.style.colorScheme = theme === "system" ? "light dark" : theme;
   document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
-    const scheme = m.media.includes("dark") ? "dark" : "light";
+    const scheme = (m.getAttribute("media") ?? "").includes("dark") ? "dark" : "light";
     m.content = theme === "system" ? BAR_COLOUR[scheme] : BAR_COLOUR[theme];
   });
 }

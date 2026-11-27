@@ -32,6 +32,8 @@ def _clean(text: Any, limit: int) -> str:
 
 def checked_cover(raw: Any) -> str:
     """AC-11.4: 2 to 5 words, at most 40 characters; anything else gives no theme (the cover shows the topic's name)."""
+    if not isinstance(raw, str):
+        return ""
     text = _clean(raw, 200)
     n = len(text.split())
     if not (COVER_WORDS[0] <= n <= COVER_WORDS[1]) or len(text) > COVER_LIMIT:
