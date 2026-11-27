@@ -14,8 +14,8 @@ Distill is a purposeful alternative to scrolling social media for news. You pick
 | | |
 |---|---|
 | Stage | Live: v0.6.1, released 27 Nov 2026 ([live app](https://distill-akkiverse.vercel.app)) |
-| Acceptance tests | 228 of 228 passing on v0.6.1 ([report](docs/quality/TEST-REPORT.md)) |
-| Latest change | [CR-0009](docs/changes/CR-0009-gold-not-paused.md): Don't show "Prices paused" because of Gold spot (B8, released in v0.6.1) |
+| Acceptance tests | 257 of 257 passing on `cr/0010-news-sources` ([report](docs/quality/TEST-REPORT.md)) |
+| Latest change | [CR-0010](docs/changes/CR-0010-news-sources.md): News sources: master list in admin, on/off per person in Settings (E9, in review) |
 
 ## Stack
 

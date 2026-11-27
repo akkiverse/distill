@@ -123,6 +123,19 @@ As a reader I want a polished app I can switch between light and dark, with each
 - **AC-11.6** Given a card with a diagram, then the feed card shows it compactly and the post shows it full size with its title; each diagram has a text version (`role="img"` with an `aria-label` listing its values or steps). *(added CR-0008)*
 - **AC-11.7** Given cards and settings saved by v0.5.1 (no cover, diagram or theme time), when they load on the device or from the account, then they read unchanged and show with the topic's cover colour and the key-figure chart as before; v0.5.1 can still read what v0.6.0 saves. *(added CR-0008)*
 
+### US-12: News sources the founder manages, chosen per person *(added CR-0010, #21)*
+As the founder I want Distill's news sources in a list I manage, and as a reader I want to switch sources on or off for my own Distill, so that each feed comes from sources we trust.
+- **AC-12.1** Given the News sources screen (`#/admin/sources`, linked from Idea Studio admin: Apps → Distill → News sources), then only Distill's admin role can use it (signed out: "sign in"; other roles: "admin only"), and it starts with today's sources: every publisher feed in `feeds.py` with its sections, Google News and GDELT; The Guardian, NewsData, Currents and Marketaux are listed as "Needs a key" while their key isn't set. *(added CR-0010)*
+- **AC-12.2** Given the list, then each source shows its name, address, sections, On or Paused, and its last check: "OK · N stories", or "Failing since <when>: <why>" (the first failure time is kept until it answers again). "Check all now" asks every source that is on once (8-second limit each); the screen does this by itself when the last full check is more than 12 hours old. *(added CR-0010)*
+- **AC-12.3** Given a new source (name, feed address, one or more sections), when it is saved, then the address is checked from the server at once (8-second limit) and saved only if it answers, is an RSS or Atom feed and has at least one story; otherwise it is refused with a plain reason: didn't answer in time, couldn't be reached, blocked or an error from the site, a web page and not a news feed, no stories, already in the list, not a web address or a private-network address. Nothing invalid is stored. *(added CR-0010)*
+- **AC-12.4** Given a source, then its name, sections or address can be edited; a changed address is checked as in AC-12.3 before saving, and a failing one leaves the source as it was. Google News, GDELT and the keyed services keep their own address and sections (only the name can change). *(added CR-0010)*
+- **AC-12.5** Given Pause, then the source stays listed but is not fetched for anyone until Resume. Given Remove, then the screen asks to confirm first, and the source goes from the list and from every feed. Google News and GDELT can be paused but not removed. *(added CR-0010)*
+- **AC-12.6** Given Settings → Sources (`#/settings`, the gear in the header) and a signed-in person, then it shows the active sources grouped by section (and "Your keywords"), each with an on/off switch, all on by default; a source that serves several sections has one switch shown in each. The choice is saved to the person's account and follows them to every device (the change made last wins; a device on v0.6.1 can't undo it), and it changes only their own feed. *(added CR-0010)*
+- **AC-12.7** Given a person's switched-off sources, when their feed refreshes, then those sources aren't asked; sources the founder adds later start on for everyone; paused, removed and key-less sources aren't listed. *(added CR-0010)*
+- **AC-12.8** Given a signed-out visitor or the demo, then every active source is used (the server ignores any switched-off list it is sent), and Settings → Sources says so instead of showing switches. *(added CR-0010)*
+- **AC-12.9** Given someone turns off every source for a section, then that section shows the warning "Every source for <Section> is off: your <Section> section will be empty." *(added CR-0010)*
+- **AC-12.10** Given nobody changed a setting, then each feed is built from exactly the sources v0.6.1 used; existing topics, saved cards and watchlists read unchanged; and if the source list can't be read, the built-in list is used instead of an empty feed. *(added CR-0010)*
+
 ## Screens and flows
 | Screen | Shows | Empty state | Error state |
 |---|---|---|---|
@@ -134,6 +147,8 @@ As a reader I want a polished app I can switch between light and dark, with each
 | Pinned strip (under the header) *(added CR-0006)* | Up to 6 pinned items: short name, type badge, price, change; a calm one-line note; on wide screens "N more slots · Edit" | Hidden when nothing is pinned or the setting is Off | One-line amber "Prices paused" only while a watched market is open; "Prices can't be reached right now" |
 | Watchlist (its own tab; replaces Prices) *(added CR-0005, changed CR-0006)* | Items grouped Gold, Indian shares, US shares with price, change and a star to pin; Edit mode (reorder, remove); "On top of every screen" order; "Show pinned prices" setting; the information-only note | "Add gold or a share to follow its price" + Add button | "Price source not set up yet"; "Prices paused since &lt;time&gt; while NSE is open"; "Markets closed, prices from the last close. NSE opens Fri 9:15 AM IST"; "Prices start when the market opens (NSE 9:15 AM IST)"; "US market closed today for a holiday"; "Prices can't be reached right now" |
 | Add to watchlist (sheet over the Watchlist) *(added CR-0006)* | Search by name or symbol, chips All, Gold, Indian shares, US shares; results grouped, the five gold types each with a one-line explanation; Add / Added | "Search by name or symbol" | "No matches yet"; "Price source not set up yet"; "You can watch up to 20 items" |
+| Settings → Sources *(added CR-0010)* | Active sources grouped by section and "Your keywords", each with an on/off switch; "N of M sources on"; admin link for the admin | Signed out: "Sign in to choose your sources. Until then, Distill uses every active source." | "The list of sources can't be loaded right now"; amber "your <Section> section will be empty" |
+| News sources (admin) *(added CR-0010)* | Each source: name, address, sections, On / Paused / Needs a key, last check; Check all now; Add a source; Edit, Pause or Resume, Remove (with a confirmation) | n/a | The server's plain reason for a refused feed; "This screen is for the Distill admin" |
 | Item detail *(added CR-0006)* | Badge, symbol and exchange, name, price, change, the market state with the next opening, Pin on top / Remove, "What this is", price time, label, source, updates, "In your news", the information-only note | "No news cards mention it right now" | "This item isn't in your watchlist" + back to the Watchlist |
 
 Flow: sign in → Topics (first time) → Feed → Refresh (progress shows "Fetching news", then "Summarising 3 of 12") → tap card → detail → back. Bottom navigation on phones: Feed, Watchlist, Saved, Topics (the old `#/prices` link opens the Watchlist). *(changed CR-0005, CR-0006)*
@@ -150,7 +165,7 @@ Flow: sign in → Topics (first time) → Feed → Refresh (progress shows "Fetc
 
 ## Stack
 Tier R, React + FastAPI on Vercel (Singapore, `sin1`). See [ADR-0002](../adr/0002-stack.md).
-News sources sit behind a `NewsSource` adapter: GDELT DOC API, Google News and a fixed list of publisher RSS feeds need no key; The Guardian, NewsData.io, Currents and Marketaux are switched on only when their key environment variables are set. A mock source is used in tests. AI sits behind a `Curator` adapter using the Studio AI kit, with a mock for tests.
+News sources sit behind a `NewsSource` adapter, built from the founder's news source list (CR-0010): GDELT DOC API, Google News and publisher RSS feeds need no key; The Guardian, NewsData.io, Currents and Marketaux are switched on only when their key environment variables are set. A mock source is used in tests. AI sits behind a `Curator` adapter using the Studio AI kit, with a mock for tests.
 
 ## API outline
 | Method | Path | Purpose |
@@ -164,6 +179,10 @@ News sources sit behind a `NewsSource` adapter: GDELT DOC API, Google News and a
 | GET | /api/market/search | Search the shared market database's instruments (Zerodha items for the founder only); optional `group` (gold, india, us); each result carries its category, group, tidy name and short name *(added CR-0005, changed CR-0006)* |
 | POST | /api/market/watch | Upsert keys into `market.watch_symbols` (AC-9.3) *(added CR-0005)* |
 | GET | /api/market/prices | Latest prices for up to 20 keys, with labels, category and tidy names, the gateway's paused state, and a `markets` map (state, next open, holiday note; from `market_calendar` or Distill's own clock) *(added CR-0005, changed CR-0006)* |
+| GET | /api/sources | The active sources a reader can switch on or off *(added CR-0010)* |
+| GET, POST | /api/admin/sources | The full source list; add a source after a server check (admin only) *(added CR-0010)* |
+| PATCH, DELETE | /api/admin/sources/{id} | Edit, pause or resume, or remove a source (admin only) *(added CR-0010)* |
+| POST | /api/admin/sources/check | Check every source that is on and keep each result (admin only) *(added CR-0010)* |
 | GET, PUT | /api/me/state | Reads and syncs the signed-in person's topics, cards and settings with the account database |
 
 ## Data model
@@ -173,7 +192,8 @@ User data (topics, cards, saved state) lives in the account database: hosted Pos
 |---|---|
 | Topics | sections (list), keywords (list), updated_at |
 | Card | id, topic_section, title, source_name, source_url, published_at, fetched_at, summary, key_points (list), key_figures (list of {label, value, unit}), story_key, relevance, saved (bool), saved_changed_at, ai_status, replaced_at (optional, added CR-0004), cover (optional, added CR-0008), visual (optional {kind, title, unit, points: [{label, value}], steps: [text]}, added CR-0008) |
-| Settings | last_refreshed_at, theme (`system`, `light` or `dark`), theme_changed_at (optional, added CR-0008) |
+| Settings | last_refreshed_at, theme (`system`, `light` or `dark`), theme_changed_at (optional, added CR-0008), sources_off (optional list of source ids, added CR-0010), sources_changed_at (optional, added CR-0010) |
+| News source list *(added CR-0010)* | One JSON document in the table `distill_settings` (key `news_sources`): version, sources [{id, name, url, sections, kind (rss, google-news, gdelt, guardian, newsdata, currents, marketaux), paused, builtin, note, check {at, ok, stories, error, failing_since}, added_at, updated_at}], checked_at, updated_at. Missing: the built-in list. See [ADR-0007](../adr/0007-news-source-list-in-the-account-database.md) |
 | Watchlist *(added CR-0005, changed CR-0006)* | keys (the first 10 market keys such as `NSE:TCS`, `US:EPAM`, `GOLD:XAU_USD`, in display order), more (items 11 to 20), pinned (up to 6 keys, in strip order), strip (`every`, `feed` or `off`), version (2; absent in v0.4.0 copies, which the migration upgrades), updated_at |
 
 Prices are not stored by Distill: they are read from the founder's shared market database (`MARKET_DATABASE_URL`, the contract's `app` role) through a `MarketData` adapter; see [ADR-0005](../adr/0005-market-data-from-shared-database.md). *(added CR-0005)*

@@ -84,3 +84,11 @@ tests/api/                   pytest acceptance tests;  src/__tests__/  Vitest ac
 - **Cause:** `priceNotices` counted gold spot (open by the clock on weekdays) as an open market, so the gateway's planned overnight quiet showed as "Prices paused".
 - **Fix:** leave gold spot out of the open markets for the paused note; add gold's own price time to the calm note, or a gold-only calm note while the gateway rests.
 - **Existing users' data:** untouched. Interface-only; no stored shape, route or contract changes; a rollback to v0.6.0 stays safe.
+
+## CR-0010: News sources: master list in admin, on/off per person in Settings (feature E9)
+
+- **List (AC-12.1, AC-12.10):** `catalog.py` holds `SourceEntry`/`Catalog`, `builtin_catalog()` from `feeds.py`, `MemoryCatalog` and `PostgresCatalog` (table `distill_settings`, key `news_sources`, locked read-modify-write), a one-minute cache for refreshes and the built-in fallback. See ADR-0007.
+- **Feeds (AC-12.5, AC-12.7, AC-12.8):** `sources.default_sources(..., entries, off)` builds from the list, leaving out paused and switched-off sources; `/api/feed/refresh` passes the person's `sources_off` only when signed in.
+- **Admin API (AC-12.1 to AC-12.5):** `/api/admin/sources` list, add, edit, pause, remove, check-all; admin role only; `check_feed()` refuses private addresses, then needs an RSS/Atom answer with at least one story within 8 seconds.
+- **Person (AC-12.6, AC-12.9):** `/api/sources`; `settings.sources_off` and `sources_changed_at`, newest wins (`newer_sources`); Settings screen with switches grouped by section and the empty-section warning.
+- **Keeping existing data working:** two optional settings fields; the built-in list reproduces v0.6.1's sources exactly (tested); v0.6.1 ignores the new fields and table, so a rollback is safe.

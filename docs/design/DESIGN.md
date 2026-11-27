@@ -86,3 +86,9 @@ The founder asked for a look that is "smooth and cool", with a light and dark sw
 - **Chips:** topic chips carry a small line icon per section; the selected state has the gradient border and glow.
 - **Motion:** cards rise and fade in once (staggered, 40 ms), the theme switch cross-fades colours over 200 ms, buttons and tabs ease on hover and press; the end-of-feed check still draws itself. All of it is off under `prefers-reduced-motion`.
 - **States:** unchanged in wording; notes and errors take the glass surface. Empty Feed gets the funnel mark large and faint above "Choose your topics to start".
+
+## CR-0010: Settings → Sources and News sources
+
+- **Settings → Sources:** one rounded panel per section (its section icon in the legend) with plain rows: source name on the left, a teal switch on the right (48 px rows, 46×28 switch; the off track is a muted grey that reads in both themes). An amber note inside a panel warns when every source in it is off.
+- **News sources (admin):** a wide page with a status line, "Check all now" and "Add a source" in one bar; each source is a card with name and an On (teal) / Paused (outlined, dashed card) / Needs a key (amber) badge, its address in small monospace, sections, and the last check (failing in the danger colour). Actions are 44 px buttons; Remove opens an inline confirmation with a danger button.
+- Header: a gear icon (Settings) beside the theme switch.
