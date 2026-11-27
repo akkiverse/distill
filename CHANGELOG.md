@@ -5,6 +5,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+- B8: overnight, gold spot no longer brings up the amber "Prices paused" note; the calm note gives gold's own price time instead, and "Prices paused" still shows while NSE, MCX or the US market is open and the price service is silent. See [CR-0009](docs/changes/CR-0009-gold-not-paused.md).
+
 ## [0.6.0] - 2026-11-27
 
 ### Added

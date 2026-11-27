@@ -4,6 +4,7 @@ Every change to Distill is recorded here: what changed, why, and how it affected
 
 | CR | Change | Why (short) | Status | Release |
 |---|---|---|---|---|
+| [CR-0009](CR-0009-gold-not-paused.md) | Don't show "Prices paused" because of Gold spot | Bug fix requested by the founder (B8) | In review | |
 | [CR-0008](CR-0008-ui-refresh.md) | A smoother look, a theme switch and AI-drawn story diagrams | New feature requested by the founder (E7) | Released | v0.6.0 |
 | [CR-0007](CR-0007-gold-search-fixed-rows.md) | Gold spot and India gold rate missing from gold search | Bug fix requested by the founder (B6) | Released | v0.5.1 |
 | [CR-0006](CR-0006-watchlist-strip.md) | Watchlist page and pinned prices strip | New feature requested by the founder (E5) | Released | v0.5.0 |

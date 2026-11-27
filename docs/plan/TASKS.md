@@ -130,3 +130,14 @@ For CR-0001. Each task names the stories and criteria it serves.
 ## Release v0.6.0
 - [x] Released 2026-11-27: merge commit 9d96ecd, Vercel deployment dpl_9WGR4q95YAtLhpR1fqpExZVsSiCa (CR-0008, E7).
 - [ ] Tag pending: add tag v0.6.0 on 9d96ecd, a GitHub Release and close milestone v0.6.0 (if one exists) from a local session.
+
+## CR-0009: Don't show "Prices paused" because of Gold spot (bug fix B8, patch)
+
+| # | Task | Serves | Done |
+|---|---|---|---|
+| 1 | Branch `cr/0009-gold-not-paused` from `main`; find the cause (gold spot counted as open in `priceNotices`) | AC-10.14 | Yes |
+| 2 | Leave gold spot out of the paused check; gold's own price time in the calm note | AC-10.14, AC-9.6, AC-10.8 | Yes |
+| 3 | Tests (fail on v0.6.0, pass now), full suite, lint, build | AC-10.14, all | Yes |
+| 4 | Records (CR-0009, spec, changelog, test report), pull request | all | Yes |
+| 5 | CI and preview check | all | Yes |
+
