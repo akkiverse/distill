@@ -48,9 +48,13 @@ export interface Topics {
   updated_at: string | null;
 }
 
+export type Theme = "system" | "light" | "dark";
+
 export interface Settings {
   last_refreshed_at: string | null;
-  theme: "system" | "light" | "dark";
+  theme: Theme;
+  /** When the reader last chose a theme (AC-11.3, added CR-0008); absent in copies saved by v0.5.1. */
+  theme_changed_at?: string | null;
 }
 
 export type StripSetting = "every" | "feed" | "off";
