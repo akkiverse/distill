@@ -109,3 +109,7 @@ For CR-0001. Each task names the stories and criteria it serves.
 | 3 | Add sheet: the India rate heading explains why it's missing | AC-10.13 | Yes |
 | 4 | Tests (fake and real SQL), lint, build | AC-10.13, all | Yes |
 | 5 | Records (CR-0007, spec, changelog, test report), pull request, CI and preview check | all | Yes |
+
+## Release v0.5.1
+- [x] Released 2026-11-27: merge commit 32ba99f, Vercel deployment dpl_GAbyYnuFwh5rR78DPVs4EaYx3hEX (CR-0007, B6).
+- [ ] Tag pending: add tag v0.5.1 on 32ba99f, a GitHub Release and close milestone v0.5.1 (if one exists) from a local session.
