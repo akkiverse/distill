@@ -122,7 +122,7 @@ export function Diagram({ visual, compact = false }: { visual: Visual; compact?:
   const label = visualText(visual);
   const unit = visual.kind === "steps" ? "" : visual.unit;
   return (
-    <figure className={`diagram dg-${visual.kind}${compact ? " compact" : ""}`} data-testid="diagram">
+    <figure className={`diagram kind-${visual.kind}${compact ? " compact" : ""}`} data-testid="diagram">
       <div role="img" aria-label={label}>
         <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
           <defs>
