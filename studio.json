@@ -5,7 +5,7 @@
   "accent": "#0f766e",
   "repo": "https://github.com/akkiverse/distill",
   "live_url": "https://distill-akkiverse.vercel.app",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "launched": "2026-11-25",
   "tests_passed": 355,
   "tests_total": 355

@@ -197,6 +197,7 @@ The production build served locally with the API answered by sample data (prices
 - [x] No motion added
 
 ## Releases
+- v0.9.0 (2026-11-27): CR-0012 prices in rupees first, dollars in brackets, with a trend graph (E11), 355 of 355 tests passing, released through [PR #26](https://github.com/akkiverse/distill/pull/26).
 - v0.8.0 (2026-11-27): CR-0011 detailed story summaries in bullet points (E10), 308 of 308 tests passing, released through [PR #24](https://github.com/akkiverse/distill/pull/24).
 - v0.7.0 (2026-11-27): CR-0010 news sources master list in admin and on/off per person in Settings (E9), 257 of 257 tests passing, released through [PR #22](https://github.com/akkiverse/distill/pull/22).
 - v0.6.1 (2026-11-27): CR-0009 gold spot no longer brings up "Prices paused" overnight (B8), 228 of 228 tests passing, released through [PR #20](https://github.com/akkiverse/distill/pull/20).
