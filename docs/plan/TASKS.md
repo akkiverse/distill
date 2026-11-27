@@ -159,3 +159,7 @@ Pushed to `cr/0010-news-sources` after each task.
 | 6 | News sources admin screen | AC-12.1 to AC-12.5 | Yes |
 | 7 | 9 UI tests; full suite, build, lint; visual check (and the sideways-scroll fix) | All | Yes |
 | 8 | Records (spec, CR-0010, ADR-0007, architecture, design, test report, changelog, README, studio.json) and pull request | All | Yes |
+
+## Release v0.7.0
+- [x] Released 2026-11-27: merge commit 3a0c679, Vercel deployment dpl_A7TcfmFdTXpqjf2F4EHQE7Pcvxwg (CR-0010, E9).
+- [ ] Tag pending: add tag v0.7.0 on 3a0c679 and a GitHub Release from a local session.
