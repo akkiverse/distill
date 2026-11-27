@@ -40,6 +40,8 @@ interface Ctx {
   toggleSave: (id: string) => Promise<void>;
   /** AC-11.1, AC-11.3: the reader's theme, applied at once and kept with the account settings (newer choice wins). */
   setTheme: (theme: Theme) => Promise<void>;
+  /** AC-12.6: the sources this person switched off, kept with the account settings (newer change wins). */
+  setSourcesOff: (ids: string[]) => Promise<void>;
   refresh: () => Promise<void>;
   dismissNotice: () => void;
 }
@@ -188,6 +190,16 @@ export function DistillProvider({ children }: { children: ReactNode }) {
     [commit, pushSync],
   );
 
+  const setSourcesOff = useCallback(
+    async (ids: string[]) => {
+      const settings = { ...latest.current.state.settings, sources_off: [...new Set(ids)], sources_changed_at: nowIso() };
+      const state = { ...latest.current.state, settings };
+      commit({ state, pendingSync: true });
+      await pushSync(state, { quiet: true });
+    },
+    [commit, pushSync],
+  );
+
   // AC-11.1: whatever the device copy or the account says, the page shows it (also after a sync brings another device's choice).
   const theme = isTheme(local.state.settings.theme) ? local.state.settings.theme : "system";
   useEffect(() => applyTheme(theme), [theme]);
@@ -207,7 +219,7 @@ export function DistillProvider({ children }: { children: ReactNode }) {
   const running = useRef(false);
   const refresh = useCallback(async () => {
     if (running.current) return;
-    const { topics, cards } = latest.current.state;
+    const { topics, cards, settings } = latest.current.state;
     if (topics.sections.length === 0) return;
     running.current = true;
     setPhase({ kind: "fetching" });
@@ -216,7 +228,8 @@ export function DistillProvider({ children }: { children: ReactNode }) {
       // AC-3.6: headline-only cards are not "known", so this refresh can bring their AI summaries.
       // AC-8.5: stories the AI already judged on this device (kept, dropped or replaced since) are known too.
       const known = [...new Set([...cards.filter((c) => !isHeadlineOnly(c)).map((c) => c.source_url), ...Object.keys(loadSeen())])].slice(0, MAX_KNOWN);
-      const got = await api.refresh({ sections: topics.sections, keywords: topics.keywords, known_urls: known });
+      // AC-12.7: the sources this person switched off (the server ignores them for signed-out visitors, AC-12.8)
+      const got = await api.refresh({ sections: topics.sections, keywords: topics.keywords, known_urls: known, sources_off: settings.sources_off ?? [] });
       outcome.failedSources = got.failed_sources;
       const fresh: Card[] = [];
       const statuses = new Set<AiStatus>();
@@ -258,9 +271,9 @@ export function DistillProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(
     () => ({
       state: local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready,
-      saveTopics, saveWatchlist, toggleSave, setTheme, refresh, dismissNotice: () => setNotice(null),
+      saveTopics, saveWatchlist, toggleSave, setTheme, setSourcesOff, refresh, dismissNotice: () => setNotice(null),
     }),
-    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, saveWatchlist, toggleSave, setTheme, refresh],
+    [local.state, sections, sync, notice, phase, lastOutcome, aiOnline, ready, saveTopics, saveWatchlist, toggleSave, setTheme, setSourcesOff, refresh],
   );
   return <DistillContext.Provider value={value}>{children}</DistillContext.Provider>;
 }

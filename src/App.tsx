@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { watchAiStatus } from "./ai-status.js";
-import { IconBookmark, IconFeed, IconPrices, IconTopics, IconX } from "./components/Icons";
+import { IconBookmark, IconFeed, IconPrices, IconSettings, IconTopics, IconX } from "./components/Icons";
 import { Strip } from "./components/Strip";
 import { ThemeSwitch } from "./components/ThemeSwitch";
+import { useMe } from "./me";
 import { PricesProvider } from "./prices";
+import { AdminSources } from "./screens/AdminSources";
 import { Feed } from "./screens/Feed";
 import { Item } from "./screens/Item";
 import { Post } from "./screens/Post";
 import { Saved } from "./screens/Saved";
+import { Settings } from "./screens/Settings";
 import { Topics } from "./screens/Topics";
 import { Watchlist } from "./screens/Watchlist";
 import { DistillProvider, useDistill } from "./state";
@@ -37,14 +40,11 @@ function Shell() {
   const route = useHashRoute();
   const { notice, dismissNotice, sync, state } = useDistill();
   const banner = useRef<HTMLDivElement>(null);
-  const [me, setMe] = useState<string | null>(null);
+  const who = useMe();
+  const me = who?.signedIn ? who.name : null;
 
   useEffect(() => {
     const stop = watchAiStatus({ mount: banner.current, text: "AI is offline right now. New stories show as headlines until it's back." });
-    fetch("/auth/me", { credentials: "same-origin" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => j?.signed_in && setMe(j.user?.name ?? "Signed in"))
-      .catch(() => undefined);
     return stop;
   }, []);
 
@@ -56,15 +56,17 @@ function Shell() {
   else if (onItem) screen = <Item k={decodeURIComponent(route.slice(6))} />;
   else if (route === "/saved") screen = <Saved />;
   else if (route === "/topics") screen = <Topics />;
+  else if (route === "/settings") screen = <Settings />; // US-12 (CR-0010)
+  else if (route === "/admin/sources") screen = <AdminSources />;
   else screen = <Feed />;
-  const active = route.startsWith("/post/") ? "/" : onWatchlist || onItem ? "/watchlist" : route;
+  const active = route.startsWith("/post/") ? "/" : onWatchlist || onItem ? "/watchlist" : route === "/settings" || route === "/admin/sources" ? "/topics" : route;
   const isFeed = active === "/";
 
   // AC-10.1, AC-10.11: the strip on every screen, on the Feed only, or off; prices are read only while some are on screen (AC-9.9).
   const setting = stripSetting(state.watchlist);
   const stripOn = pinnedKeys(state.watchlist).length > 0 && (setting === "every" || (setting === "feed" && isFeed));
   const reading = stripOn || onWatchlist || onItem;
-  const wide = onWatchlist;
+  const wide = onWatchlist || route === "/admin/sources";
 
   return (
     <div className="shell">
@@ -86,6 +88,7 @@ function Shell() {
         <div className="who">
           <ThemeSwitch />
           {sync === "pending" && <span className="sync-dot" title="Changes will sync when the connection is back">Not synced yet</span>}
+          <a className="icon-btn" href="#/settings" aria-label="Settings" title="Settings" aria-current={route === "/settings" ? "page" : undefined}><IconSettings /></a>
           {me && <><span className="small muted">{me}</span> <a className="small" href="/auth/logout">Sign out</a></>}
         </div>
       </header>

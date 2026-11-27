@@ -72,6 +72,43 @@ export interface Settings {
   theme: Theme;
   /** When the reader last chose a theme (AC-11.3, added CR-0008); absent in copies saved by v0.5.1. */
   theme_changed_at?: string | null;
+  /** AC-12.6 (added CR-0010): the news sources this person switched off, and when; absent in copies saved by v0.6.1. */
+  sources_off?: string[] | null;
+  sources_changed_at?: string | null;
+}
+
+/** US-12 (CR-0010): an active news source a reader can switch on or off. `sections` is [] for keyed news services. */
+export interface PersonSource {
+  id: string;
+  name: string;
+  sections: string[];
+  kind: string;
+}
+
+export interface SourceCheck {
+  at: string;
+  ok: boolean;
+  stories: number;
+  error: string;
+  failing_since: string | null;
+}
+
+/** A source as the admin's News sources screen sees it. */
+export interface AdminSource extends PersonSource {
+  url: string;
+  paused: boolean;
+  builtin: boolean;
+  note: string;
+  check: SourceCheck | null;
+  can_remove: boolean;
+  missing_key: boolean;
+  key_name: string | null;
+}
+
+export interface AdminSources {
+  sources: AdminSource[];
+  checked_at: string | null;
+  saved_in_database: boolean;
 }
 
 export type StripSetting = "every" | "feed" | "off";
