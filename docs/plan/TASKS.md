@@ -176,3 +176,7 @@ Pushed to `cr/0010-news-sources` after each task.
 | 6 | 16 UI tests; full suites, build, lint | All | Yes |
 | 7 | Visual check at 375 px and 1280 px, light and dark | AC-13.7 | Yes |
 | 8 | Records (spec, CR-0011, ADR-0008, architecture, plan, design, test report, changelog, README, studio.json) and pull request | All | Yes |
+
+## Release v0.8.0
+- [x] Released 2026-11-27: merge commit 1f40620, Vercel deployment dpl_4rcLgff2Frywz4m3zkeLtHJFqtug (CR-0011, E10).
+- [ ] Tag pending: add tag v0.8.0 on 1f40620 and a GitHub Release from a local session.
