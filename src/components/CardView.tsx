@@ -5,6 +5,7 @@ import { Cover } from "./Cover";
 import { drawable } from "./Diagram";
 import { Figures } from "./FigureChart";
 import { IconBookmark } from "./Icons";
+import { PointSlides } from "./PointSlides";
 
 const HEADLINE_ONLY: Record<string, string> = {
   offline: "Headline only: AI was offline when this was fetched.",
@@ -45,9 +46,28 @@ export function WhenPublished({ card }: { card: Card }) {
   );
 }
 
-export function CardView({ card, index = 0 }: { card: Card; index?: number }) {
+export const PREPARING = "Detailed points are being prepared"; // AC-13.8
+export const NOT_AVAILABLE = "Detailed summary not available for this source"; // AC-13.4
+
+/** AC-13.4, AC-13.8, AC-13.9: what a summarised card without its detailed points says about them. */
+export function DetailNote({ card }: { card: Card }) {
+  const { aiOnline, detailOff } = useDistill();
+  if (card.detail_status === "ready" || card.ai_status !== "ok" || !card.summary) return null;
+  if (card.detail_status === "unavailable") return <p className="detail-note">{NOT_AVAILABLE}</p>;
+  if (aiOnline === false || detailOff) return null; // AC-13.9: with the AI away, the card is just as before
+  return <p className="detail-note preparing">{PREPARING}</p>;
+}
+
+export const hasDetail = (card: Card) => card.detail_status === "ready" && (card.detail_points?.length ?? 0) > 0;
+
+/**
+ * One story. In the Feed (`feed`), a story with its detailed summary shows it as bullet-point slides only (AC-13.6);
+ * elsewhere (Saved) the card looks as before, with the longer summary in place of the short one (AC-13.5).
+ */
+export function CardView({ card, index = 0, feed = false }: { card: Card; index?: number; feed?: boolean }) {
   const { sections } = useDistill();
   const summarised = card.ai_status === "ok" && !!card.summary;
+  const detailed = summarised && hasDetail(card);
   return (
     <article className={summarised ? "card" : "card plain"} style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }} data-testid="card">
       {summarised && <Cover card={card} />}
@@ -59,12 +79,19 @@ export function CardView({ card, index = 0 }: { card: Card; index?: number }) {
       <h2 className="card-title">
         <a href={`#/post/${card.id}`} className="card-link">{card.title}</a>
       </h2>
-      {summarised ? (
+      {detailed && feed ? (
         <>
           <p className="ai-label">AI summary</p>
-          <p className="summary">{card.summary}</p>
+          <PointSlides points={card.detail_points!} title={card.title} href={`#/post/${card.id}`} />
+          {!drawable(card.visual) && <Figures figures={card.key_figures} />}
+        </>
+      ) : summarised ? (
+        <>
+          <p className="ai-label">AI summary</p>
+          <p className="summary">{detailed && card.detail_summary ? card.detail_summary : card.summary}</p>
           <ul className="points">{card.key_points.map((p, i) => <li key={i}>{p}</li>)}</ul>
           {!drawable(card.visual) && <Figures figures={card.key_figures} />}
+          {feed && <DetailNote card={card} />}
         </>
       ) : (
         <p className="headline-only">{HEADLINE_ONLY[card.ai_status] ?? HEADLINE_ONLY.offline}</p>

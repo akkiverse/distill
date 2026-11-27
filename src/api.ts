@@ -1,4 +1,4 @@
-import type { AdminSources, AiStatus, Article, Card, Instrument, PersonSource, PricesResult, Section, UserState } from "./types";
+import type { AdminSources, AiStatus, Article, Card, DetailAnswer, Instrument, PersonSource, PricesResult, Section, UserState } from "./types";
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) {
@@ -40,6 +40,8 @@ export const api = {
     post<{ articles: Article[]; failed_sources: string[]; fetched_at: string }>("/api/feed/refresh", body),
   curate: (body: { article: Article; sections: string[]; keywords: string[] }) =>
     post<{ card: Card | null; ai_status: AiStatus }>("/api/feed/curate", body),
+  // US-13 (CR-0011): one story's detailed summary, read from its article on the server
+  detail: (body: { url: string; title: string; source_name: string }) => post<DetailAnswer>("/api/feed/detail", body),
   merge: (cards: Card[], new_cards: Card[]) => post<{ cards: Card[] }>("/api/feed/merge", { cards, new_cards }),
   sync: (state: UserState) => call<{ state: UserState; synced_at: string }>("/api/me/state", { method: "PUT", body: JSON.stringify(state) }),
   aiStatus: () => call<{ configured?: boolean; online?: boolean }>("/api/ai/status"),
