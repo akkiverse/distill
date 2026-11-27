@@ -5,6 +5,19 @@ export interface Section {
   name: string;
 }
 
+/** The AI's diagram for a story (AC-11.5, added CR-0008). */
+export interface VisualPoint {
+  label: string;
+  value: number;
+}
+export interface Visual {
+  kind: "bars" | "change" | "trend" | "steps";
+  title: string;
+  unit: string;
+  points: VisualPoint[];
+  steps: string[];
+}
+
 export interface KeyFigure {
   label: string;
   value: number;
@@ -29,6 +42,10 @@ export interface Card {
   ai_status: AiStatus;
   /** When a newer report on the same story replaced an older card (AC-8.6); absent on cards saved before v0.3.0. */
   replaced_at?: string | null;
+  /** The AI's short theme for the cover band (AC-11.4, added CR-0008); absent on cards made by v0.5.1. */
+  cover?: string;
+  /** The AI's diagram (AC-11.5, added CR-0008). */
+  visual?: Visual | null;
 }
 
 export interface Article {

@@ -14,7 +14,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@fontsource/source-serif-4": "^5.1.0",
+    "@fontsource/sora": "^5.2.6",
     "@vercel/functions": "^2.0.0",
     "jose": "^5.9.6",
     "react": "^18.3.1",

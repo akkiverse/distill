@@ -1,33 +1,53 @@
-/* Distill: calm, clear, finished. Tokens and rationale in docs/design/DESIGN.md. */
+/* Distill: calm, clear, finished; smooth and cool since CR-0008. Tokens and rationale in docs/design/DESIGN.md. */
+/* Night desk (CR-0008): light is crisp cool white, dark is deep blue-black glass. Explicit choices set data-theme (AC-11.1). */
 :root {
-  --paper: #f4f2ec;
-  --surface: #fffefb;
-  --ink: #1b2420;
-  --muted: #5b6661;
-  --line: #e2ded4;
-  --teal: #0f766e;
-  --teal-soft: #e1f0ed;
+  --paper: #eef2f6;
+  --surface: #ffffff;
+  --surface-2: #f5f8fb;
+  --ink: #0e1726;
+  --muted: #536173;
+  --line: #dbe3ec;
+  --teal: #0b7a72;
+  --cyan: #0e7490;
+  --teal-soft: #dff3f0;
   --on-teal: #ffffff;
+  --glow: rgba(13, 148, 136, .18);
   --danger: #b42318;
-  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --glass: rgba(255, 255, 255, .82);
+  --shadow: 0 1px 2px rgba(14, 23, 38, .05), 0 8px 24px rgba(14, 23, 38, .06);
+  --shadow-up: 0 2px 4px rgba(14, 23, 38, .06), 0 16px 40px rgba(14, 23, 38, .10);
+  --cover-ink: #0e1726;
+  --cover-strength: 22%;
+  --aurora: radial-gradient(1100px 420px at 15% -120px, rgba(13, 148, 136, .14), transparent 70%),
+    radial-gradient(900px 380px at 90% -160px, rgba(14, 116, 144, .12), transparent 70%);
+  --display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --serif: var(--display);
   --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
-  --radius: 14px;
+  --accent-grad: linear-gradient(135deg, var(--teal), var(--cyan));
+  --radius: 18px;
   --nav-h: 64px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #121715;
-    --surface: #1a211e;
-    --ink: #e6ebe8;
-    --muted: #9ba7a1;
-    --line: #2b3531;
-    --teal: #5ec4b6;
-    --teal-soft: #1d3430;
-    --on-teal: #08201c;
-    --danger: #f97066;
+  :root:not([data-theme="light"]) {
+    --paper: #070b12; --surface: #0f1622; --surface-2: #141d2c; --ink: #e8eef7; --muted: #93a1b5; --line: #1f2a3b;
+    --teal: #2dd4bf; --cyan: #38bdf8; --teal-soft: #10302f; --on-teal: #04201c; --glow: rgba(45, 212, 191, .22); --danger: #f97066;
+    --glass: rgba(15, 22, 34, .72); --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 10px 30px rgba(0, 0, 0, .35);
+    --shadow-up: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 18px 44px rgba(0, 0, 0, .5); --cover-ink: #f1f6fd; --cover-strength: 34%;
+    --aurora: radial-gradient(1100px 460px at 12% -140px, rgba(45, 212, 191, .16), transparent 70%),
+      radial-gradient(900px 420px at 92% -180px, rgba(99, 102, 241, .18), transparent 70%);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --paper: #070b12; --surface: #0f1622; --surface-2: #141d2c; --ink: #e8eef7; --muted: #93a1b5; --line: #1f2a3b;
+  --teal: #2dd4bf; --cyan: #38bdf8; --teal-soft: #10302f; --on-teal: #04201c; --glow: rgba(45, 212, 191, .22); --danger: #f97066;
+  --glass: rgba(15, 22, 34, .72); --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 10px 30px rgba(0, 0, 0, .35);
+  --shadow-up: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 18px 44px rgba(0, 0, 0, .5); --cover-ink: #f1f6fd; --cover-strength: 34%;
+  --aurora: radial-gradient(1100px 460px at 12% -140px, rgba(45, 212, 191, .16), transparent 70%),
+    radial-gradient(900px 420px at 92% -180px, rgba(99, 102, 241, .18), transparent 70%);
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -200,7 +220,8 @@ legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
 
 /* prices (US-9, CR-0005; Watchlist and strip, CR-0006) */
 :root { --up: #1a7f37; --down: var(--danger); --amber: #8a5a00; --amber-soft: #fbf1dc; --gold: #7a5c0e; --gold-soft: #f5ecd4; }
-@media (prefers-color-scheme: dark) { :root { --up: #57c785; --amber: #f0b84d; --amber-soft: #2e2615; --gold: #d9b45a; --gold-soft: #33291a; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --up: #4ade80; --amber: #fbbf24; --amber-soft: #2a2110; --gold: #e3bf62; --gold-soft: #2d2412; } }
+:root[data-theme="dark"] { --up: #4ade80; --amber: #fbbf24; --amber-soft: #2a2110; --gold: #e3bf62; --gold-soft: #2d2412; }
 .num { font-variant-numeric: tabular-nums; }
 .up { color: var(--up); }
 .down { color: var(--down); }
@@ -335,7 +356,7 @@ legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
 }
 
 /* the Add sheet (AC-10.5) */
-.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(12, 18, 16, .45); display: flex; align-items: flex-end; justify-content: center; }
+.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(4, 8, 14, .55); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: 100%; max-width: 560px; max-height: calc(100% - 40px); overflow-y: auto; background: var(--paper); border-radius: 20px 20px 0 0; padding: 10px 16px calc(20px + env(safe-area-inset-bottom)); animation: sheet .25s ease-out both; }
 @keyframes sheet { from { transform: translateY(24px); opacity: 0; } }
 @media (min-width: 760px) { .sheet-backdrop { align-items: center; } .sheet { border-radius: 20px; max-height: 86vh; padding-bottom: 20px; } }

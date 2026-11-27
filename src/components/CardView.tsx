@@ -1,6 +1,8 @@
 import { sectionLabel, useDistill } from "../state";
 import { clock, hasTime, publishedLabel, timeAgo } from "../time";
 import type { Card } from "../types";
+import { Cover } from "./Cover";
+import { drawable } from "./Diagram";
 import { Figures } from "./FigureChart";
 import { IconBookmark } from "./Icons";
 
@@ -47,7 +49,8 @@ export function CardView({ card, index = 0 }: { card: Card; index?: number }) {
   const { sections } = useDistill();
   const summarised = card.ai_status === "ok" && !!card.summary;
   return (
-    <article className="card" style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }} data-testid="card">
+    <article className={summarised ? "card" : "card plain"} style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }} data-testid="card">
+      {summarised && <Cover card={card} />}
       <div className="card-meta">
         <span className="source">{card.source_name}</span>
         <span className="topic">{sectionLabel(card.topic_section, sections)}</span>
@@ -61,7 +64,7 @@ export function CardView({ card, index = 0 }: { card: Card; index?: number }) {
           <p className="ai-label">AI summary</p>
           <p className="summary">{card.summary}</p>
           <ul className="points">{card.key_points.map((p, i) => <li key={i}>{p}</li>)}</ul>
-          <Figures figures={card.key_figures} />
+          {!drawable(card.visual) && <Figures figures={card.key_figures} />}
         </>
       ) : (
         <p className="headline-only">{HEADLINE_ONLY[card.ai_status] ?? HEADLINE_ONLY.offline}</p>
